@@ -34,10 +34,15 @@ echo "Aplicando la migración…"
 psql -h "$socket" -p "$puerto" -U postgres -d jubileo -q -v ON_ERROR_STOP=1 \
   -f "$raiz/supabase/migraciones/0001_esquema.sql"
 
-echo
-salida=$(psql -h "$socket" -p "$puerto" -U postgres -d jubileo \
-  -f "$raiz/supabase/pruebas/01-restricciones.sql" 2>&1 | grep -v '^$')
-echo "$salida"
+salida=""
+for prueba in 01-restricciones 02-modo-pareja 03-rls; do
+  echo
+  echo "=== $prueba ==="
+  parcial=$(psql -h "$socket" -p "$puerto" -U postgres -d jubileo \
+    -f "$raiz/supabase/pruebas/$prueba.sql" 2>&1 | grep -v '^$')
+  echo "$parcial"
+  salida="$salida"$'\n'"$parcial"
+done
 
 echo
 echo "Columnas de dinero que no sean bigint (tiene que salir vacío):"
@@ -47,8 +52,8 @@ psql -h "$socket" -p "$puerto" -U postgres -d jubileo -tAc \
     where table_schema='public' and column_name like '%cents%' and data_type<>'bigint'"
 
 echo
-if grep -q 'FALLA' <<<"$salida"; then
-  echo "Hay restricciones que no se comportan como deben."
+if grep -qE 'FALLA|^psql:.*ERROR' <<<"$salida"; then
+  echo "Hay comprobaciones que no se comportan como deben."
   exit 1
 fi
-echo "El esquema aplica y todas las restricciones se comportan."
+echo "El esquema aplica, las restricciones se comportan y las políticas aíslan el hogar."
