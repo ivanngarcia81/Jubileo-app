@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritorio v2 — App de Presupuesto · Jubileo Financiero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carbon:#1C1E1F; --carbon-2:#2A2D2E; --carbon-3:#3A3E3F;
+    --gris:#F2F3F1; --blanco:#FFFFFF;
+    --teal:#12C2A0; --teal-osc:#0A7A64; --ambar:#E8A33D; --rojo:#D9503F;
+    --texto:#1C1E1F; --texto-2:#6B7175; --linea:#E2E4E1;
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:#0E0F10;color:var(--texto);padding:30px 22px 60px;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  .doc{max-width:1420px;margin:0 auto 26px;color:#fff}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .doc h1{font-family:var(--serif);font-size:clamp(26px,3.6vw,40px);font-weight:400;margin:9px 0 10px;line-height:1.06}
+  .doc p{color:#9AA09E;max-width:78ch;font-size:14.5px;line-height:1.6}
+  .doc p b{color:var(--teal);font-weight:600}
+
+  .win{max-width:1420px;margin:0 auto;background:var(--carbon);border-radius:22px;overflow:hidden;
+    box-shadow:0 34px 70px -22px rgba(0,0,0,.85)}
+
+  /* barra de navegación superior */
+  .nav{display:flex;align-items:center;gap:26px;padding:17px 26px;color:#fff;border-bottom:1px solid #262A2B}
+  .logo{font-family:var(--serif);font-size:21px;display:flex;align-items:center;gap:8px}
+  .logo em{color:var(--teal);font-style:normal}
+  .nav-links{display:flex;gap:20px;font-size:13.5px;color:#787E7D}
+  .nav-links a{color:#787E7D;text-decoration:none}
+  .nav-links a.on{color:#fff;font-weight:600;position:relative}
+  .nav-links a.on::after{content:"";position:absolute;left:0;right:0;bottom:-19px;height:2px;background:var(--teal)}
+  .nav-r{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .search{background:var(--carbon-2);border-radius:99px;padding:9px 16px;color:#787E7D;font-size:13px;
+    display:flex;gap:9px;align-items:center;min-width:250px}
+  .circ{width:35px;height:35px;border-radius:50%;background:var(--carbon-2);display:grid;place-items:center;
+    color:#A7ACAB;font-size:13px;position:relative}
+  .circ .bd{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--teal);border:1.5px solid var(--carbon-2)}
+  .circ.you{background:var(--carbon-3);color:#fff;font-size:11.5px;font-weight:600}
+
+  /* ---------- BANDA DE INDICADORES ---------- */
+  .band{padding:26px 26px 30px;color:#fff;display:grid;grid-template-columns:1fr 500px;gap:34px;align-items:center;
+    background:
+      radial-gradient(900px 320px at 88% 120%, rgba(18,194,160,.14), transparent 70%),
+      var(--carbon);}
+  .greet{font-family:var(--serif);font-size:26px;margin-bottom:20px}
+  .greet em{color:var(--teal);font-style:normal}
+  .greet .sub{font-family:var(--sans);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#787E7D;
+    margin-top:5px;font-weight:600}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:22px 30px}
+  .kpi .k{font-size:12px;color:#787E7D}
+  .kpi .v{font-size:29px;font-weight:600;margin-top:3px}
+  .kpi .v.teal{color:var(--teal)}
+  .kpi .d{font-size:11.5px;color:#6E7473;margin-top:4px}
+  .kpi .d b{font-weight:600}
+  .kpi .d b.up{color:var(--teal)}
+  .kpi .d b.dn{color:#E8A33D}
+
+  /* riel de cheques dentro de la banda */
+  .chq-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#787E7D;font-weight:600;margin-bottom:10px}
+  .chqs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .chq{background:var(--carbon-2);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+  .chq .k{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#787E7D;font-weight:600}
+  .chq .v{font-family:var(--serif);font-size:28px;line-height:1.1;margin:6px 0 2px}
+  .chq .d{font-size:10.5px;color:#787E7D;line-height:1.35}
+  .chq.done{opacity:.55}
+  .chq.now{background:linear-gradient(150deg,#0F7F69,#12C2A0);color:#04291F}
+  .chq.now .k,.chq.now .d{color:rgba(4,41,31,.72)}
+  .chq.extra{border:1.5px dashed var(--ambar)}
+  .chq.extra .v{color:var(--ambar)}
+  .chq-foot{font-size:11px;color:#787E7D;margin-top:10px}
+  .chq-foot b{color:var(--ambar);font-weight:600}
+
+  /* ---------- lienzo claro ---------- */
+  .canvas{background:var(--gris);padding:22px;display:grid;grid-template-columns:1fr 262px 262px;gap:16px;align-items:start}
+
+  .card{background:var(--blanco);border:1px solid var(--linea);border-radius:15px;padding:18px}
+  .ch{display:flex;align-items:center;gap:10px;margin-bottom:15px}
+  .ch .ico{width:28px;height:28px;border-radius:9px;background:var(--carbon);color:var(--teal);
+    display:grid;place-items:center;font-family:var(--serif);font-size:14px;flex-shrink:0}
+  .ch h3{font-family:var(--serif);font-size:18.5px;font-weight:400;flex:1}
+  .ch .r{font-family:var(--serif);font-size:19px}
+
+  .seg{display:flex;gap:2px;background:var(--gris);border-radius:99px;padding:3px}
+  .seg div{font-size:11.5px;font-weight:500;color:var(--texto-2);padding:5px 13px;border-radius:99px}
+  .seg div.on{background:var(--blanco);color:var(--texto);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+
+  .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--texto-2);font-weight:600;
+    display:flex;align-items:center;gap:7px;margin:18px 0 11px}
+  .lbl::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--teal)}
+
+  /* gráfica de semanas */
+  .chart{display:flex;align-items:flex-end;gap:14px;height:158px}
+  .chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+  .chart .stack{width:100%;max-width:52px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px}
+  .chart .sb{border-radius:6px}
+  .chart .lb{font-size:11.5px;color:var(--texto-2)}
+  .chart .col.on .lb{color:var(--texto);font-weight:700}
+  .leg{display:flex;gap:16px;font-size:11.5px;color:var(--texto-2);margin-top:12px}
+  .leg span{display:flex;align-items:center;gap:6px}
+  .leg i{width:9px;height:9px;border-radius:3px;display:block}
+
+  .kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--linea);font-size:13px}
+  .kv:last-of-type{border-bottom:0}
+  .kv .k{color:var(--texto-2)}
+  .kv .v{font-weight:600}
+
+  .btn{margin-top:14px;width:100%;background:var(--carbon);color:#fff;border:0;border-radius:11px;padding:12px;
+    font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer}
+  .ghost{width:100%;background:transparent;border:1px solid var(--linea);border-radius:11px;padding:10px;
+    font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--texto-2);cursor:pointer;margin-top:8px}
+
+  /* movimientos */
+  .mov{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:var(--gris);margin-bottom:6px}
+  .mov .dot{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12px;flex-shrink:0;
+    background:var(--blanco);color:var(--texto-2);border:1px solid var(--linea)}
+  .mov .m{flex:1;min-width:0}
+  .mov .t{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mov .s{font-size:10.5px;color:var(--texto-2);margin-top:1px}
+  .mov .a{font-size:12.5px;font-weight:600;white-space:nowrap}
+  .mov .a.in{color:var(--teal-osc)}
+
+  /* fondos de reserva */
+  .goal{padding:13px 0;border-bottom:1px solid var(--linea)}
+  .goal:last-child{border-bottom:0;padding-bottom:0}
+  .goal .g-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+  .goal .t{font-size:13.5px;font-weight:600}
+  .goal .w{font-size:11px;color:var(--texto-2)}
+  .goal .when{font-size:11px;color:var(--texto-2);margin-bottom:8px}
+  .goal .when b{color:var(--teal-osc);font-weight:600}
+  .bar{height:6px;border-radius:99px;background:var(--gris);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px;background:var(--teal)}
+  .goal .fig{display:flex;justify-content:space-between;font-size:11.5px;margin-top:6px}
+  .goal .fig b{font-weight:600}
+  .goal .fig span{color:var(--texto-2)}
+
+  /* premium */
+  .prem{background:var(--carbon);border-radius:15px;padding:18px;color:#fff}
+  .prem .star{width:26px;height:26px;border-radius:8px;background:var(--teal);color:#06322A;display:grid;place-items:center;
+    font-size:13px;margin-bottom:12px}
+  .prem h4{font-family:var(--serif);font-size:21px;font-weight:400;line-height:1.15;margin-bottom:8px}
+  .prem p{font-size:12px;color:#9AA09E;line-height:1.5;margin-bottom:13px}
+  .prem .cta{background:var(--teal);color:#06322A;border:0;border-radius:10px;padding:10px 15px;
+    font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer}
+  .prem .price{font-size:11px;color:#787E7D;margin-top:9px}
+
+  .coach{display:flex;align-items:center;gap:11px}
+  .coach .av{width:38px;height:38px;border-radius:50%;background:var(--carbon);color:var(--teal);
+    display:grid;place-items:center;font-family:var(--serif);font-size:16px;flex-shrink:0}
+  .coach .t{font-size:13px;font-weight:600}
+  .coach .s{font-size:11.5px;color:var(--texto-2);margin-top:2px}
+
+  .note{max-width:1420px;margin:22px auto 0;color:#8A908F;font-size:13px;line-height:1.65;
+    border-left:2px solid #2A2D2E;padding-left:15px}
+  .note b{color:#C9CCCA;font-weight:600}
+  .note ul{list-style:none;margin-top:8px}
+  .note li{margin-bottom:5px;padding-left:14px;position:relative}
+  .note li::before{content:"—";position:absolute;left:0;color:var(--teal)}
+
+  @media (max-width:1240px){
+    .band{grid-template-columns:1fr;gap:26px}
+    .canvas{grid-template-columns:1fr 262px}
+    .c3{grid-column:1 / 3;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  }
+  @media (max-width:880px){
+    .canvas{grid-template-columns:1fr}.c3{grid-column:1;grid-template-columns:1fr}
+    .kpis{grid-template-columns:1fr 1fr}.nav-links{display:none}.search{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="doc">
+  <div class="eyebrow">Escritorio v2 · para Claude Code</div>
+  <h1>Panel de presupuesto — versión de computadora</h1>
+  <p>Combina lo mejor de tus dos referencias: la <b>carcasa carbón</b> y las tarjetas del primero, con la <b>banda de indicadores</b> y la <b>columna de metas</b> del segundo. Los cheques del mes viven en la banda oscura, donde la referencia ponía la tarjeta de crédito.</p>
+</div>
+
+<div class="win">
+
+  <div class="nav">
+    <div class="logo">Jubileo<em>.</em></div>
+    <div class="nav-links">
+      <a href="#" class="on">Resumen</a>
+      <a href="#">Presupuesto</a>
+      <a href="#">Deudas</a>
+      <a href="#">Metas</a>
+      <a href="#">Ajustes</a>
+    </div>
+    <div class="nav-r">
+      <div class="search"><span>⌕</span><span>Buscar gasto, categoría, deuda…</span></div>
+      <div class="circ">◔<span class="bd"></span></div>
+      <div class="circ you">IV</div>
+    </div>
+  </div>
+
+  <!-- ====== BANDA DE INDICADORES ====== -->
+  <div class="band">
+    <div>
+      <div class="greet">Buenos días, Iván<em>.</em>
+        <div class="sub">Agosto 2026 · cada dos semanas · Premium</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <div class="k">Entra este mes</div>
+          <div class="v num">$3,680</div>
+          <div class="d">3 cheques · <b class="up">+$1,200</b> vs julio</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Sale este mes</div>
+          <div class="v num">$3,680</div>
+          <div class="d">18 categorías · <b class="dn">+4%</b> vs julio</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Sin repartir</div>
+          <div class="v num teal">$0</div>
+          <div class="d">Tu presupuesto cuadra</div>
+        </div>
+        <div class="kpi">
+          <div class="k">A la deuda este mes</div>
+          <div class="v num">$1,650</div>
+          <div class="d">Fecha de libertad: <b class="up">mar 2028</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="chq-lbl">Tus cheques de agosto</div>
+      <div class="chqs">
+        <div class="chq done">
+          <div class="k">Cheque 1 · 20 jul</div>
+          <div class="v num">$0</div>
+          <div class="d">Repartido y cerrado</div>
+        </div>
+        <div class="chq now">
+          <div class="k">Cheque 2 · 3 ago</div>
+          <div class="v num">$65</div>
+          <div class="d">Te queda libre</div>
+        </div>
+        <div class="chq extra">
+          <div class="k">Extra · 17 ago</div>
+          <div class="v num">$1,200</div>
+          <div class="d">Tercer cheque</div>
+        </div>
+      </div>
+      <div class="chq-foot">Este mes te caen <b>3 cheques</b>. El extra no se reparte en categorías: va completo a Capital One.</div>
+    </div>
+  </div>
+
+  <!-- ====== LIENZO ====== -->
+  <div class="canvas">
+
+    <!-- columna principal -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="ch">
+          <div class="ico">$</div>
+          <h3>Cómo va el reparto</h3>
+          <div class="seg"><div>Semana</div><div class="on">Cheque</div><div>Mes</div></div>
+        </div>
+
+        <div class="lbl" style="margin-top:2px">Planeado vs. gastado por semana</div>
+        <div class="chart">
+          <div class="col">
+            <div class="stack"><div class="sb" style="height:34%;background:var(--carbon-3)"></div><div class="sb" style="height:30%;background:var(--teal)"></div></div>
+            <div class="lb">Sem 1</div>
+          </div>
+          <div class="col">
+            <div class="stack"><div class="sb" style="height:30%;background:var(--carbon-3)"></div><div class="sb" style="height:34%;background:var(--teal)"></div></div>
+            <div class="lb">Sem 2</div>
+          </div>
+          <div class="col on">
+            <div class="stack"><div class="sb" style="height:26%;background:var(--carbon-3)"></div><div class="sb" style="height:44%;background:var(--teal)"></div></div>
+            <div class="lb">Sem 3</div>
+          </div>
+          <div class="col">
+            <div class="stack"><div class="sb" style="height:58%;background:var(--gris);border:1px dashed var(--linea)"></div></div>
+            <div class="lb">Sem 4</div>
+          </div>
+          <div class="col">
+            <div class="stack"><div class="sb" style="height:34%;background:var(--gris);border:1px dashed var(--linea)"></div></div>
+            <div class="lb">Sem 5</div>
+          </div>
+        </div>
+        <div class="leg">
+          <span><i style="background:var(--teal)"></i> Gastado</span>
+          <span><i style="background:var(--carbon-3)"></i> Planeado</span>
+          <span><i style="background:var(--gris);border:1px dashed var(--linea)"></i> Por venir</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <div class="ico">↓</div>
+          <h3>Salir de deudas</h3>
+          <div class="r">Marzo 2028</div>
+        </div>
+        <div class="kv"><span class="k">Capital One · <b style="color:var(--teal-osc)">enfoque</b></span><span class="v num">$1,240</span></div>
+        <div class="kv"><span class="k">Préstamo del carro · mínimo</span><span class="v num">$8,900</span></div>
+        <div class="kv"><span class="k">Préstamo estudiantil · mínimo</span><span class="v num">$8,260</span></div>
+        <div class="kv"><span class="k" style="color:var(--teal-osc);font-weight:600">Si mandas +$150 al mes</span><span class="v" style="color:var(--teal-osc)">Sales en oct 2027</span></div>
+      </div>
+    </div>
+
+    <!-- columna media -->
+    <div class="c3" style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="ch"><div class="ico">⇅</div><h3 style="font-size:17px">Movimientos</h3></div>
+        <div class="mov"><div class="dot">↓</div><div class="m"><div class="t">Cheque de nómina</div><div class="s">Ingreso · 3 ago</div></div><div class="a in num">+$1,240</div></div>
+        <div class="mov"><div class="dot">⌂</div><div class="m"><div class="t">Renta</div><div class="s">Vivienda · 3 ago</div></div><div class="a num">$900</div></div>
+        <div class="mov"><div class="dot">✦</div><div class="m"><div class="t">Diezmo</div><div class="s">Mayordomía · 3 ago</div></div><div class="a num">$124</div></div>
+        <div class="mov"><div class="dot">⚡</div><div class="m"><div class="t">PSE&amp;G</div><div class="s">Servicios · 4 ago</div></div><div class="a num">$85</div></div>
+        <div class="mov"><div class="dot">☰</div><div class="m"><div class="t">Supermercado</div><div class="s">Comida · 4 ago</div></div><div class="a num">$62</div></div>
+        <button class="ghost">Ver todos</button>
+      </div>
+
+      <div class="prem">
+        <div class="star">★</div>
+        <h4>Conecta tu banco</h4>
+        <p>La app trae tus gastos y tú solo los mandas a su sobre. Incluye avisos al teléfono y modo pareja.</p>
+        <button class="cta">Hazte Premium</button>
+        <div class="price">$8 al mes · o $79 al año</div>
+      </div>
+    </div>
+
+    <!-- columna derecha: fondos de reserva -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="ch" style="margin-bottom:6px"><div class="ico">◍</div><h3 style="font-size:17px">Fondos de reserva</h3></div>
+        <div class="goal">
+          <div class="g-top"><div class="t">Viaje al país</div><div class="w">53%</div></div>
+          <div class="when">Diciembre · faltan <b>4 meses</b></div>
+          <div class="bar"><i style="width:53%"></i></div>
+          <div class="fig"><b class="num">$840</b><span class="num">de $1,600</span></div>
+        </div>
+        <div class="goal">
+          <div class="g-top"><div class="t">Llantas</div><div class="w">35%</div></div>
+          <div class="when">Octubre · faltan <b>2 meses</b></div>
+          <div class="bar"><i style="width:35%"></i></div>
+          <div class="fig"><b class="num">$210</b><span class="num">de $600</span></div>
+        </div>
+        <div class="goal">
+          <div class="g-top"><div class="t">Navidad</div><div class="w">18%</div></div>
+          <div class="when">Diciembre · <b>$95 por cheque</b></div>
+          <div class="bar"><i style="width:18%"></i></div>
+          <div class="fig"><b class="num">$144</b><span class="num">de $800</span></div>
+        </div>
+        <button class="ghost" style="margin-top:14px">Agregar un fondo</button>
+      </div>
+
+      <div class="card">
+        <div class="ch" style="margin-bottom:13px"><div class="ico">◌</div><h3 style="font-size:17px">Tu coach</h3></div>
+        <div class="coach">
+          <div class="av">JF</div>
+          <div>
+            <div class="t">Iván revisó tu mes</div>
+            <div class="s">Dejó 2 notas · hace 3 días</div>
+          </div>
+        </div>
+        <button class="ghost" style="margin-top:13px">Leer las notas</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  <b>Lo que se tomó de cada referencia:</b>
+  <ul>
+    <li><b>De la primera:</b> la carcasa carbón, las tarjetas blancas sobre gris claro, el control segmentado, la columna de movimientos y el bloque oscuro de premium.</li>
+    <li><b>De la segunda:</b> la banda superior con cuatro indicadores y su comparación contra el mes pasado, y la columna derecha de metas con fecha objetivo y barra de progreso — que aquí son tus fondos de reserva.</li>
+    <li><b>Lo que se fue:</b> el degradado morado, las tarjetas de crédito como héroe y las caritas en las transacciones. En su lugar: tus cheques del mes en la banda, categorías en los movimientos, y el bloque de coach.</li>
+    <li><b>La gráfica ahora informa:</b> planeado vs. gastado por semana, con las semanas por venir en punteado. La referencia tenía un eje de 2015 a 2023 rotulado "1 semana".</li>
+  </ul>
+</div>
+
+</body>
+</html>

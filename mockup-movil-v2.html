@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Móvil v2 — App de Presupuesto · Jubileo Financiero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carbon:#1C1E1F; --carbon-2:#2A2D2E; --carbon-3:#3A3E3F;
+    --gris:#F2F3F1; --blanco:#FFFFFF;
+    --teal:#12C2A0; --teal-osc:#0A7A64; --ambar:#E8A33D; --rojo:#D9503F;
+    --texto:#1C1E1F; --texto-2:#6B7175; --linea:#E2E4E1;
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--carbon);color:var(--texto);padding:30px 16px 60px;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  .doc{max-width:1180px;margin:0 auto 34px;color:#fff}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .doc h1{font-family:var(--serif);font-size:clamp(28px,5vw,42px);font-weight:400;margin:9px 0 11px;line-height:1.05}
+  .doc p{color:#9AA09E;max-width:66ch;font-size:14.5px;line-height:1.6}
+  .doc p b{color:var(--teal);font-weight:600}
+
+  .grid{max-width:1180px;margin:0 auto;display:grid;gap:44px 34px;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+  .wrap{display:flex;flex-direction:column;gap:14px}
+  .lab{color:#fff;display:flex;align-items:baseline;gap:10px}
+  .lab b{font-family:var(--serif);font-size:21px;font-weight:400}
+  .lab span{font-size:12px;color:#8A908F}
+  .note{font-size:12.5px;color:#8A908F;line-height:1.55;border-left:2px solid var(--carbon-2);padding-left:12px}
+
+  .phone{width:100%;max-width:352px;background:var(--gris);border-radius:36px;border:9px solid #0E0F10;
+    overflow:hidden;box-shadow:0 26px 50px -18px rgba(0,0,0,.7);display:flex;flex-direction:column;height:706px;position:relative}
+  .sb{background:var(--gris);padding:11px 22px 3px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:600}
+  .sb.dark{background:transparent;color:#fff}
+
+  /* ---------- cabecera clara ---------- */
+  .hd{padding:8px 18px 0;display:flex;align-items:center;gap:11px}
+  .hd .av{width:36px;height:36px;border-radius:50%;background:var(--carbon);color:var(--teal);
+    display:grid;place-items:center;font-family:var(--serif);font-size:15px}
+  .hd .m{flex:1}
+  .hd .t{font-family:var(--serif);font-size:20px;line-height:1.1}
+  .hd .s{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-2);font-weight:600;margin-top:2px}
+  .hd .bell{width:34px;height:34px;border-radius:50%;background:var(--blanco);border:1px solid var(--linea);
+    display:grid;place-items:center;font-size:13px;color:var(--texto-2);position:relative}
+  .hd .bell i{position:absolute;top:8px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+
+  .body{flex:1;overflow-y:auto;padding:14px 16px 96px}
+  .body::-webkit-scrollbar{width:0}
+
+  /* ---------- tarjeta héroe del cheque ---------- */
+  .hero{background:linear-gradient(152deg,#0F7F69 0%,#12C2A0 100%);border-radius:19px;padding:17px 18px 16px;color:#04291F;
+    position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;bottom:-56px;width:150px;height:150px;border-radius:50%;
+    background:rgba(255,255,255,.12)}
+  .hero .k{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:rgba(4,41,31,.62)}
+  .hero .big{font-family:var(--serif);font-size:52px;line-height:1;margin:6px 0 3px}
+  .hero .d{font-size:12px;color:rgba(4,41,31,.75)}
+  .hero .strip{display:flex;gap:5px;margin-top:14px}
+  .hero .strip div{flex:1;background:rgba(255,255,255,.28);border-radius:8px;padding:6px 5px;text-align:center}
+  .hero .strip div .n{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;opacity:.72}
+  .hero .strip div .v{font-size:12px;font-weight:700;margin-top:1px}
+  .hero .strip div.now{background:rgba(255,255,255,.94)}
+  .hero .strip div.ext{background:rgba(28,30,31,.16)}
+
+  /* chips de acción rápida */
+  .chips{display:flex;gap:7px;margin:13px 0 4px}
+  .chip{flex:1;background:var(--blanco);border:1px solid var(--linea);border-radius:99px;padding:9px 4px;
+    text-align:center;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
+  .chip .i{width:17px;height:17px;border-radius:50%;background:var(--teal);color:#06322A;display:grid;place-items:center;
+    font-size:10px;font-weight:700;flex-shrink:0}
+
+  .sect{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-2);font-weight:600;
+    margin:20px 0 9px;display:flex;justify-content:space-between;align-items:center}
+  .sect span{letter-spacing:0;text-transform:none;font-size:11.5px;font-weight:500;color:var(--teal-osc)}
+
+  .card{background:var(--blanco);border:1px solid var(--linea);border-radius:13px;padding:13px 14px}
+  .stk{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;gap:11px}
+  .row .m{flex:1;min-width:0}
+  .row .t{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .s{font-size:11.5px;color:var(--texto-2);margin-top:2px}
+  .row .a{font-size:15px;font-weight:600;white-space:nowrap}
+  .row .a.in{color:var(--teal-osc)}
+  .chk{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--linea);flex-shrink:0}
+  .chk.on{background:var(--teal);border-color:var(--teal);position:relative}
+  .chk.on::after{content:"";position:absolute;left:6px;top:3px;width:6px;height:10px;
+    border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(40deg)}
+  .dotx{width:26px;height:26px;border-radius:8px;background:var(--gris);border:1px solid var(--linea);
+    display:grid;place-items:center;font-size:12px;color:var(--texto-2);flex-shrink:0}
+
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 6px;border-radius:5px;background:rgba(18,194,160,.14);color:var(--teal-osc)}
+
+  .env{background:var(--blanco);border:1px solid var(--linea);border-radius:13px;padding:12px 14px}
+  .env-t{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .env-t .t{font-size:14px;font-weight:500}
+  .env-t .v{font-size:12px;color:var(--texto-2)}
+  .env-t .v b{color:var(--texto);font-size:14px;font-weight:600}
+  .bar{height:6px;border-radius:99px;background:var(--gris);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px}
+
+  /* selector de mes con barras */
+  .msel{background:var(--blanco);border:1px solid var(--linea);border-radius:15px;padding:15px 14px 12px}
+  .msel .top{text-align:center;margin-bottom:14px}
+  .msel .top .v{font-family:var(--serif);font-size:38px;line-height:1}
+  .msel .top .l{font-size:11.5px;color:var(--texto-2);margin-top:3px}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:112px}
+  .bars .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
+  .bars .b{width:100%;max-width:24px;background:var(--gris);border-radius:7px;position:relative;height:100%}
+  .bars .b i{position:absolute;left:0;bottom:0;width:100%;border-radius:7px;background:var(--linea)}
+  .bars .c.on .b i{background:linear-gradient(180deg,#12C2A0,#0F7F69)}
+  .bars .lb{font-size:10.5px;color:var(--texto-2)}
+  .bars .c.on .lb{color:var(--texto);font-weight:700}
+  .msel .seg{display:flex;gap:2px;background:var(--gris);border-radius:99px;padding:3px;margin-top:14px}
+  .msel .seg div{flex:1;text-align:center;font-size:11.5px;font-weight:500;color:var(--texto-2);padding:6px;border-radius:99px}
+  .msel .seg div.on{background:var(--blanco);color:var(--texto);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+
+  /* metas */
+  .goal{padding:11px 0;border-bottom:1px solid var(--linea)}
+  .goal:last-child{border-bottom:0;padding-bottom:0}
+  .goal .g{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+  .goal .t{font-size:13.5px;font-weight:600}
+  .goal .w{font-size:11px;color:var(--texto-2)}
+  .goal .when{font-size:11px;color:var(--texto-2);margin-bottom:7px}
+  .goal .when b{color:var(--teal-osc);font-weight:600}
+
+  /* ---------- navegación flotante ---------- */
+  .fnav{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:5px;
+    background:var(--carbon);border-radius:99px;padding:6px;box-shadow:0 12px 28px rgba(0,0,0,.38)}
+  .fnav .n{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#787E7D;font-size:16px}
+  .fnav .n.on{background:var(--teal);color:#06322A}
+
+  /* ---------- pantalla de aviso ---------- */
+  .lock{background:linear-gradient(170deg,#1C1E1F 0%,#31302B 58%,#4A4238 100%);flex:1;
+    padding:0 15px 22px;display:flex;flex-direction:column;color:#fff}
+  .lock .tm{text-align:center;margin:26px 0 24px}
+  .lock .tm .h{font-family:var(--serif);font-size:60px;line-height:1}
+  .lock .tm .d{font-size:13px;color:#C9CCCA;margin-top:4px}
+  .notif{background:rgba(255,255,255,.95);color:var(--texto);border-radius:17px;padding:13px 14px;
+    box-shadow:0 10px 26px rgba(0,0,0,.3)}
+  .nh{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .nh .ico{width:19px;height:19px;border-radius:5px;background:var(--carbon);color:var(--teal);
+    display:grid;place-items:center;font-family:var(--serif);font-size:12px}
+  .nh .nm{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;flex:1}
+  .nh .tt{font-size:11px;color:var(--texto-2)}
+  .notif h4{font-size:15px;font-weight:600;margin-bottom:7px}
+  .notif ul{list-style:none;font-size:13px;line-height:1.62}
+  .notif li{display:flex;justify-content:space-between;gap:10px}
+  .notif li span:first-child{color:#3E4342}
+  .notif li b{font-weight:600}
+  .notif .dv{height:1px;background:var(--linea);margin:8px 0}
+  .notif .ft{font-size:12px;color:var(--texto-2);margin-top:8px;display:flex;justify-content:space-between}
+  .notif .ft b{color:var(--teal-osc);font-weight:700}
+  .hint{margin-top:auto;text-align:center;font-size:11.5px;color:#9AA09E;line-height:1.5}
+
+  @media (max-width:400px){.phone{height:648px}.hero .big{font-size:46px}}
+</style>
+</head>
+<body>
+
+<div class="doc">
+  <div class="eyebrow">Móvil v2 · para Claude Code</div>
+  <h1>App de presupuesto — versión de teléfono</h1>
+  <p>Ajustada a tu referencia: <b>navegación flotante en píldora oscura</b>, <b>chips de acción rápida</b> bajo el héroe, y el <b>selector de periodo con barras</b> más el control segmentado. Fondo claro, un solo número grande por pantalla.</p>
+</div>
+
+<div class="grid">
+
+  <!-- ===== 1 · MI SEMANA ===== -->
+  <div class="wrap">
+    <div class="lab"><b>1 · Mi semana</b><span>inicio</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>▮▮▮ ⌁ 84%</span></div>
+      <div class="hd">
+        <div class="av">IV</div>
+        <div class="m">
+          <div class="t">Buenos días, Iván</div>
+          <div class="s">Cuenta Premium</div>
+        </div>
+        <div class="bell">◔<i></i></div>
+      </div>
+
+      <div class="body">
+        <div class="hero">
+          <div class="k">Te queda esta semana</div>
+          <div class="big num">$65</div>
+          <div class="d">Entró $1,240 el lunes 3 de agosto</div>
+          <div class="strip">
+            <div><div class="n">Chq 1</div><div class="v num">$0</div></div>
+            <div class="now"><div class="n">Chq 2</div><div class="v num">$65</div></div>
+            <div class="ext"><div class="n">Extra</div><div class="v num">$1,200</div></div>
+          </div>
+        </div>
+
+        <div class="chips">
+          <div class="chip"><span class="i">+</span>Anotar</div>
+          <div class="chip"><span class="i">✓</span>Pagué</div>
+          <div class="chip"><span class="i">◷</span>Semana</div>
+        </div>
+
+        <div class="sect">Pagos de esta semana <span>2 de 4 hechos</span></div>
+        <div class="stk">
+          <div class="card row">
+            <div class="chk on"></div>
+            <div class="m"><div class="t">Renta</div><div class="s">Venció el 3 · pagado</div></div>
+            <div class="a num" style="color:var(--texto-2);text-decoration:line-through">$900</div>
+          </div>
+          <div class="card row">
+            <div class="chk on"></div>
+            <div class="m"><div class="t">Luz — PSE&amp;G</div><div class="s">Venció el 4 · pagado</div></div>
+            <div class="a num" style="color:var(--texto-2);text-decoration:line-through">$85</div>
+          </div>
+          <div class="card row">
+            <div class="chk"></div>
+            <div class="m"><div class="t">Capital One</div><div class="s">Vence el 9 · <span class="tag">enfoque</span></div></div>
+            <div class="a num">$150</div>
+          </div>
+          <div class="card row">
+            <div class="chk"></div>
+            <div class="m"><div class="t">Remesa a la familia</div><div class="s">Vence el 10</div></div>
+            <div class="a num">$200</div>
+          </div>
+        </div>
+
+        <div class="sect">Sobres de la semana</div>
+        <div class="stk">
+          <div class="env">
+            <div class="env-t"><div class="t">Comida</div><div class="v"><b>$62</b> de $150</div></div>
+            <div class="bar"><i style="width:41%;background:var(--teal)"></i></div>
+          </div>
+          <div class="env">
+            <div class="env-t"><div class="t">Gasolina</div><div class="v"><b>$48</b> de $60</div></div>
+            <div class="bar"><i style="width:80%;background:var(--ambar)"></i></div>
+          </div>
+          <div class="env">
+            <div class="env-t"><div class="t">Personal</div><div class="v"><b>$40</b> de $40</div></div>
+            <div class="bar"><i style="width:100%;background:var(--rojo)"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fnav">
+        <div class="n on">◆</div><div class="n">▣</div><div class="n">↓</div><div class="n">◍</div>
+      </div>
+    </div>
+    <div class="note">Héroe turquesa con el número de la semana y el riel de cheques dentro. Los chips de acción están justo debajo, en la zona del pulgar. La navegación flota y no roba altura.</div>
+  </div>
+
+  <!-- ===== 2 · EL MES ===== -->
+  <div class="wrap">
+    <div class="lab"><b>2 · El mes</b><span>base cero</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>▮▮▮ ⌁ 84%</span></div>
+      <div class="hd">
+        <div class="av">◀</div>
+        <div class="m">
+          <div class="t">Agosto 2026</div>
+          <div class="s">Cada dos semanas · 3 cheques</div>
+        </div>
+        <div class="bell">✎</div>
+      </div>
+
+      <div class="body">
+        <div class="msel">
+          <div class="top">
+            <div class="v num" style="color:var(--teal-osc)">$0</div>
+            <div class="l">Sin repartir — tu presupuesto cuadra</div>
+          </div>
+          <div class="bars">
+            <div class="c"><div class="b"><i style="height:28%"></i></div><div class="lb">Mar</div></div>
+            <div class="c"><div class="b"><i style="height:44%"></i></div><div class="lb">Abr</div></div>
+            <div class="c"><div class="b"><i style="height:39%"></i></div><div class="lb">May</div></div>
+            <div class="c"><div class="b"><i style="height:52%"></i></div><div class="lb">Jun</div></div>
+            <div class="c"><div class="b"><i style="height:48%"></i></div><div class="lb">Jul</div></div>
+            <div class="c on"><div class="b"><i style="height:86%"></i></div><div class="lb">Ago</div></div>
+          </div>
+          <div class="seg"><div>Entra</div><div class="on">Sale</div><div>Sobró</div></div>
+        </div>
+
+        <div class="sect">Primero</div>
+        <div class="card row">
+          <div class="dotx">✦</div>
+          <div class="m"><div class="t">Diezmo y ofrenda</div><div class="s">10% · en los 2 cheques</div></div>
+          <div class="a num">$368</div>
+        </div>
+
+        <div class="sect">Gastos fijos <span>6 categorías</span></div>
+        <div class="stk">
+          <div class="card row">
+            <div class="dotx">⌂</div>
+            <div class="m"><div class="t">Renta</div><div class="s">Vence el 3 · Cheque 1</div></div>
+            <div class="a num">$900</div>
+          </div>
+          <div class="card row">
+            <div class="dotx">⚡</div>
+            <div class="m"><div class="t">Luz y agua</div><div class="s">Vence el 4 · Cheque 1</div></div>
+            <div class="a num">$130</div>
+          </div>
+          <div class="card row">
+            <div class="dotx">⛨</div>
+            <div class="m"><div class="t">Seguro del carro</div><div class="s">Vence el 18 · Cheque 2</div></div>
+            <div class="a num">$142</div>
+          </div>
+        </div>
+
+        <div class="sect">Fondos de reserva</div>
+        <div class="card">
+          <div class="goal">
+            <div class="g"><div class="t">Viaje al país</div><div class="w">53%</div></div>
+            <div class="when">Diciembre · <b>$190 por cheque</b></div>
+            <div class="bar"><i style="width:53%;background:var(--teal)"></i></div>
+          </div>
+          <div class="goal">
+            <div class="g"><div class="t">Llantas</div><div class="w">35%</div></div>
+            <div class="when">Octubre · <b>$98 por cheque</b></div>
+            <div class="bar"><i style="width:35%;background:var(--teal)"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fnav">
+        <div class="n">◆</div><div class="n on">▣</div><div class="n">↓</div><div class="n">◍</div>
+      </div>
+    </div>
+    <div class="note">El selector con barras viene de tu referencia, pero mide algo útil: entra, sale o sobró, mes por mes. Cada gasto fijo muestra su día de vencimiento y a qué cheque le toca.</div>
+  </div>
+
+  <!-- ===== 3 · DEUDAS ===== -->
+  <div class="wrap">
+    <div class="lab"><b>3 · Deudas</b><span>bola de nieve</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>▮▮▮ ⌁ 84%</span></div>
+      <div class="hd">
+        <div class="av">↓</div>
+        <div class="m">
+          <div class="t">Salir de deudas</div>
+          <div class="s">Paso 2 · 3 de 5 pendientes</div>
+        </div>
+        <div class="bell">⋯</div>
+      </div>
+
+      <div class="body">
+        <div class="hero" style="background:linear-gradient(152deg,#2A2D2E 0%,#1C1E1F 100%);color:#fff">
+          <div class="k" style="color:#787E7D">Tu fecha de libertad</div>
+          <div class="big" style="font-size:40px">Marzo 2028</div>
+          <div class="d" style="color:var(--teal)">19 meses menos que hace un año</div>
+        </div>
+
+        <div class="card" style="margin-top:13px">
+          <div class="s" style="font-size:12.5px;color:var(--texto-2);margin-bottom:14px">
+            ¿Y si mandas un pago extra cada mes?
+          </div>
+          <div style="height:5px;background:var(--gris);border-radius:99px;position:relative;margin:20px 4px 16px">
+            <div style="position:absolute;left:0;top:0;height:100%;width:42%;background:var(--teal);border-radius:99px"></div>
+            <div style="position:absolute;left:42%;top:-26px;transform:translateX(-50%);font-size:13px;font-weight:700">+$150</div>
+            <div style="position:absolute;left:42%;top:50%;transform:translate(-50%,-50%);width:24px;height:24px;
+              border-radius:50%;background:#fff;border:2px solid var(--teal);box-shadow:0 2px 6px rgba(0,0,0,.16)"></div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--teal-osc)">Sales en octubre 2027 — 5 meses antes.</div>
+        </div>
+
+        <div class="sect">En orden de saldo <span>menor primero</span></div>
+        <div class="stk">
+          <div class="card">
+            <div class="row" style="margin-bottom:10px">
+              <div class="m">
+                <div class="t">Capital One <span class="tag">enfoque</span></div>
+                <div class="s">Mínimo $35 · pagas $150</div>
+              </div>
+              <div class="a num">$1,240</div>
+            </div>
+            <div class="bar"><i style="width:68%;background:var(--teal)"></i></div>
+          </div>
+          <div class="card row">
+            <div class="m"><div class="t">Préstamo del carro</div><div class="s">Solo el mínimo · $310</div></div>
+            <div class="a num">$8,900</div>
+          </div>
+          <div class="card row">
+            <div class="m"><div class="t">Préstamo estudiantil</div><div class="s">Solo el mínimo · $95</div></div>
+            <div class="a num">$8,260</div>
+          </div>
+        </div>
+
+        <div class="sect">Vale la pena revisar</div>
+        <div class="card">
+          <div class="t" style="font-size:14px;font-weight:600">Mandas $200 al mes en remesas</div>
+          <div class="s" style="font-size:12.5px;color:var(--texto-2);margin-top:5px;line-height:1.5">
+            mientras pagas 24.9% de interés en Capital One. Vale la pena verlo con calma.
+          </div>
+        </div>
+      </div>
+
+      <div class="fnav">
+        <div class="n">◆</div><div class="n">▣</div><div class="n on">↓</div><div class="n">◍</div>
+      </div>
+    </div>
+    <div class="note">Aquí el héroe es carbón en vez de turquesa: la fecha de libertad es la meta, no un saldo. El deslizador es la parte adictiva de toda la app.</div>
+  </div>
+
+  <!-- ===== 4 · EL AVISO ===== -->
+  <div class="wrap">
+    <div class="lab"><b>4 · El aviso</b><span>arranque de semana</span></div>
+    <div class="phone">
+      <div class="lock">
+        <div class="sb dark" style="padding:11px 8px 0"><span></span><span>▮▮▮ ⌁ 91%</span></div>
+        <div class="tm">
+          <div class="d">domingo, 2 de agosto</div>
+          <div class="h num">8:00</div>
+        </div>
+
+        <div class="notif">
+          <div class="nh"><div class="ico">J</div><div class="nm">Jubileo</div><div class="tt">ahora</div></div>
+          <h4>Tu semana empieza mañana</h4>
+          <ul><li><span>Entra el lunes</span><b class="num">$1,240</b></li></ul>
+          <div class="dv"></div>
+          <ul>
+            <li><span>Renta · vence el 3</span><b class="num">$900</b></li>
+            <li><span>Luz · vence el 4</span><b class="num">$85</b></li>
+            <li><span>Capital One · el 9</span><b class="num">$150</b></li>
+          </ul>
+          <div class="dv"></div>
+          <ul><li><span>Comida, gasolina, personal</span><b class="num">$250</b></li></ul>
+          <div class="ft"><span>Te queda libre</span><b class="num">$65</b></div>
+        </div>
+
+        <div class="notif" style="margin-top:11px">
+          <div class="nh"><div class="ico">J</div><div class="nm">Jubileo</div><div class="tt">dom pasado</div></div>
+          <h4>¿Cerramos la semana?</h4>
+          <div class="ft" style="margin-top:2px"><span>3 preguntas · 30 segundos</span><b>Abrir</b></div>
+        </div>
+
+        <div class="hint">El usuario ya sabe su semana sin abrir la app.<br>Entra solo a verificar.</div>
+      </div>
+    </div>
+    <div class="note">La pantalla más importante del producto. Canal elegible — notificación, correo o SMS/WhatsApp — y hora elegible. En modo pareja llega a los dos con el mismo número.</div>
+  </div>
+
+</div>
+</body>
+</html>
