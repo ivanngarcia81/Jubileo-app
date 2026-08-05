@@ -1,0 +1,63 @@
+# ---------- Secretos: lo más importante de este archivo ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ---------- Dependencias ----------
+node_modules/
+.pnpm-store/
+.yarn/
+jspm_packages/
+
+# ---------- Compilados ----------
+dist/
+build/
+out/
+.next/
+.output/
+*.tsbuildinfo
+
+# ---------- Caché de herramientas ----------
+.vite/
+.cache/
+.parcel-cache/
+.eslintcache
+coverage/
+.nyc_output/
+
+# ---------- Tauri (fase 2) ----------
+src-tauri/target/
+src-tauri/gen/
+
+# ---------- Base de datos local ----------
+*.sqlite
+*.sqlite3
+*.db
+supabase/.branches/
+supabase/.temp/
+
+# ---------- Mac ----------
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# ---------- Editores ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# ---------- Registros y temporales ----------
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp/
+temp/

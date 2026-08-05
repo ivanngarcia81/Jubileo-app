@@ -1,0 +1,303 @@
+# SPEC — App de Presupuesto · Jubileo Financiero
+
+> Este archivo es el contrato del proyecto. Léelo completo antes de escribir código.
+> Si algo aquí choca con una petición del chat, pregunta antes de decidir.
+
+---
+
+## 1. Qué estamos construyendo
+
+Una app de presupuesto personal en español, con método de presupuesto base cero, para el público de Jubileo Financiero (coaching financiero en español, principalmente comunidad latina en Estados Unidos).
+
+Se vende como membresía desde `jubileofinanciero.com`, con nivel gratis y nivel premium.
+
+**El diferenciador central, y la razón de existir de la app:**
+
+> El mes es siempre el marco del presupuesto. Los subperiodos de ejecución se ajustan a la frecuencia de pago real del usuario.
+
+Ninguna app grande hace esto bien. Todo el diseño gira alrededor de esta idea.
+
+**A quién le hablamos.** Persona que cobra por cheque, muchas veces en efectivo o con ingreso variable, que se queda corta la última semana del mes, que manda dinero a su familia en otro país, y que está pagando deudas. Puede tener 50 años y poca paciencia con software. La app tiene que ser obvia.
+
+---
+
+## 2. Principios de producto
+
+1. **La notificación es el producto; la app es el respaldo.** El usuario debe poder saber su semana sin abrir nada. Abre la app solo a verificar lo que entró y lo que gastó.
+2. **Una pantalla, un número.** Cada vista tiene un dato principal grande y todo lo demás en segundo plano.
+3. **Presupuestar es un acto, no un reporte.** El usuario asigna; la app nunca decide por él. Ver el punto sobre Plaid en la sección 11.
+4. **Funciona sin banco conectado.** La captura manual es el modo por defecto, no un modo degradado.
+5. **Español primero.** Toda la interfaz, los correos y los avisos nacen en español. El texto en español ocupa ~20% más que en inglés: los componentes deben aguantarlo sin cortar palabras.
+
+---
+
+## 3. No-objetivos y restricciones legales
+
+Estas reglas no son negociables.
+
+- **No usar marcas de Ramsey Solutions** en ninguna parte del producto: nada de "Baby Steps", "Paso de bebé", "EveryDollar", "Financial Peace", "Total Money Makeover", "Debt Snowball" como nombre de función. Describir el método en genérico: *presupuesto base cero*, *pagar la deuda más pequeña primero*, *fondo de emergencia*, *pasos de libertad financiera*.
+- **No clonar la interfaz de EveryDollar** ni copiar sus textos, nombres de categorías ni estructura de pantallas.
+- **No dar consejo de inversión, legal ni de impuestos** dentro de la app. La app organiza dinero; no recomienda productos financieros.
+- **No es una app de pagos.** No mueve dinero, no hace transferencias, no paga cuentas.
+- **No auto-categorizar sin confirmación.** Ver sección 11.
+- No hay chat, no hay red social, no hay foro. No hay gamificación con puntos ni insignias, salvo el reto de 30 días (fase 4).
+
+---
+
+## 4. Arquitectura
+
+### Fase 1 — Web app instalable (PWA)
+
+- Un solo frontend responsivo que sirve escritorio y teléfono.
+- Servido en el subdominio `app.jubileofinanciero.com`. El sitio de marketing sigue en su propio repo, intacto.
+- Instalable en iPhone y Android desde el navegador ("Agregar a la pantalla de inicio"). El onboarding debe empujar esto: sin instalación no hay notificaciones push en iOS.
+- Datos en el servidor, no locales. Escritorio y teléfono ven exactamente lo mismo.
+
+### Fase 2 — Envoltura Tauri para App Store
+
+- Tauri 2, apuntando a iOS y iPadOS, reutilizando el mismo frontend.
+- **Regla dura:** dentro de la app nativa no hay registro, ni precios, ni botón de comprar, ni enlaces a pagar. Solo "Iniciar sesión". La cuenta y el pago se hacen en la web. Esto es para no caer en la obligación de compra dentro de la app de Apple.
+
+### Stack propuesto
+
+- **Frontend:** React + TypeScript + Vite. Tailwind con los tokens de `/design/design-tokens.css`.
+- **Backend y base de datos:** Postgres administrado con autenticación incluida (Supabase o equivalente). Autenticación por correo con enlace mágico o contraseña; nada de contraseñas propias hechas a mano.
+- **Trabajos programados:** un cron diario que dispara los avisos (sección 9).
+- **Pagos:** Stripe Checkout + Customer Portal + webhooks.
+- **Caché local:** IndexedDB para lectura sin señal y captura de gastos en cola. Sincroniza al recuperar conexión. La verdad vive en el servidor.
+
+### Reglas técnicas
+
+- **Todo el dinero en centavos enteros.** Nunca flotantes. Formateo solo en la capa de presentación.
+- Fechas guardadas en UTC; toda la lógica de periodos y avisos corre en la zona horaria del usuario, que se guarda en su perfil.
+- Un solo lugar en el código donde se genera el calendario de periodos. Con pruebas. Ver sección 6.
+- Accesibilidad: 17px base en móvil, contraste mínimo AA, objetivos tocables de 44px, ningún gesto oculto sin botón equivalente.
+
+---
+
+## 5. Modelo de datos
+
+Nombres orientativos; ajusta a la convención del proyecto.
+
+**usuarios**
+- id, correo, nombre, zona_horaria, nivel (`gratis` | `premium`), stripe_customer_id
+- frecuencia_pago: `semanal` | `cada_dos_semanas` | `dos_veces_al_mes` | `mensual` | `variable`
+- fecha_ancla (fecha de un cheque conocido, base para generar los periodos)
+- dias_pago (para `dos_veces_al_mes`, ej. `[1, 15]`)
+- ingreso_esperado_cents (opcional; nulo si el ingreso es variable)
+- creado_en
+
+**meses**
+- id, usuario_id, anio, mes, estado (`borrador` | `activo` | `cerrado`)
+- Único por (usuario_id, anio, mes)
+
+**periodos**
+- id, usuario_id, mes_id, numero, fecha_inicio, fecha_fin, fecha_pago
+- ingreso_esperado_cents, ingreso_real_cents (nulo hasta que el usuario confirma)
+- es_extra (booleano: tercer cheque en meses de 3)
+- estado (`futuro` | `activo` | `cerrado`)
+
+**categorias**
+- id, usuario_id, nombre, orden, activa
+- grupo: `mayordomia` | `fijo` | `variable` | `deuda` | `fondo`
+- es_fija (booleano: monto igual todos los meses)
+- dia_vencimiento (1–31, nulo para variables) — **campo obligatorio para las fijas: sin él el aviso semanal pierde la mitad de su valor**
+
+**lineas_presupuesto**
+- id, mes_id, categoria_id, monto_mensual_cents
+
+**asignaciones** ← *la capa clave del producto*
+- id, linea_presupuesto_id, periodo_id, monto_cents
+- **Invariante:** para cada línea, la suma de sus asignaciones debe igualar `monto_mensual_cents`. Si no cuadra, la interfaz lo marca y el mes no se puede cerrar.
+
+**transacciones**
+- id, usuario_id, periodo_id, categoria_id (nulo si está pendiente), fecha, monto_cents
+- tipo (`gasto` | `ingreso`), descripcion, comercio
+- origen (`manual` | `plaid`), estado (`pendiente` | `asignada`)
+
+**deudas**
+- id, usuario_id, nombre, saldo_cents, pago_minimo_cents, tasa_interes, orden
+- es_enfoque (booleano: solo una a la vez), pagada_en
+
+**fondos_reserva**
+- id, usuario_id, nombre, meta_cents, acumulado_cents, fecha_objetivo
+- Derivado, no guardado: cuánto apartar por periodo para llegar a la meta.
+
+**preferencias_aviso**
+- id, usuario_id, canal (`push` | `correo` | `sms`), dia_semana, hora_local, activo
+- Gratis: solo `correo`. Premium: los tres, con hora elegible.
+
+**hogares** *(fase 4, modo pareja)*
+- id, nombre; **miembros_hogar**: hogar_id, usuario_id, rol. Los datos del presupuesto cuelgan del hogar, no del usuario. Diseña las llaves con esto en mente desde el día uno para no migrar después.
+
+---
+
+## 6. La lógica de periodos — el corazón del proyecto
+
+Esta es la parte donde se gana o se pierde el producto. Aíslala en un módulo puro, sin acceso a base de datos, con pruebas unitarias exhaustivas.
+
+**Entrada:** frecuencia de pago, fecha ancla, días de pago, y el mes a generar.
+**Salida:** lista de periodos con fecha de inicio, fecha de fin y fecha de pago.
+
+### Reglas por frecuencia
+
+- **`semanal`** — Semanas del mes; pueden ser 4 o 5. Nunca asumir 4: la quinta semana es exactamente donde el usuario truena. La semana empieza el día que el usuario cobra.
+- **`dos_veces_al_mes`** — 24 al año, siempre 2 por mes, en los días configurados (típico: 1 y 15, o 15 y último). Los periodos caen limpios dentro del mes.
+- **`cada_dos_semanas`** — 26 al año, cada 14 días desde la fecha ancla. Dos meses del año traen **3 cheques**. Los periodos cruzan el límite del mes.
+- **`mensual`** — Un solo periodo que es el mes.
+- **`variable`** — Periodos semanales. `ingreso_esperado_cents` queda nulo; el usuario captura lo que entró al arrancar el periodo y ahí se reparte. **Nunca se presupuesta ingreso que no ha entrado.**
+
+### Reglas que cruzan meses
+
+1. **Un cheque se asigna al mes que financia, no al mes en que cae.** Un cheque del 28 de agosto que paga cuentas de septiembre pertenece a septiembre. Por defecto asigna al mes de la fecha de pago; el usuario puede moverlo con un control explícito.
+2. **Meses de 3 cheques:** la app los detecta sola y lo dice en la interfaz. El tercer cheque se marca `es_extra` y **no se reparte entre categorías**. Sugerencia por defecto: va completo a la deuda de enfoque, o al fondo de emergencia si no hay deudas.
+3. **Cambiar de frecuencia no rehace el presupuesto.** Es un solo control en ajustes: se regeneran los periodos y se re-reparten las asignaciones proporcionalmente. Los montos mensuales no se tocan. Esto debe tener prueba.
+
+### Pruebas mínimas exigidas
+
+- Un mes con 5 semanas en modo `semanal`.
+- Los dos meses de 3 cheques del año en modo `cada_dos_semanas`, con la fecha ancla en distintos días de la semana.
+- Febrero, incluyendo año bisiesto.
+- Un cheque que cae el 28–31 y financia el mes siguiente.
+- Cambio de `semanal` a `cada_dos_semanas` con presupuesto ya armado: los montos mensuales quedan idénticos.
+- Un mes que cierra con la invariante de asignaciones violada: debe rechazarse.
+
+---
+
+## 7. Pantallas
+
+El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, espaciados y estructura. No rediseñes.**
+
+- `/design/escritorio.html` — panel de computadora
+- `/design/movil.html` — cuatro pantallas de teléfono
+- `/design/design-tokens.css` — variables de color y tipografía
+
+### Móvil
+
+1. **Mi semana** *(inicio)* — Héroe turquesa con el dinero que queda en el periodo y el riel de cheques dentro. Debajo, chips de acción rápida: *Anotar · Pagué · Semana*. Luego los pagos del periodo con casilla de marcado, y los sobres variables con barra de progreso.
+2. **El mes** — Base cero. Selector de mes con barras (entra / sale / sobró). Primero mayordomía, luego fijos con su día de vencimiento y su cheque asignado, luego fondos de reserva.
+3. **Deudas** — Héroe carbón con la fecha de libertad. Deslizador de "¿y si mandas un pago extra?" que recalcula la fecha en vivo. Lista en orden de saldo, menor primero, con la de enfoque marcada.
+4. **El aviso** — No es una pantalla de la app: es la notificación. Ver sección 9.
+
+Navegación flotante en píldora oscura, cuatro destinos: Semana · Mes · Deudas · Metas.
+
+### Escritorio
+
+Barra carbón arriba. Banda oscura con cuatro indicadores (entra, sale, sin repartir, a la deuda) con comparación contra el mes anterior, y los cheques del mes a la derecha. Lienzo claro de tres columnas: reparto y gráfica de planeado vs. gastado; movimientos y bloque de premium; fondos de reserva y bloque del coach.
+
+### Onboarding — 6 pasos, nada más
+
+1. ¿Cada cuánto te pagan? *(esto define la frecuencia y la fecha ancla)*
+2. ¿Cuánto entra, más o menos? *(o "es variable")*
+3. Tus gastos fijos, con día de vencimiento
+4. Tus deudas, con saldo y mínimo
+5. ¿Cuándo quieres el aviso, y por dónde?
+6. Instala la app en tu pantalla de inicio *(paso destacado, con instrucciones distintas para iPhone y Android)*
+
+Al terminar, el usuario ve su primera semana ya armada. Nunca una pantalla vacía.
+
+---
+
+## 8. Estados vacíos y errores
+
+- Pantalla vacía = invitación a actuar, con el botón que resuelve. Nunca un dibujo con "no hay nada aquí".
+- Los errores dicen qué pasó y cómo arreglarlo, sin disculparse y sin jerga.
+- Si el usuario se pasó de un sobre, la app lo dice sin regañar: *"Te pasaste $12 en gasolina. ¿De dónde lo tomamos?"* con opciones concretas.
+
+---
+
+## 9. Los avisos
+
+**El aviso de arranque de periodo** es la función más importante del producto.
+
+Contenido, en este orden:
+1. Cuánto entra y qué día. Si el ingreso es variable, la pregunta es *"¿cuánto entró?"*.
+2. Las cuentas y deudas que vencen dentro del periodo, con su fecha. La de enfoque se señala como pago extra.
+3. Los montos de los sobres variables.
+4. Cuánto queda libre.
+
+**El aviso de cierre de periodo:** tres preguntas, treinta segundos. ¿Entró lo esperado? ¿Cuánto gastaste en los sobres variables? ¿Pagaste lo que faltaba?
+
+Implementación:
+- Cron diario que evalúa qué usuarios arrancan o cierran periodo y respeta hora local y canal elegido.
+- Canales: correo (todos), push web y SMS (premium). Push en iOS solo funciona si la app está instalada en la pantalla de inicio — detecta si no lo está y ofrece correo mientras tanto.
+- Registro de envíos para no duplicar. Idempotente por (usuario, periodo, tipo de aviso).
+- En modo pareja el aviso llega a los dos, con el mismo número.
+
+---
+
+## 10. Membresía
+
+**Gratis**
+- Presupuesto mensual base cero completo
+- Motor de subperiodos por frecuencia de pago *(el diferenciador va gratis: es lo que hace que la gente lo cuente)*
+- Sobres del periodo, captura manual de gastos
+- Deudas con fecha de libertad
+- Resumen semanal **por correo**
+- Historial: mes actual y el anterior
+
+**Premium — $8 al mes o $79 al año**
+- Aviso al teléfono (push y SMS), canal y hora elegibles
+- Banco conectado (fase 3)
+- Modo pareja (fase 4)
+- Planificador de remesas (fase 4)
+- Fondos de reserva ilimitados
+- Historial completo, comparar meses, tendencias
+- Simulador "¿qué pasa si?"
+- Exportar el presupuesto en PDF
+- Compartir con el coach
+
+**Reglas de negocio**
+- Premium incluye **2 cuentas bancarias conectadas**. Más cuentas requieren nivel superior o cargo adicional. Esto es por el costo de Plaid: se cobra por cuenta conectada, no por usuario.
+- El pago se hace en la web con Stripe. Los webhooks son la única fuente de verdad del nivel del usuario.
+- Al vencer premium, la cuenta baja a gratis sin borrar datos: el historial viejo queda visible en modo lectura.
+- Código de cortesía: premium gratis por 3 meses para clientes de coaching. Necesita tabla de códigos con vencimiento y un solo uso.
+
+---
+
+## 11. Plaid — fase 3, no antes
+
+Cómo se usa, y esto es filosófico, no técnico:
+
+- Plaid trae las transacciones como **pendientes de asignar**. El usuario las manda a su sobre con un toque.
+- Plaid **verifica** saldos y el ingreso que entró — que es justo lo que pregunta el aviso de cierre.
+- La captura manual sigue existiendo y sigue siendo el modo por defecto.
+
+**Nunca** dejar que las transacciones caigan categorizadas y listas sin que el usuario toque nada. Si eso pasa, el usuario deja de presupuestar y empieza a leer un reporte, y se pierde el efecto del método completo.
+
+Notas de implementación: empezar en sandbox; el producto que se necesita es Transactions, que se cobra como suscripción mensual por cuenta conectada; guardar los access token cifrados y nunca en el cliente; manejar el estado de conexión caída y avisarle al usuario con instrucciones para reconectar.
+
+---
+
+## 12. Fases de entrega
+
+**Fase 1 — El núcleo (PWA)**
+Autenticación, onboarding de 6 pasos, motor de periodos con sus pruebas, presupuesto base cero, asignación por periodo con la invariante, sobres, captura manual, pantalla Mi semana, pantalla El mes, deudas con fecha de libertad, fondos de reserva, resumen semanal por correo, Stripe con los dos niveles.
+*Criterio de aceptación:* un usuario nuevo cobra cada dos semanas, se registra, arma su mes, y recibe el correo del domingo con los números correctos, incluido el mes de 3 cheques.
+
+**Fase 2 — Envoltura Tauri para iOS y iPadOS**
+Mismo frontend, sin registro ni precios dentro. Push nativo.
+
+**Fase 3 — Banco conectado**
+Plaid en premium, con el flujo de "pendientes de asignar".
+
+**Fase 4 — Los diferenciadores grandes**
+Modo pareja con la reunión mensual de dinero guiada. Planificador de remesas con tipo de cambio y la alerta de remesa contra interés alto. Panel del coach. Reto de 30 días.
+
+---
+
+## 13. Vocabulario de la interfaz
+
+Usar siempre los mismos términos. Un botón dice exactamente lo que hace, y el mensaje de confirmación usa el mismo verbo.
+
+- **cheque** (no "periodo de pago", no "pay period")
+- **sobre** para las categorías variables
+- **fondo de reserva** para el ahorro con propósito y fecha
+- **fecha de libertad** para la fecha en que sale de deudas
+- **enfoque** para la deuda que se está atacando
+- **mayordomía** para diezmo y ofrenda
+- **repartir** para asignar dinero a categorías
+- **anotar** para registrar un gasto
+- **cerrar el mes** / **cerrar la semana**
+
+Trato de tú, no de usted. Frases cortas. Nada de "¡Felicidades!" con signos de exclamación en cada acción.

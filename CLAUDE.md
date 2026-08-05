@@ -1,0 +1,70 @@
+# Jubileo — App de Presupuesto
+
+Presupuesto personal en español. El mes es el marco; los subperiodos se ajustan a la
+frecuencia de pago del usuario. Se vende como membresía desde jubileofinanciero.com.
+
+Subtítulo del producto: **presupuesto cheque a cheque**
+
+---
+
+## Antes de escribir código
+
+1. Lee `SPEC.md` completo. Es el contrato del proyecto.
+2. Los archivos en `design/` son el contrato visual. Extrae de ahí colores,
+   tipografías, espaciados y estructura. **No rediseñes.**
+3. Si algo del chat contradice `SPEC.md`, pregunta antes de decidir.
+
+## Reglas que no se rompen
+
+- **Dinero en centavos enteros.** Nunca flotantes. Formateo solo al presentar.
+- **La lógica de periodos va en un módulo puro, sin base de datos, con pruebas
+  antes de conectarla a nada.** Ver sección 6 de `SPEC.md`. Es la parte donde un
+  error silencioso arruina el producto.
+- **La invariante de asignaciones:** la suma de las asignaciones por periodo de una
+  línea debe igualar su monto mensual. Si no cuadra, el mes no se cierra.
+- **Nada de marcas de Ramsey Solutions** en el producto: no "Baby Steps", no
+  "EveryDollar", no "Debt Snowball" como nombre de función. Ver sección 3 de `SPEC.md`.
+- **Nunca auto-categorizar transacciones sin confirmación del usuario.** Presupuestar
+  es un acto, no un reporte.
+- Fechas en UTC en la base; toda la lógica de periodos y avisos corre en la zona
+  horaria del usuario.
+- Interfaz en español, trato de tú. El texto en español ocupa ~20% más que en inglés:
+  los componentes deben aguantarlo.
+
+## Vocabulario de la interfaz
+
+Usar siempre los mismos términos, y que los botones y sus confirmaciones usen el
+mismo verbo: **cheque**, **sobre**, **fondo de reserva**, **fecha de libertad**,
+**enfoque** (la deuda que se está atacando), **mayordomía**, **repartir**, **anotar**,
+**cerrar el mes**, **cerrar la semana**.
+
+## Stack
+
+- React + TypeScript + Vite; Tailwind con los tokens de `design/design-tokens.css`
+- Postgres administrado con autenticación (Supabase o equivalente)
+- Stripe Checkout + Customer Portal + webhooks (los webhooks son la única fuente de
+  verdad del nivel del usuario)
+- IndexedDB como caché local; la verdad vive en el servidor
+- Cron diario para los avisos
+
+## Estructura
+
+```
+SPEC.md              contrato del proyecto
+CLAUDE.md            este archivo
+design/              contrato visual — no rediseñar
+  escritorio.html
+  movil.html
+  design-tokens.css
+src/
+  lib/periodos/      módulo puro + pruebas. Empezar por aquí.
+  ...
+```
+
+## Cómo trabajar
+
+- Fase 1 es PWA. Nada de Tauri ni App Store todavía. Ver sección 12 de `SPEC.md`.
+- Cambios chicos y verificables. Correr las pruebas de periodos en cada cambio que
+  toque fechas o asignaciones.
+- Commits en español, en imperativo: "agrega generador de periodos quincenales".
+- Las llaves van en `.env`, nunca en el código ni en un commit.
