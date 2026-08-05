@@ -1,0 +1,124 @@
+import type { Presupuesto } from '../../datos/tipos'
+import { type Centavos, centavos, suma } from '../../lib/dinero'
+import { diaDe } from '../../lib/fecha'
+import { Moneda } from '../base'
+
+/**
+ * El aviso de arranque de periodo.
+ *
+ * No es una pantalla de la app: es la notificación. Se construye aquí como
+ * componente porque es la misma pieza que alimenta el correo y el push, y
+ * porque conviene poder verla sin esperar al domingo. Vive en la ruta de
+ * vista previa `#/aviso`, fuera de la navegación.
+ *
+ * El orden del contenido lo fija la sección 9 del SPEC y no se cambia:
+ * cuánto entra y qué día, lo que vence dentro del periodo, los sobres
+ * variables, y al final cuánto queda libre.
+ */
+
+function Notificacion({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-texto rounded-[17px] bg-white/95 px-[14px] py-[13px] shadow-[0_10px_26px_rgba(0,0,0,.3)]">
+      {children}
+    </div>
+  )
+}
+
+function Encabezado({ cuando }: { cuando: string }) {
+  return (
+    <div className="mb-[9px] flex items-center gap-2">
+      <div className="bg-carbon text-teal font-serif grid size-[19px] place-items-center rounded-[5px] text-[12px]">
+        J
+      </div>
+      <div className="flex-1 text-[11px] font-bold tracking-[.03em] uppercase">Jubileo</div>
+      <div className="text-texto-2 text-[11px]">{cuando}</div>
+    </div>
+  )
+}
+
+function Renglon({ texto, monto }: { texto: string; monto: Centavos }) {
+  return (
+    <li className="flex justify-between gap-[10px]">
+      <span className="text-[#3E4342]">{texto}</span>
+      <b className="font-semibold">
+        <Moneda centavos={monto} />
+      </b>
+    </li>
+  )
+}
+
+export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
+  const activo = presupuesto.periodos[presupuesto.periodoActivo]!
+  const pendientes = presupuesto.pagos.filter((p) => !p.pagado)
+  const sobresTotal = centavos(suma(presupuesto.sobres.map((s) => s.presupuestoCents)))
+  const libre = presupuesto.libreporPeriodoCents[presupuesto.periodoActivo]!
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-[linear-gradient(170deg,#1C1E1F_0%,#31302B_58%,#4A4238_100%)] px-[15px] pt-4 pb-[22px] text-white">
+      <div className="flex justify-end px-2 text-[11.5px] font-semibold">▮▮▮ ⌁ 91%</div>
+
+      <div className="mt-[26px] mb-6 text-center">
+        <div className="text-[13px] text-[#C9CCCA]">domingo, 2 de agosto</div>
+        <div className="font-serif text-[60px] leading-none [font-variant-numeric:tabular-nums]">
+          8:00
+        </div>
+      </div>
+
+      <Notificacion>
+        <Encabezado cuando="ahora" />
+        <h4 className="mb-[7px] text-[15px] font-semibold">Tu semana empieza mañana</h4>
+
+        <ul className="list-none text-[13px] leading-[1.62]">
+          <Renglon texto="Entra el lunes" monto={presupuesto.ingresoPorChequeCents} />
+        </ul>
+
+        <div className="bg-linea my-2 h-px" />
+        <ul className="list-none text-[13px] leading-[1.62]">
+          {pendientes.map((pago) => (
+            <Renglon
+              key={pago.id}
+              texto={`${pago.nombre} · ${pago.esEnfoque ? 'pago extra el' : 'vence el'} ${pago.diaVencimiento}`}
+              monto={pago.montoCents}
+            />
+          ))}
+        </ul>
+
+        <div className="bg-linea my-2 h-px" />
+        <ul className="list-none text-[13px] leading-[1.62]">
+          <Renglon
+            texto={presupuesto.sobres.map((s) => s.nombre.toLowerCase()).join(', ')}
+            monto={sobresTotal}
+          />
+        </ul>
+
+        <div className="text-texto-2 mt-2 flex justify-between text-[12px]">
+          <span>Te queda libre</span>
+          <b className="text-teal-osc font-bold">
+            <Moneda centavos={libre} />
+          </b>
+        </div>
+      </Notificacion>
+
+      <div className="mt-[11px]">
+        <Notificacion>
+          <Encabezado cuando="dom pasado" />
+          <h4 className="mb-[7px] text-[15px] font-semibold">¿Cerramos la semana?</h4>
+          <div className="text-texto-2 mt-[2px] flex justify-between text-[12px]">
+            <span>3 preguntas · 30 segundos</span>
+            <b className="text-teal-osc font-bold">Abrir</b>
+          </div>
+        </Notificacion>
+      </div>
+
+      <p className="mt-auto pt-8 text-center text-[11.5px] leading-[1.5] text-[#9AA09E]">
+        El usuario ya sabe su semana sin abrir la app.
+        <br />
+        Entra solo a verificar.
+      </p>
+
+      <p className="sr-only">
+        El aviso arranca el periodo del {diaDe(activo.fechaPago)}.
+      </p>
+    </div>
+  )
+}

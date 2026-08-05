@@ -1,0 +1,8 @@
+<!-- Mismo icono que lleva el aviso en design/movil.html: cuadro carbón con la
+     J en turquesa. Los dos colores son --carbon y --teal de
+     design/design-tokens.css; un SVG no puede leer variables de CSS, así que
+     aquí van escritos. Si cambian en los tokens, hay que cambiarlos aquí. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#1C1E1F"/>
+  <text x="16" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#12C2A0">J</text>
+</svg>

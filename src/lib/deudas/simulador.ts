@@ -85,7 +85,9 @@ export function simular(
 
     // 2. El pago del mes se reparte: primero los mínimos de lo que sigue vivo,
     //    y todo lo que sobra va a la deuda más pequeña.
-    let disponible = pagoMensual
+    // Dentro del mes trabajamos con un entero suelto: se va gastando en pagos
+    // y solo vuelve a ser `Centavos` cuando sale del simulador.
+    let disponible: number = pagoMensual
     const vivas = pendientes
       .filter((d) => saldos.get(d.id)! > 0)
       .sort((a, b) => saldos.get(a.id)! - saldos.get(b.id)!)

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../design/design-tokens.css';
+@import './fuentes.css';
 
 /* ============================================================
    Puente entre los tokens de diseño y las utilidades de Tailwind.
