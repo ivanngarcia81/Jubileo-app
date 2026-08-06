@@ -11,7 +11,7 @@
   :root{
     --carbon:#1C1E1F; --carbon-2:#2A2D2E; --carbon-3:#3A3E3F;
     --gris:#F2F3F1; --blanco:#FFFFFF;
-    --teal:#12C2A0; --teal-osc:#0A7A64; --ambar:#E8A33D; --rojo:#D9503F;
+    --teal:#0ABBB4; --teal-osc:#057F7A; --ambar:#E8A33D; --rojo:#D9503F;
     --texto:#1C1E1F; --texto-2:#6B7175; --linea:#E2E4E1;
     --serif:'Instrument Serif',Georgia,serif;
     --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -53,7 +53,7 @@
   .body::-webkit-scrollbar{width:0}
 
   /* ---------- tarjeta héroe del cheque ---------- */
-  .hero{background:linear-gradient(152deg,#0F7F69 0%,#12C2A0 100%);border-radius:19px;padding:17px 18px 16px;color:#04291F;
+  .hero{background:linear-gradient(152deg,#0A847F 0%,#0ABBB4 100%);border-radius:19px;padding:17px 18px 16px;color:#022B29;
     position:relative;overflow:hidden}
   .hero::after{content:"";position:absolute;right:-40px;bottom:-56px;width:150px;height:150px;border-radius:50%;
     background:rgba(255,255,255,.12)}
@@ -71,7 +71,7 @@
   .chips{display:flex;gap:7px;margin:13px 0 4px}
   .chip{flex:1;background:var(--blanco);border:1px solid var(--linea);border-radius:99px;padding:9px 4px;
     text-align:center;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
-  .chip .i{width:17px;height:17px;border-radius:50%;background:var(--teal);color:#06322A;display:grid;place-items:center;
+  .chip .i{width:17px;height:17px;border-radius:50%;background:var(--teal);color:#043432;display:grid;place-items:center;
     font-size:10px;font-weight:700;flex-shrink:0}
 
   .sect{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-2);font-weight:600;
@@ -113,7 +113,7 @@
   .bars .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
   .bars .b{width:100%;max-width:24px;background:var(--gris);border-radius:7px;position:relative;height:100%}
   .bars .b i{position:absolute;left:0;bottom:0;width:100%;border-radius:7px;background:var(--linea)}
-  .bars .c.on .b i{background:linear-gradient(180deg,#12C2A0,#0F7F69)}
+  .bars .c.on .b i{background:linear-gradient(180deg,#0ABBB4,#0A847F)}
   .bars .lb{font-size:10.5px;color:var(--texto-2)}
   .bars .c.on .lb{color:var(--texto);font-weight:700}
   .msel .seg{display:flex;gap:2px;background:var(--gris);border-radius:99px;padding:3px;margin-top:14px}
@@ -133,7 +133,7 @@
   .fnav{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:5px;
     background:var(--carbon);border-radius:99px;padding:6px;box-shadow:0 12px 28px rgba(0,0,0,.38)}
   .fnav .n{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#787E7D;font-size:16px}
-  .fnav .n.on{background:var(--teal);color:#06322A}
+  .fnav .n.on{background:var(--teal);color:#043432}
 
   /* ---------- pantalla de aviso ---------- */
   .lock{background:linear-gradient(170deg,#1C1E1F 0%,#31302B 58%,#4A4238 100%);flex:1;

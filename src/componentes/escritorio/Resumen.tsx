@@ -174,7 +174,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
         </TarjetaEscritorio>
 
         <div className="bg-carbon rounded-[15px] p-[18px] text-white">
-          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-[13px] text-[#06322A]">
+          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-[13px] text-[#043432]">
             ★
           </div>
           <h4 className="font-serif mb-2 text-[21px] leading-[1.15] font-normal">
@@ -186,7 +186,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
           </p>
           <button
             type="button"
-            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-[12.5px] font-bold text-[#06322A]"
+            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-[12.5px] font-bold text-[#043432]"
           >
             Hazte Premium
           </button>

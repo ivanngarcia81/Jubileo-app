@@ -13,8 +13,8 @@
   --blanco:        #FFFFFF;  /* tarjetas */
   --linea:         #E2E4E1;  /* bordes en claro */
 
-  --teal:          #12C2A0;  /* acento de marca: disponible, activo, positivo */
-  --teal-osc:      #0A7A64;  /* teal sobre fondo claro, para texto legible */
+  --teal:          #0ABBB4;  /* acento de marca: disponible, activo, positivo */
+  --teal-osc:      #057F7A;  /* teal sobre fondo claro, para texto legible */
   --ambar:         #E8A33D;  /* cerca del límite, cheque extra */
   --rojo:          #D9503F;  /* sobregiro, solo cuando ya se pasó */
 

@@ -44,16 +44,16 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
   const dia = new Date(`${activo.fechaPago}T00:00:00Z`).getUTCDay()
 
   return (
-    <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#0F7F69_0%,#12C2A0_100%)] px-[18px] pt-[17px] pb-4 text-[#04291F]">
+    <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#0A847F_0%,#0ABBB4_100%)] px-[18px] pt-[17px] pb-4 text-[#022B29]">
       <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
       <div className="relative">
-        <div className="text-[10.5px] font-bold tracking-[.12em] text-[#04291F]/60 uppercase">
+        <div className="text-[10.5px] font-bold tracking-[.12em] text-[#022B29]/60 uppercase">
           Te queda esta semana
         </div>
         <div className="font-serif mt-[6px] mb-[3px] text-[52px] leading-none [font-variant-numeric:tabular-nums]">
           {formatearRedondo(disponible)}
         </div>
-        <div className="text-[12px] text-[#04291F]/75">
+        <div className="text-[12px] text-[#022B29]/75">
           Entró <Moneda centavos={ingresoPorChequeCents} /> el {DIAS[dia]} {diaDe(activo.fechaPago)}{' '}
           de {MESES[mesDe(activo.fechaPago) - 1]}
         </div>
@@ -107,7 +107,7 @@ export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
             type="button"
             className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold"
           >
-            <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#06322A]">
+            <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#043432]">
               {icono}
             </span>
             {texto}

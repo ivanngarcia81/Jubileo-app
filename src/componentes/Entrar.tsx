@@ -70,9 +70,15 @@ export function Entrar() {
   return (
     <main className="bg-carbon font-sans grid min-h-dvh place-items-center px-6 py-10 text-white">
       <div className="w-full max-w-[34ch]">
-        <div className="bg-carbon-2 text-teal font-serif mb-7 grid size-12 place-items-center rounded-[13px] text-[26px]">
-          J
-        </div>
+        {/* La versión para fondo oscuro: la mitad negra del logo va en blanco,
+            porque sobre carbón el negro de la marca desaparece. */}
+        <img
+          src="/logo-jf.png"
+          alt="Jubileo Financiero"
+          width={56}
+          height={54}
+          className="mb-7 w-14"
+        />
 
         <h1 className="font-serif text-[32px] leading-[1.1]">
           Jubileo<span className="text-teal">.</span>
@@ -159,7 +165,7 @@ export function Entrar() {
             <button
               type="submit"
               disabled={estado.paso === 'mandando' || correo.trim() === ''}
-              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#06322A] disabled:opacity-50"
+              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#043432] disabled:opacity-50"
             >
               {estado.paso === 'mandando' ? 'Mandando…' : 'Mándame el código'}
             </button>

@@ -185,13 +185,13 @@ export function BandaIndicadores({
                   periodo.esExtra
                     ? 'border-ambar border-[1.5px] border-dashed'
                     : esActivo
-                      ? 'bg-[linear-gradient(150deg,#0F7F69,#12C2A0)] text-[#04291F]'
+                      ? 'bg-[linear-gradient(150deg,#0A847F,#0ABBB4)] text-[#022B29]'
                       : 'bg-carbon-2'
                 } ${cerrado ? 'opacity-55' : ''}`}
               >
                 <div
                   className={`text-[9.5px] font-semibold tracking-[.1em] uppercase ${
-                    esActivo && !periodo.esExtra ? 'text-[#04291F]/70' : 'text-[#787E7D]'
+                    esActivo && !periodo.esExtra ? 'text-[#022B29]/70' : 'text-[#787E7D]'
                   }`}
                 >
                   {periodo.esExtra ? 'Extra' : `Cheque ${periodo.numero}`} ·{' '}
@@ -206,7 +206,7 @@ export function BandaIndicadores({
                 </div>
                 <div
                   className={`text-[10.5px] leading-[1.35] ${
-                    esActivo && !periodo.esExtra ? 'text-[#04291F]/70' : 'text-[#787E7D]'
+                    esActivo && !periodo.esExtra ? 'text-[#022B29]/70' : 'text-[#787E7D]'
                   }`}
                 >
                   {periodo.esExtra ? 'Tercer cheque' : cerrado ? 'Repartido y cerrado' : 'Te queda libre'}

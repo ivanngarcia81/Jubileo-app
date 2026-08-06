@@ -47,7 +47,7 @@ function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
               <div className="bg-gris relative h-full w-full max-w-[24px] rounded-[7px]">
                 <div
                   className={`absolute bottom-0 left-0 w-full rounded-[7px] ${
-                    activo ? 'bg-[linear-gradient(180deg,#12C2A0,#0F7F69)]' : 'bg-linea'
+                    activo ? 'bg-[linear-gradient(180deg,#0ABBB4,#0A847F)]' : 'bg-linea'
                   }`}
                   style={{ height: `${ALTURAS_MESES[i] ?? 0}%` }}
                 />
