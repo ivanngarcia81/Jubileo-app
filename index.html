@@ -2,9 +2,25 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: en iPhone la navegación flotante tiene que poder
+         llegar hasta abajo, por debajo de la barra del sistema. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Tu presupuesto ajustado a cómo te pagan de verdad." />
+
+    <!-- El carbón de los tokens: la barra del sistema hace juego con la app. -->
     <meta name="theme-color" content="#1C1E1F" />
+
     <link rel="icon" href="/icono.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iOS ignora el manifiesto para el icono y el nombre: los pide aparte.
+         Sin esto, "Agregar a la pantalla de inicio" pone una captura borrosa
+         de la página. Y sin instalar no hay push en iOS (sección 4 del SPEC). -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Jubileo" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <title>Jubileo — presupuesto cheque a cheque</title>
   </head>
   <body>

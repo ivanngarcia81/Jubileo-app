@@ -94,6 +94,28 @@ const fuentes = await p.evaluate(async () => {
 revisar(fuentes.includes('Instrument Serif'), 'Instrument Serif carga desde el propio servidor')
 revisar(fuentes.includes('Inter'), 'Inter carga desde el propio servidor')
 
+// Instalable de verdad: sin manifiesto ni iconos, "Agregar a la pantalla de
+// inicio" pone una captura borrosa — y sin instalar no hay push en iOS.
+const pwa = await p.evaluate(async () => {
+  const enlace = document.querySelector('link[rel=manifest]')
+  if (!enlace) return { manifiesto: false }
+  const m = await (await fetch(enlace.getAttribute('href'))).json()
+  const iconos = await Promise.all(
+    m.icons.map(async (i) => (await fetch(i.src)).ok),
+  )
+  return {
+    manifiesto: true,
+    standalone: m.display === 'standalone',
+    maskable: m.icons.some((i) => i.purpose === 'maskable'),
+    iconos: iconos.every(Boolean),
+    apple: Boolean(document.querySelector('link[rel=apple-touch-icon]')),
+    appleOk: (await fetch('/apple-touch-icon.png')).ok,
+  }
+})
+revisar(pwa.manifiesto && pwa.standalone, 'el manifiesto existe y abre en modo app')
+revisar(pwa.iconos && pwa.maskable, 'los iconos del manifiesto cargan, con uno enmascarable')
+revisar(pwa.apple && pwa.appleOk, 'iOS tiene su propio icono para la pantalla de inicio')
+
 // El deslizador de deudas tiene que recalcular en vivo.
 await p.goto(`${BASE}/#/deudas`, { waitUntil: 'networkidle' })
 const leerFecha = () => p.locator('text=/Sales en /').first().innerText()

@@ -49,6 +49,21 @@ como usuarios de verdad:
 ./supabase/pruebas/probar-esquema.sh
 ```
 
+## Desplegar
+
+La app es estática: cualquier hosting sirve. En Vercel se conecta el repo y se
+detecta solo (Vite, salida en `dist/`). Las variables se ponen en el panel del
+hosting, no en un archivo.
+
+**Solo las que empiezan con `VITE_`.** Esas viajan dentro del JavaScript que
+descarga el navegador. La `anon key` está bien ahí — es pública por diseño y lo
+que protege los datos son las políticas de RLS. La `service_role` se salta el
+RLS entero y **nunca** va en el frontend.
+
+Una vez desplegada, se instala desde el navegador del teléfono con "Agregar a
+la pantalla de inicio". `npm run revisar:pantallas` comprueba que el manifiesto
+y los iconos estén, porque sin instalar no hay avisos push en iOS.
+
 ## Las llaves
 
 Van en `.env`, nunca en el código ni en un commit. Copia `.env.example` y

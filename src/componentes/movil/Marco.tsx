@@ -60,7 +60,10 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
   return (
     <nav
       aria-label="Navegación principal"
-      className="bg-carbon fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-full p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
+      // En un iPhone instalado en la pantalla de inicio, la página llega hasta
+      // el borde: sin el área segura la píldora queda debajo de la barra del
+      // sistema y los botones dejan de responder.
+      className="bg-carbon fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-full p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
     >
       {DESTINOS.map(({ ruta, icono, nombre }) => {
         const activo = ruta === activa
@@ -97,7 +100,9 @@ export function Marco({
   return (
     <div className="bg-gris text-texto font-sans flex min-h-dvh flex-col">
       {cabecera}
-      <main className="flex-1 px-4 pt-[14px] pb-[110px]">{children}</main>
+      <main className="flex-1 px-4 pt-[14px] pb-[calc(110px+env(safe-area-inset-bottom))]">
+        {children}
+      </main>
       <NavFlotante activa={activa} ir={ir} />
     </div>
   )
