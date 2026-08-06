@@ -46,14 +46,22 @@ export function cliente(): SupabaseClient {
 // ---------------------------------------------------------------------------
 // Entrar
 //
-// Supabase manda en el mismo correo un enlace y un código de seis dígitos. El
-// enlace es frágil en teléfono: al pedirlo se guarda un secreto en el navegador
-// que hizo la petición, y si el correo lo abre en otro visor —lo normal en
-// iPhone— el secreto no está y la sesión no se crea, sin decir nada. El código
-// no tiene ese problema porque nadie abre nada: se teclea donde ya estás.
+// Supabase puede mandar un enlace, un código de seis dígitos, o los dos. Aquí
+// va solo el código, y las plantillas del correo tampoco llevan enlace.
+//
+// El enlace es frágil en teléfono: al pedirlo se guarda un secreto en el
+// navegador que hizo la petición, y si el correo lo abre en otro visor —lo
+// normal en iPhone— el secreto no está y la sesión no se crea, sin decir nada.
+// El código no tiene ese problema porque nadie abre nada: se teclea donde ya
+// estás.
+//
+// Cuál de las dos plantillas se usa depende de la cuenta: `signInWithOtp` crea
+// al usuario si no existe, y a uno nuevo o sin confirmar le llega «Confirm
+// signup»; a los demás, «Magic Link». Las dos tienen que llevar `{{ .Token }}`
+// — está en el README. `type: 'email'` en `verifyOtp` cubre las dos.
 // ---------------------------------------------------------------------------
 
-/** Manda el correo con el código y el enlace. */
+/** Manda el correo con el código. */
 export async function pedirCodigo(correo: string): Promise<void> {
   const volverA = import.meta.env.VITE_URL_APP
   const { error } = await cliente().auth.signInWithOtp({

@@ -90,29 +90,97 @@ ya está desplegado: hay que volver a desplegar.
 
 ### El correo de entrada
 
-Se entra con un código de seis dígitos que llega por correo. En Supabase,
-**Authentication → URL Configuration**, el *Site URL* es la dirección pública de
-la app, y en *Redirect URLs* van esa misma y `http://localhost:5173/**`.
+Se entra con un código de seis dígitos que llega por correo. **No hay enlace**:
+el enlace solo funciona si el correo se abre en el mismo navegador donde se
+pidió, y en teléfono casi nunca pasa. Dejarlo en el correo serviría para que lo
+toquen y falle.
 
-En **Authentication → Emails → Magic Link**, la plantilla tiene que incluir
-`{{ .Token }}`. Sin eso el correo llega con enlace pero sin código, y el código
-es el camino que no se rompe: el enlace solo funciona si el correo se abre en el
-mismo navegador donde se pidió, y en teléfono casi nunca pasa.
+#### Hace falta un servidor de correo propio
 
-El correo lo ve el usuario final, así que va en español (principio 5 del SPEC):
+No es opcional y no es solo para los avisos. El correo que presta Supabase
+manda **2 mensajes por hora**, desde el dominio de ellos, en inglés, y **solo a
+las direcciones del equipo del proyecto**. Y desde junio de 2026, un proyecto
+del plan gratis que usa ese correo prestado **no puede editar ninguna
+plantilla** — el panel enseña *"Set up custom SMTP to edit templates"* y las
+plantillas por omisión no traen `{{ .Token }}`. Sin proveedor propio no hay
+código que teclear.
+
+El aviso semanal del domingo, que la sección 9 del SPEC llama la función más
+importante del producto, tampoco sale de ahí: está en el nivel gratis, o sea
+que lo recibe todo el mundo.
+
+**1. Resend** (gratis hasta 3,000 al mes; la misma cuenta sirve para los avisos)
+
+- **Domains → Add Domain →** `jubileofinanciero.com`.
+- Copiar los tres registros de DNS que enseña al panel del dominio: un `MX` y un
+  `TXT` colgados de `send.jubileofinanciero.com`, y un `TXT` en
+  `resend._domainkey`. Ninguno toca la raíz, así que no estorban al correo
+  normal de la empresa.
+- Esperar a que diga **Verified**.
+- **API Keys → Create API Key** con permiso de envío. Empieza con `re_` y se ve
+  una sola vez.
+
+**2. Supabase → Authentication → Emails → SMTP Settings**
+
+| Campo        | Valor                            |
+| ------------ | -------------------------------- |
+| Sender email | `hola@jubileofinanciero.com`     |
+| Sender name  | `Jubileo`                        |
+| Host         | `smtp.resend.com`                |
+| Port         | `465`                            |
+| Username     | `resend` ← literal, no un correo |
+| Password     | la llave `re_…`                  |
+
+Al guardar, las plantillas se vuelven editables y el límite sube a 30 por hora,
+ajustable en **Authentication → Rate Limits**.
+
+**3. Las plantillas — son dos**
+
+`signInWithOtp` crea la cuenta si no existe. A un usuario nuevo o sin confirmar
+le llega **Confirm signup**; a los demás, **Magic Link**. Las dos necesitan
+`{{ .Token }}`, o falla la mitad de los casos sin patrón visible. El correo lo
+ve el usuario final, así que va en español (principio 5 del SPEC).
+
+Asunto de las dos: `Tu código para entrar a Jubileo`
+
+*Confirm signup:*
 
 ```html
-<h2>Tu código para entrar a Jubileo</h2>
+<h2>Bienvenido a Jubileo</h2>
+<p>Este es tu código para entrar:</p>
 <p style="font-size:32px;letter-spacing:.3em"><b>{{ .Token }}</b></p>
 <p>Tecléalo en la pantalla donde lo pediste. Vence en una hora.</p>
-<p>También puedes <a href="{{ .ConfirmationURL }}">entrar desde aquí</a>, si
-abres este correo en el mismo navegador.</p>
-<p>Si no lo pediste tú, ignora este mensaje.</p>
+<p>Si no fuiste tú, ignora este mensaje.</p>
 ```
 
-El servidor de correo que presta Supabase manda desde su dominio, en inglés, y
-con un límite de unos pocos envíos por hora. Sirve para probar; el aviso
-semanal del domingo necesita un proveedor propio con `jubileofinanciero.com`.
+*Magic Link:*
+
+```html
+<h2>Tu código para entrar</h2>
+<p style="font-size:32px;letter-spacing:.3em"><b>{{ .Token }}</b></p>
+<p>Tecléalo en la pantalla donde lo pediste. Vence en una hora.</p>
+<p>Si no fuiste tú, ignora este mensaje.</p>
+```
+
+Sin `{{ .ConfirmationURL }}` a propósito. Verificar el código confirma el correo
+igual que el enlace, así que no quedan cuentas a medias.
+
+**4. Supabase → Authentication → Providers → Email**
+
+- **Email OTP Length: 6.** La pantalla se manda sola al sexto dígito — es `LARGO`
+  en `src/componentes/Entrar.tsx`. Cambiarlo aquí rompe la app.
+- **Email OTP Expiration: 3600.** El correo dice "vence en una hora".
+
+**5. Supabase → Authentication → URL Configuration**
+
+El *Site URL* es la dirección pública de la app, y en *Redirect URLs* van esa
+misma y `http://localhost:5173/**`.
+
+#### Cuando no llega un correo
+
+**Resend → Logs** lista cada envío con su estado. Si el correo no aparece ahí,
+el problema es de Supabase — llave del SMTP, dominio sin verificar o límite de
+envíos — y no del correo.
 
 Una vez desplegada, se instala desde el navegador del teléfono con "Agregar a
 la pantalla de inicio". `npm run revisar:pantallas` comprueba que el manifiesto

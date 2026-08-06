@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 /**
  * Entrar con el correo, sin contraseña.
  *
- * Llega un código de seis dígitos y se teclea aquí mismo. El correo también
- * trae un enlace y sigue funcionando, pero el código es el camino que no se
- * rompe: el enlace depende de que el correo lo abra en el mismo navegador donde
- * se pidió, y en iPhone casi nunca pasa. El SPEC describe a alguien con poca
+ * Llega un código de seis dígitos y se teclea aquí mismo. El correo no trae
+ * enlace a propósito: el enlace depende de que el correo se abra en el mismo
+ * navegador donde se pidió, y en iPhone casi nunca pasa. Dejarlo ahí solo
+ * serviría para que lo toquen y falle. El SPEC describe a alguien con poca
  * paciencia con software — teclear seis números es algo que nadie falla.
  */
 
@@ -136,8 +136,7 @@ export function Entrar() {
             </div>
 
             <p className="mt-6 text-[12.5px] leading-[1.55] text-[#6E7473]">
-              El correo también trae un enlace. Si lo abres, entras igual — pero el código
-              funciona siempre, sin importar dónde abras el correo.
+              Si no llega en un minuto, revisa la carpeta de correo no deseado.
             </p>
           </div>
         ) : (
