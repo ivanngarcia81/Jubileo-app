@@ -1,5 +1,5 @@
-import { PRESUPUESTO_EJEMPLO } from './datos/ejemplo'
 import type { Presupuesto } from './datos/tipos'
+import { usarPresupuesto } from './datos/usarPresupuesto'
 import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
 import { Resumen } from './componentes/escritorio/Resumen'
 import { Aviso } from './componentes/movil/Aviso'
@@ -88,9 +88,26 @@ function Ajustes() {
   )
 }
 
+/** Un mes que todavía no llega, o que no se pudo traer. */
+function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
+  return (
+    <main className="bg-gris text-texto font-sans grid min-h-dvh place-items-center p-gap">
+      <div className="max-w-[38ch] text-center">
+        <h1 className="font-serif text-h1">{titulo}</h1>
+        {cuerpo && <p className="text-texto-2 text-dato mt-2 leading-[1.6]">{cuerpo}</p>}
+      </div>
+    </main>
+  )
+}
+
 export function App() {
-  const presupuesto = PRESUPUESTO_EJEMPLO
+  const fuente = usarPresupuesto()
   const [ruta, ir] = useRuta()
+
+  if (fuente.estado === 'cargando') return <Mensaje titulo="Un momento…" />
+  if (fuente.estado === 'error')
+    return <Mensaje titulo="No pudimos traer tu mes" cuerpo={fuente.mensaje} />
+  const presupuesto = fuente.presupuesto
 
   // El aviso no es una pantalla de la app: es la notificación. Se ve entera,
   // sin barra ni navegación.

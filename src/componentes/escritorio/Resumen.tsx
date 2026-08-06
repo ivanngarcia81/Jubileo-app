@@ -228,23 +228,25 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
           </button>
         </TarjetaEscritorio>
 
-        <TarjetaEscritorio icono="◌" titulo="Tu coach">
-          <div className="flex items-center gap-[11px]">
-            <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-[16px]">
-              {presupuesto.coach.iniciales}
+        {presupuesto.coach && (
+          <TarjetaEscritorio icono="◌" titulo="Tu coach">
+            <div className="flex items-center gap-[11px]">
+              <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-[16px]">
+                {presupuesto.coach.iniciales}
+              </div>
+              <div>
+                <div className="text-[13px] font-semibold">{presupuesto.coach.titulo}</div>
+                <div className="text-texto-2 mt-[2px] text-[11.5px]">{presupuesto.coach.detalle}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-[13px] font-semibold">{presupuesto.coach.titulo}</div>
-              <div className="text-texto-2 mt-[2px] text-[11.5px]">{presupuesto.coach.detalle}</div>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="border-linea text-texto-2 mt-[13px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
-          >
-            Leer las notas
-          </button>
-        </TarjetaEscritorio>
+            <button
+              type="button"
+              className="border-linea text-texto-2 mt-[13px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
+            >
+              Leer las notas
+            </button>
+          </TarjetaEscritorio>
+        )}
       </div>
     </div>
   )

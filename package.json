@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Presupuesto cheque a cheque \u2014 Jubileo Financiero",
+  "description": "Presupuesto cheque a cheque — Jubileo Financiero",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -15,6 +15,7 @@
     "revisar:pantallas": "node herramientas/revisar-pantallas.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

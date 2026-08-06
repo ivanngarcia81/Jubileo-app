@@ -41,7 +41,9 @@ npm run periodos:demo -- --frecuencia dos_veces_al_mes --dias-pago 15,31
 ```
 
 El esquema de la base se prueba contra un Postgres desechable, sin tocar nada
-real (necesita Postgres instalado):
+real (necesita Postgres instalado). Levanta la base, aplica la migración y
+comprueba las restricciones, el modo pareja y las políticas de RLS actuando
+como usuarios de verdad:
 
 ```bash
 ./supabase/pruebas/probar-esquema.sh
@@ -67,7 +69,12 @@ src/
   componentes/
     movil/           las pantallas de teléfono de design/movil.html
     escritorio/      el panel de design/escritorio.html
-  datos/ejemplo.ts   datos de ejemplo — TEMPORAL, se cambia por el servidor
+  datos/
+    ejemplo.ts       datos de ejemplo — TEMPORAL, mientras no haya servidor
+    fuente.ts        el interruptor: ejemplo o servidor, según el .env
+  servidor/
+    mapeo.ts         filas de la base → el presupuesto que ven las pantallas
+    repositorios/    puro I/O contra Supabase
   rutas.ts           enrutador por fragmento de URL
   lib/
     dinero/          centavos enteros y el único lugar donde se divide dinero
@@ -76,7 +83,7 @@ src/
     deudas/          simulador de la fecha de libertad
 supabase/
   migraciones/       el esquema, versionado
-  pruebas/           comprobación del esquema contra un Postgres desechable
+  pruebas/           restricciones, modo pareja y RLS contra Postgres real
 herramientas/
   demo-periodos.ts   imprime un año de periodos
 ```
@@ -93,14 +100,24 @@ herramientas/
   cierra — es un rechazo, no una advertencia.
 - **Las fechas se guardan en UTC**, pero la lógica de periodos trabaja con
   fechas civiles. La zona horaria del usuario solo entra en la capa de avisos.
+- **Las llaves aguantan el modo pareja.** Los periodos cuelgan del usuario, no
+  solo del hogar: en modo pareja cada quien cobra con su frecuencia y un mes
+  trae dos juegos de cheques. Está probado hoy, no prometido para la fase 4.
+- **Una asignación no puede cruzar de mes.** El mes viaja en las dos llaves
+  foráneas de `asignaciones`, así que no hay forma de cuadrar una línea con
+  dinero de otro mes.
 
 ## Estado
 
 Fase 1, en construcción.
 
-Listo: el motor de periodos con sus pruebas, el esquema de la base, y las
-pantallas del contrato visual — Mi semana, El mes, Deudas y el aviso en
-teléfono, y el panel de Resumen en computadora. Corren con datos de ejemplo.
+Listo: el motor de periodos con sus pruebas, las pantallas del contrato visual
+— Mi semana, El mes, Deudas y el aviso en teléfono, y el panel de Resumen en
+computadora — el esquema de la base con sus pruebas, y la capa de datos que lo
+consulta.
 
-Falta: autenticación, onboarding de 6 pasos, el servidor detrás de las
-pantallas, Stripe, el cron de avisos y el manifiesto de PWA.
+Sin `VITE_SUPABASE_URL` en el `.env`, la app corre con datos de ejemplo y se ve
+igual. Con la llave puesta, lee del servidor: es el único interruptor.
+
+Falta: onboarding de 6 pasos, pantallas de sesión, el webhook de Stripe, el
+cron de avisos, la caché de IndexedDB y el manifiesto de PWA.

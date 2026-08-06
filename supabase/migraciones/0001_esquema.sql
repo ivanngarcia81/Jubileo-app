@@ -147,6 +147,39 @@ create index on periodos (hogar_id, fecha_pago);
 create index on periodos (usuario_id, fecha_pago);
 
 -- ---------------------------------------------------------------------------
+-- Deudas y fondos de reserva
+-- ---------------------------------------------------------------------------
+
+create table deudas (
+  id                  uuid primary key default gen_random_uuid(),
+  hogar_id            uuid not null references hogares (id) on delete cascade,
+  nombre              text not null,
+  -- Con cuánto empezó: la barra de la pantalla mide lo que ya lleva pagado.
+  saldo_inicial_cents bigint not null check (saldo_inicial_cents >= 0),
+  saldo_cents         bigint not null check (saldo_cents >= 0),
+  pago_minimo_cents   bigint not null check (pago_minimo_cents >= 0),
+  tasa_interes        numeric(5, 2) check (tasa_interes >= 0),
+  orden               smallint not null default 0,
+  es_enfoque          boolean not null default false,
+  pagada_en           date,
+
+  constraint saldo_no_pasa_del_inicial check (saldo_cents <= saldo_inicial_cents)
+);
+
+-- Solo una deuda de enfoque a la vez por hogar.
+create unique index deuda_enfoque_unica on deudas (hogar_id) where es_enfoque;
+
+create table fondos_reserva (
+  id              uuid primary key default gen_random_uuid(),
+  hogar_id        uuid not null references hogares (id) on delete cascade,
+  nombre          text not null,
+  meta_cents      bigint not null check (meta_cents > 0),
+  acumulado_cents bigint not null default 0 check (acumulado_cents >= 0),
+  fecha_objetivo  date
+  -- Cuánto apartar por periodo es derivado, no se guarda.
+);
+
+-- ---------------------------------------------------------------------------
 -- Categorías, líneas y asignaciones
 -- ---------------------------------------------------------------------------
 
@@ -159,10 +192,16 @@ create table categorias (
   activa          boolean not null default true,
   es_fija         boolean not null default false,
   dia_vencimiento smallint check (dia_vencimiento between 1 and 31),
+  -- La categoría de grupo `deuda` es la línea del presupuesto que paga esa
+  -- deuda. Se amarra por llave y no por nombre: si se amarrara por nombre,
+  -- renombrar la deuda rompería el enlace en silencio y la app dejaría de
+  -- señalar la de enfoque como pago extra en el aviso.
+  deuda_id        uuid references deudas (id) on delete set null,
 
   -- El SPEC lo llama obligatorio para las fijas: sin día de vencimiento el
   -- aviso semanal pierde la mitad de su valor.
   constraint fija_con_vencimiento check (not es_fija or dia_vencimiento is not null),
+  constraint deuda_solo_en_grupo_deuda check (deuda_id is null or grupo = 'deuda'),
   unique (hogar_id, nombre)
 );
 
@@ -265,39 +304,6 @@ create table transacciones (
 create index on transacciones (hogar_id, fecha desc);
 create index on transacciones (periodo_id);
 create index on transacciones (hogar_id, estado) where estado = 'pendiente';
-
--- ---------------------------------------------------------------------------
--- Deudas y fondos de reserva
--- ---------------------------------------------------------------------------
-
-create table deudas (
-  id                  uuid primary key default gen_random_uuid(),
-  hogar_id            uuid not null references hogares (id) on delete cascade,
-  nombre              text not null,
-  -- Con cuánto empezó: la barra de la pantalla mide lo que ya lleva pagado.
-  saldo_inicial_cents bigint not null check (saldo_inicial_cents >= 0),
-  saldo_cents         bigint not null check (saldo_cents >= 0),
-  pago_minimo_cents   bigint not null check (pago_minimo_cents >= 0),
-  tasa_interes        numeric(5, 2) check (tasa_interes >= 0),
-  orden               smallint not null default 0,
-  es_enfoque          boolean not null default false,
-  pagada_en           date,
-
-  constraint saldo_no_pasa_del_inicial check (saldo_cents <= saldo_inicial_cents)
-);
-
--- Solo una deuda de enfoque a la vez por hogar.
-create unique index deuda_enfoque_unica on deudas (hogar_id) where es_enfoque;
-
-create table fondos_reserva (
-  id              uuid primary key default gen_random_uuid(),
-  hogar_id        uuid not null references hogares (id) on delete cascade,
-  nombre          text not null,
-  meta_cents      bigint not null check (meta_cents > 0),
-  acumulado_cents bigint not null default 0 check (acumulado_cents >= 0),
-  fecha_objetivo  date
-  -- Cuánto apartar por periodo es derivado, no se guarda.
-);
 
 -- ---------------------------------------------------------------------------
 -- Avisos

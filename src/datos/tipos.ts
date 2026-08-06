@@ -97,7 +97,11 @@ export interface Presupuesto {
 
   /** Desde cuándo se cuenta la fecha de libertad. */
   inicioDeudas: FechaCivil
-  /** Nota del bloque "Vale la pena revisar". */
-  observacion: { titulo: string; cuerpo: string }
-  coach: { iniciales: string; titulo: string; detalle: string }
+  /**
+   * Nota del bloque "Vale la pena revisar". Opcional: no sale de la base
+   * todavía, y una tarjeta que no se puede llenar no se dibuja.
+   */
+  observacion?: { titulo: string; cuerpo: string }
+  /** Solo cuando el usuario comparte su presupuesto con un coach. */
+  coach?: { iniciales: string; titulo: string; detalle: string }
 }

@@ -157,13 +157,17 @@ export function Deudas({ presupuesto }: { presupuesto: Presupuesto }) {
         ))}
       </div>
 
-      <Seccion>Vale la pena revisar</Seccion>
-      <Tarjeta>
-        <div className="text-[14px] font-semibold">{presupuesto.observacion.titulo}</div>
-        <div className="text-texto-2 mt-[5px] text-[12.5px] leading-[1.5]">
-          {presupuesto.observacion.cuerpo}
-        </div>
-      </Tarjeta>
+      {presupuesto.observacion && (
+        <>
+          <Seccion>Vale la pena revisar</Seccion>
+          <Tarjeta>
+            <div className="text-[14px] font-semibold">{presupuesto.observacion.titulo}</div>
+            <div className="text-texto-2 mt-[5px] text-[12.5px] leading-[1.5]">
+              {presupuesto.observacion.cuerpo}
+            </div>
+          </Tarjeta>
+        </>
+      )}
     </>
   )
 }
