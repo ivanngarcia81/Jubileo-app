@@ -39,6 +39,8 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     frecuencia: 'Cada dos semanas',
   },
 
+  // Sin mes en el servidor: la demostración se ve pero no se edita.
+  mesId: null,
   mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
   periodos: PERIODOS,
   periodoActivo: 1,
@@ -97,6 +99,14 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       gastadoCents: centavos(4000),
       presupuestoCents: centavos(4000),
     },
+  ],
+
+  // Los mismos sobres de arriba, pero con su monto del mes entero: es lo que
+  // se reparte entre los cheques.
+  variables: [
+    { id: 'comida', nombre: 'Comida', icono: '◇', detalle: '', montoMensualCents: centavos(45000) },
+    { id: 'gasolina', nombre: 'Gasolina', icono: '◇', detalle: '', montoMensualCents: centavos(18000) },
+    { id: 'personal', nombre: 'Personal', icono: '◇', detalle: '', montoMensualCents: centavos(12000) },
   ],
 
   mayordomia: {

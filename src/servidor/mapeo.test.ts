@@ -208,10 +208,36 @@ describe('el mes armado desde la base', () => {
     ])
   })
 
-  it('separa mayordomía de los fijos', () => {
+  it('separa mayordomía de los fijos, y los variables van aparte', () => {
     expect(p.mayordomia.nombre).toBe('Diezmo y ofrenda')
     expect(p.mayordomia.montoMensualCents).toBe(36800)
     expect(p.fijos.map((f) => f.nombre)).toEqual(['Renta', 'Luz y agua'])
+    expect(p.variables.map((v) => v.nombre)).toEqual(['Comida'])
+  })
+
+  it('cada fijo dice con qué cheque se paga, no solo cuándo vence', () => {
+    // Los cheques del riel van 3–16 ago, 17–30 ago y el extra 31 ago–13 sep.
+    // Renta vence el 3 y Luz y agua el 4: los dos caen en el primero.
+    expect(p.fijos.map((f) => f.detalle)).toEqual([
+      'Vence el 3 · Cheque 1',
+      'Vence el 4 · Cheque 1',
+    ])
+  })
+
+  it('un vencimiento tardío lo paga el cheque que termina en el mes siguiente', () => {
+    // El riel de julio cierra el 3 de agosto. Comparando solo el día, un
+    // recibo que vence el 25 no encontraría cheque y se quedaría sin decirlo.
+    const f = filas()
+    f.mes = { ...f.mes, mes: 7 }
+    f.periodos = [
+      { id: 'j1', mes_id: MES, usuario_id: IVAN, numero: 1, fecha_inicio: '2026-07-06', fecha_fin: '2026-07-19', fecha_pago: '2026-07-06', ingreso_esperado_cents: 124000, ingreso_real_cents: null, es_extra: false, estado: 'cerrado' },
+      { id: 'j2', mes_id: MES, usuario_id: IVAN, numero: 2, fecha_inicio: '2026-07-20', fecha_fin: '2026-08-02', fecha_pago: '2026-07-20', ingreso_esperado_cents: 124000, ingreso_real_cents: null, es_extra: false, estado: 'futuro' },
+    ]
+    f.categorias = f.categorias.map((c) =>
+      c.nombre === 'Renta' ? { ...c, dia_vencimiento: 25 } : c,
+    )
+    const julio = aPresupuesto(f)
+    expect(julio.fijos.find((x) => x.nombre === 'Renta')?.detalle).toBe('Vence el 25 · Cheque 2')
   })
 
   it('deriva cuánto apartar por cheque para cada fondo', () => {

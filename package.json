@@ -13,7 +13,8 @@
     "typecheck": "tsc -b --noEmit",
     "periodos:demo": "tsx herramientas/demo-periodos.ts",
     "revisar:pantallas": "node herramientas/revisar-pantallas.mjs",
-    "revisar:entrar": "node herramientas/revisar-entrar.mjs"
+    "revisar:entrar": "node herramientas/revisar-entrar.mjs",
+    "revisar:el-mes": "node herramientas/revisar-el-mes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.1",

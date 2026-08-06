@@ -15,7 +15,7 @@ import { Metas } from './componentes/movil/Metas'
 import { MiSemana } from './componentes/movil/MiSemana'
 import { mesYAnio } from './componentes/textos'
 import { simular } from './lib/deudas'
-import { centavos, suma } from './lib/dinero'
+import { type Centavos, centavos, suma } from './lib/dinero'
 import { fecha } from './lib/fecha'
 import { type Ruta, rutaEscritorio, rutaMovil, useRuta } from './rutas'
 
@@ -70,10 +70,18 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
   }
 }
 
-function Contenido({ ruta, presupuesto }: { ruta: Ruta; presupuesto: Presupuesto }) {
+function Contenido({
+  ruta,
+  presupuesto,
+  alPonerMonto,
+}: {
+  ruta: Ruta
+  presupuesto: Presupuesto
+  alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+}) {
   switch (ruta) {
     case 'mes':
-      return <ElMes presupuesto={presupuesto} />
+      return <ElMes presupuesto={presupuesto} {...(alPonerMonto ? { alPonerMonto } : {})} />
     case 'deudas':
       return <Deudas presupuesto={presupuesto} />
     case 'metas':
@@ -156,6 +164,17 @@ export function App() {
   const enMovil = rutaMovil(ruta)
   const enEscritorio = rutaEscritorio(ruta)
 
+  // Con datos de ejemplo no hay dónde guardar, y sin `mesId` tampoco: la
+  // pantalla se ve igual pero sin botones que prometan algo que no pasa.
+  const mesId = presupuesto.mesId
+  const alPonerMonto = mesId
+    ? async (categoriaId: string, montoCents: Centavos) => {
+        const { ponerMontoMensual } = await import('./servidor/repositorios/presupuestar')
+        await ponerMontoMensual(mesId, categoriaId, montoCents)
+        fuente.recargar()
+      }
+    : undefined
+
   const extraActual = centavos(
     suma(presupuesto.deudas.map((d) => d.pagoActualCents)) -
       suma(presupuesto.deudas.map((d) => d.pagoMinimoCents)),
@@ -167,7 +186,7 @@ export function App() {
     <>
       <div className="lg:hidden">
         <Marco cabecera={cabeceraDe(enMovil, presupuesto, ir)} activa={enMovil} ir={ir}>
-          <Contenido ruta={enMovil} presupuesto={presupuesto} />
+          <Contenido ruta={enMovil} presupuesto={presupuesto} {...(alPonerMonto ? { alPonerMonto } : {})} />
         </Marco>
       </div>
 
@@ -182,7 +201,11 @@ export function App() {
             {enEscritorio === 'ajustes' ? (
               <Ajustes />
             ) : (
-              <Contenido ruta={enEscritorio} presupuesto={presupuesto} />
+              <Contenido
+                ruta={enEscritorio}
+                presupuesto={presupuesto}
+                {...(alPonerMonto ? { alPonerMonto } : {})}
+              />
             )}
           </div>
         )}

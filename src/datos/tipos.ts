@@ -66,6 +66,12 @@ export interface Presupuesto {
     nivel: 'gratis' | 'premium'
     frecuencia: string
   }
+  /**
+   * La llave del mes en el servidor. Nula con los datos de ejemplo, y es
+   * justo lo que hace que la demostración no se pueda editar: sin mes real no
+   * hay dónde guardar.
+   */
+  mesId: string | null
   mes: { anio: number; mes: number; etiqueta: string }
   periodos: Periodo[]
   /** Índice del periodo en curso dentro de `periodos`. */
@@ -85,6 +91,11 @@ export interface Presupuesto {
   sobres: Sobre[]
   mayordomia: LineaMes
   fijos: LineaMes[]
+  /**
+   * Los sobres variables vistos como líneas del mes. `sobres` es lo mismo pero
+   * del cheque en curso: aquí va el monto mensual, que es lo que se reparte.
+   */
+  variables: LineaMes[]
   fondos: Fondo[]
   deudas: (DeudaSimulada & {
     pagoActualCents: Centavos

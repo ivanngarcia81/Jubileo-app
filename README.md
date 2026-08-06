@@ -41,6 +41,15 @@ teclearlo, y que un código malo se explique en español:
 npm run revisar:entrar
 ```
 
+Y repartir el mes, que es el camino que toca dinero, se recorre entero contra
+un Supabase de mentiras que sí guarda: se le pone monto a un sobre y se
+comprueba que quedó en centavos enteros, que el reparto salió solo y que las
+asignaciones suman el monto al centavo:
+
+```bash
+npm run revisar:el-mes
+```
+
 Para ver el calendario de periodos de un año completo:
 
 ```bash

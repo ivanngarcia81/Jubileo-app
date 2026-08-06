@@ -159,13 +159,33 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       .filter((c) => c.grupo === grupo && c.activa)
       .sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre))
 
-  const aLineaMes = (c: (typeof filas.categorias)[number], icono: string): LineaMes => ({
-    id: c.id,
-    nombre: c.nombre,
-    icono,
-    detalle: c.dia_vencimiento ? `Vence el ${c.dia_vencimiento}` : '',
-    montoMensualCents: centavos(lineaPorCategoria.get(c.id)?.monto_mensual_cents ?? 0),
-  })
+  /**
+   * A qué cheque le toca pagar un fijo: el primero que termina en o después de
+   * su día de vencimiento. Es lo que el contrato visual enseña como "Vence el
+   * 3 · Cheque 1", y lo que hace útil el aviso — saber el día no sirve si no
+   * sabes con cuál cheque lo vas a pagar.
+   */
+  const chequeQuePaga = (dia: number): number | null => {
+    // La fecha completa, no solo el día: el último cheque del mes casi siempre
+    // termina en el mes siguiente (julio cierra el 3 de agosto), y comparar
+    // días sueltos diría que nadie paga lo que vence el 25.
+    const vence = `${filas.mes.anio}-${String(filas.mes.mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+    const i = periodosOrdenados.findIndex((p) => p.fecha_fin >= vence)
+    return i === -1 ? null : i + 1
+  }
+
+  const aLineaMes = (c: (typeof filas.categorias)[number], icono: string): LineaMes => {
+    const cheque = c.dia_vencimiento === null ? null : chequeQuePaga(c.dia_vencimiento)
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      icono,
+      detalle: c.dia_vencimiento
+        ? `Vence el ${c.dia_vencimiento}${cheque ? ` · Cheque ${cheque}` : ''}`
+        : '',
+      montoMensualCents: centavos(lineaPorCategoria.get(c.id)?.monto_mensual_cents ?? 0),
+    }
+  }
 
   // ---- Pagos del periodo en curso ----------------------------------------
   // Las categorías fijas y las de deuda que vencen dentro del cheque activo.
@@ -264,6 +284,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       frecuencia: yo.frecuencia_pago ? (ETIQUETAS_FRECUENCIA[yo.frecuencia_pago] ?? '') : '',
     },
 
+    mesId: filas.mes.id,
     mes: {
       anio: filas.mes.anio,
       mes: filas.mes.mes,
@@ -289,6 +310,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       ? aLineaMes(mayordomia, '✦')
       : { id: 'mayordomia', nombre: 'Mayordomía', icono: '✦', detalle: '', montoMensualCents: centavos(0) },
     fijos: enCategoria('fijo').map((c) => aLineaMes(c, '·')),
+    variables: enCategoria('variable').map((c) => aLineaMes(c, '◇')),
     fondos,
 
     deudas: [...filas.deudas]

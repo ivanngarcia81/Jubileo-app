@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { ALTURAS_MESES } from '../../datos/ejemplo'
-import type { Presupuesto } from '../../datos/tipos'
-import { formatearRedondo } from '../../lib/dinero'
+import type { LineaMes, Presupuesto } from '../../datos/tipos'
+import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
+import { PonerMonto } from './PonerMonto'
 
 /**
  * El mes — presupuesto base cero.
@@ -17,22 +18,27 @@ const VISTAS = ['Entra', 'Sale', 'Sobró'] as const
 function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
   const [vista, setVista] = useState<string>('Sale')
 
+  const sobra = presupuesto.sinRepartirCents
   const cifra =
-    vista === 'Entra'
-      ? presupuesto.entraCents
-      : vista === 'Sale'
-        ? presupuesto.saleCents
-        : presupuesto.sinRepartirCents
+    vista === 'Entra' ? presupuesto.entraCents : vista === 'Sale' ? presupuesto.saleCents : sobra
 
   return (
     <div className="bg-blanco border-linea rounded-[15px] border px-[14px] pt-[15px] pb-3">
       <div className="mb-[14px] text-center">
-        <div className="font-serif text-teal-osc text-[38px] leading-none [font-variant-numeric:tabular-nums]">
-          {formatearRedondo(vista === 'Sobró' ? presupuesto.sinRepartirCents : cifra)}
+        <div
+          className={`font-serif text-[38px] leading-none [font-variant-numeric:tabular-nums] ${
+            vista === 'Sobró' && sobra !== 0 ? 'text-ambar' : 'text-teal-osc'
+          }`}
+        >
+          {formatearRedondo(cifra)}
         </div>
         <div className="text-texto-2 mt-[3px] text-[11.5px]">
           {vista === 'Sobró'
-            ? 'Sin repartir — tu presupuesto cuadra'
+            ? sobra === 0
+              ? 'Sin repartir — tu presupuesto cuadra'
+              : sobra > 0
+                ? 'Sin repartir — todavía falta darle destino'
+                : 'Te pasaste: repartiste más de lo que entra'
             : vista === 'Entra'
               ? `Entra este mes · ${presupuesto.periodos.length} cheques`
               : 'Sale este mes · repartido en tus cheques'}
@@ -65,34 +71,68 @@ function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
   )
 }
 
-export function ElMes({ presupuesto }: { presupuesto: Presupuesto }) {
+export function ElMes({
+  presupuesto,
+  alPonerMonto,
+}: {
+  presupuesto: Presupuesto
+  /** Ausente con los datos de ejemplo: la demostración se ve pero no se edita. */
+  alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+}) {
+  const [editando, setEditando] = useState<LineaMes | null>(null)
+  const editable = Boolean(alPonerMonto && presupuesto.mesId)
+  // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
+  const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
+
+  const filaEditable = (linea: LineaMes) => (
+    <Tarjeta key={linea.id}>
+      <Fila
+        izquierda={<Icono>{linea.icono}</Icono>}
+        titulo={linea.nombre}
+        detalle={linea.detalle}
+        derecha={
+          editable ? (
+            <button
+              type="button"
+              onClick={() => setEditando(linea)}
+              aria-label={`Poner el monto de ${linea.nombre}`}
+              className="border-linea text-texto min-h-11 rounded-[9px] border px-3 text-[15px] font-semibold [font-variant-numeric:tabular-nums]"
+            >
+              <Moneda centavos={linea.montoMensualCents} />
+            </button>
+          ) : (
+            <Moneda centavos={linea.montoMensualCents} />
+          )
+        }
+      />
+    </Tarjeta>
+  )
+
   return (
     <>
       <SelectorDeMes presupuesto={presupuesto} />
 
       <Seccion>Primero</Seccion>
-      <Tarjeta>
-        <Fila
-          izquierda={<Icono>{presupuesto.mayordomia.icono}</Icono>}
-          titulo={presupuesto.mayordomia.nombre}
-          detalle={presupuesto.mayordomia.detalle}
-          derecha={<Moneda centavos={presupuesto.mayordomia.montoMensualCents} />}
-        />
-      </Tarjeta>
+      {filaEditable(presupuesto.mayordomia)}
 
       <Seccion dato={`${presupuesto.fijos.length} categorías`}>Gastos fijos</Seccion>
-      <div className="flex flex-col gap-2">
-        {presupuesto.fijos.map((linea) => (
-          <Tarjeta key={linea.id}>
-            <Fila
-              izquierda={<Icono>{linea.icono}</Icono>}
-              titulo={linea.nombre}
-              detalle={linea.detalle}
-              derecha={<Moneda centavos={linea.montoMensualCents} />}
-            />
-          </Tarjeta>
-        ))}
-      </div>
+      <div className="flex flex-col gap-2">{presupuesto.fijos.map(filaEditable)}</div>
+
+      {presupuesto.variables.length > 0 && (
+        <>
+          <Seccion dato={`${presupuesto.variables.length} sobres`}>Gastos variables</Seccion>
+          <div className="flex flex-col gap-2">{presupuesto.variables.map(filaEditable)}</div>
+        </>
+      )}
+
+      {editando && alPonerMonto && (
+        <PonerMonto
+          linea={editando}
+          cheques={chequesQueSeReparten}
+          alGuardar={(monto) => alPonerMonto(editando.id, monto)}
+          alCerrar={() => setEditando(null)}
+        />
+      )}
 
       <Seccion>Fondos de reserva</Seccion>
       <Tarjeta>
