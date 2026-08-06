@@ -27,6 +27,7 @@ out/
 .eslintcache
 coverage/
 .nyc_output/
+capturas/
 
 # ---------- Tauri (fase 2) ----------
 src-tauri/target/

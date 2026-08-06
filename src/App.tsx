@@ -16,6 +16,7 @@ import { MiSemana } from './componentes/movil/MiSemana'
 import { mesYAnio } from './componentes/textos'
 import { simular } from './lib/deudas'
 import { centavos, suma } from './lib/dinero'
+import { fecha } from './lib/fecha'
 import { type Ruta, rutaEscritorio, rutaMovil, useRuta } from './rutas'
 
 /**
@@ -116,6 +117,10 @@ export function App() {
   const fuente = usarPresupuesto(mes, usuarioId)
 
   if (sesion.estado === 'cargando') return <Mensaje titulo="Un momento…" />
+  // La configuración existe pero está mal puesta. Se dice aquí, con lo que hay
+  // que hacer, en vez de dejar que reviente al mandar el correo.
+  if (sesion.estado === 'mal_configurado')
+    return <Mensaje titulo="La app no está bien conectada" cuerpo={sesion.motivo} />
   if (sesion.estado === 'fuera') return <Entrar />
 
   if (fuente.estado === 'cargando') return <Mensaje titulo="Un momento…" />
@@ -129,14 +134,12 @@ export function App() {
         mes={mes}
         alArmar={async (datos) => {
           const { armarPrimerMes } = await import('./servidor/repositorios/arranque')
-          const { centavos: aCentavos } = await import('./lib/dinero')
-          const { fecha: aFecha } = await import('./lib/fecha')
           await armarPrimerMes(usuarioId!, mes, {
             frecuencia: datos.frecuencia,
-            fechaAncla: aFecha(datos.fechaAncla),
+            fechaAncla: fecha(datos.fechaAncla),
             diasPago: datos.diasPago,
             ingresoEsperadoCents:
-              datos.ingresoEsperadoCents === null ? null : aCentavos(datos.ingresoEsperadoCents),
+              datos.ingresoEsperadoCents === null ? null : centavos(datos.ingresoEsperadoCents),
           })
           fuente.recargar()
         }}

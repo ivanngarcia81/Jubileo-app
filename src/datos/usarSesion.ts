@@ -5,15 +5,19 @@ export type EstadoSesion =
   | { estado: 'cargando' }
   | { estado: 'fuera' }
   | { estado: 'dentro'; usuarioId: string }
-  /** Sin servidor configurado: la app corre con los datos de ejemplo. */
+  /** La configuración existe pero está mal puesta. */
+  | { estado: 'mal_configurado'; motivo: string }
+  /** Sin servidor: la app corre con los datos de ejemplo. */
   | { estado: 'ejemplo' }
 
 /**
  * Quién está usando la app.
  *
- * Se queda escuchando los cambios de sesión de Supabase: cuando el usuario
- * abre el enlace mágico de su correo, la sesión aparece sola y la pantalla
- * cambia sin que nadie recargue nada.
+ * Se **suscribe antes de preguntar**. Al abrir el enlace del correo, Supabase
+ * canjea el código de la dirección por una sesión de forma asíncrona; si se
+ * preguntara primero y se escuchara después, ese canje puede terminar justo en
+ * el hueco entre las dos cosas y el aviso se pierde. El usuario se queda viendo
+ * la pantalla de entrar con la sesión ya creada.
  */
 export function usarSesion(): EstadoSesion {
   const [estado, setEstado] = useState<EstadoSesion>(() =>
@@ -25,17 +29,35 @@ export function usarSesion(): EstadoSesion {
     let vigente = true
     let desuscribir: (() => void) | undefined
 
-    void import('../servidor/cliente').then(async ({ cliente, usuarioConSesion }) => {
-      const usuarioId = await usuarioConSesion()
-      if (!vigente) return
-      setEstado(usuarioId ? { estado: 'dentro', usuarioId } : { estado: 'fuera' })
+    void import('../servidor/cliente')
+      .then(async ({ cliente, usuarioConSesion, problemaDeConfiguracion }) => {
+        const problema = problemaDeConfiguracion()
+        if (problema) {
+          if (vigente) setEstado({ estado: 'mal_configurado', motivo: problema })
+          return
+        }
 
-      const { data } = cliente().auth.onAuthStateChange((_evento, sesion) => {
+        // Primero el oído, después la pregunta.
+        const { data } = cliente().auth.onAuthStateChange((_evento, sesion) => {
+          if (!vigente) return
+          setEstado(
+            sesion?.user ? { estado: 'dentro', usuarioId: sesion.user.id } : { estado: 'fuera' },
+          )
+        })
+        desuscribir = () => data.subscription.unsubscribe()
+
+        const usuarioId = await usuarioConSesion()
         if (!vigente) return
-        setEstado(sesion?.user ? { estado: 'dentro', usuarioId: sesion.user.id } : { estado: 'fuera' })
+        setEstado(usuarioId ? { estado: 'dentro', usuarioId } : { estado: 'fuera' })
       })
-      desuscribir = () => data.subscription.unsubscribe()
-    })
+      .catch((e: unknown) => {
+        if (vigente) {
+          setEstado({
+            estado: 'mal_configurado',
+            motivo: e instanceof Error ? e.message : String(e),
+          })
+        }
+      })
 
     return () => {
       vigente = false

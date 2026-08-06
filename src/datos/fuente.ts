@@ -14,8 +14,18 @@ import type { Presupuesto } from './tipos'
  * PWA que tiene que abrir con mala señal, eso importa.
  */
 
+/**
+ * ¿Hay algo de servidor configurado? Ojo: dice si *se intentó* configurar, no
+ * si quedó bien. Lo segundo lo revisa `revisarConfiguracion`, y así una llave
+ * mal pegada se ve como un error con instrucciones en vez de caer de vuelta a
+ * los datos de ejemplo como si nada.
+ */
 export function usaServidor(): boolean {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+  return Boolean(
+    import.meta.env.VITE_SUPABASE_URL ||
+      import.meta.env.VITE_SUPABASE_ANON_KEY ||
+      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  )
 }
 
 /**

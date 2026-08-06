@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
     "periodos:demo": "tsx herramientas/demo-periodos.ts",
-    "revisar:pantallas": "node herramientas/revisar-pantallas.mjs"
+    "revisar:pantallas": "node herramientas/revisar-pantallas.mjs",
+    "revisar:entrar": "node herramientas/revisar-entrar.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.1",

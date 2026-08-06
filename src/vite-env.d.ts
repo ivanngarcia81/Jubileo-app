@@ -7,7 +7,12 @@
  */
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string
+  /**
+   * La misma llave con dos nombres: Supabase renombró `anon` a `publishable`.
+   * Basta con una — el código acepta cualquiera de las dos.
+   */
   readonly VITE_SUPABASE_ANON_KEY?: string
+  readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string
   readonly VITE_URL_APP?: string
 }
 
