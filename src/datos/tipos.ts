@@ -11,6 +11,11 @@ export interface Pago {
   diaVencimiento: number
   montoCents: Centavos
   pagado: boolean
+  /**
+   * El movimiento que lo dio por pagado, para poder deshacerlo. Marcar y
+   * desmarcar no son lo mismo: marcar anota un gasto, desmarcar lo borra.
+   */
+  transaccionId: string | null
   /** La deuda que se está atacando se señala como pago extra. */
   esEnfoque?: boolean
 }
@@ -72,10 +77,17 @@ export interface Presupuesto {
    * hay dónde guardar.
    */
   mesId: string | null
+  /** El hogar de quien tiene la sesión. Nulo con los datos de ejemplo. */
+  hogarId: string | null
   mes: { anio: number; mes: number; etiqueta: string }
   periodos: Periodo[]
   /** Índice del periodo en curso dentro de `periodos`. */
   periodoActivo: number
+  /**
+   * La llave del cheque en curso. Todo lo que se anota cuelga de él: es lo que
+   * hace que un gasto de hoy baje el dinero de esta semana y no el del mes.
+   */
+  periodoActivoId: string | null
   ingresoPorChequeCents: Centavos
   /** Lo que queda libre en cada periodo, en el mismo orden que `periodos`. */
   libreporPeriodoCents: Centavos[]

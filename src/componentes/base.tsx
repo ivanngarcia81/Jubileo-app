@@ -132,21 +132,27 @@ export function Casilla({
   marcada,
   etiqueta,
   alCambiar,
+  ocupada = false,
 }: {
   marcada: boolean
   etiqueta: string
-  alCambiar: () => void
+  /** Ausente en la demostración: se ve, no se toca. */
+  alCambiar?: (() => void) | undefined
+  /** Esperando al servidor. */
+  ocupada?: boolean
 }) {
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={marcada}
+      aria-busy={ocupada}
+      disabled={!alCambiar || ocupada}
       aria-label={marcada ? `Desmarcar ${etiqueta}` : `Marcar ${etiqueta} como pagado`}
       onClick={alCambiar}
       className={`relative size-[21px] shrink-0 rounded-[6px] border-[1.5px] before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ${
-        marcada ? 'bg-teal border-teal' : 'border-linea'
-      }`}
+        ocupada ? 'opacity-50' : ''
+      } ${marcada ? 'bg-teal border-teal' : 'border-linea'}`}
     >
       {marcada && (
         <span className="absolute top-[3px] left-[6px] h-[10px] w-[6px] rotate-[40deg] border-r-2 border-b-2 border-white" />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Presupuesto } from '../../datos/tipos'
+import type { Pago, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
 import {
@@ -13,6 +13,7 @@ import {
   colorDeSobre,
   porcentaje,
 } from '../base'
+import { Anotar } from './Anotar'
 
 /**
  * Mi semana — la pantalla de inicio.
@@ -89,12 +90,22 @@ const CHIPS = [
   { icono: '◷', texto: 'Semana' },
 ] as const
 
-export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
-  const [pagados, setPagados] = useState<Record<string, boolean>>(
-    Object.fromEntries(presupuesto.pagos.map((p) => [p.id, p.pagado])),
-  )
+export function MiSemana({
+  presupuesto,
+  alAnotar,
+  alMarcarPago,
+}: {
+  presupuesto: Presupuesto
+  /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
+  alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
+  alMarcarPago?: (pago: Pago) => Promise<void>
+}) {
+  const [anotando, setAnotando] = useState(false)
+  // Cuál casilla está esperando al servidor. Se marca al volver, no al tocar:
+  // una palomita que aparece y se deshace sola es peor que una que tarda.
+  const [ocupado, setOcupado] = useState<string | null>(null)
 
-  const hechos = presupuesto.pagos.filter((p) => pagados[p.id]).length
+  const hechos = presupuesto.pagos.filter((p) => p.pagado).length
 
   return (
     <>
@@ -105,7 +116,9 @@ export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
           <button
             key={texto}
             type="button"
-            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold"
+            onClick={texto === 'Anotar' && alAnotar ? () => setAnotando(true) : undefined}
+            disabled={texto === 'Anotar' && !alAnotar}
+            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold disabled:opacity-50"
           >
             <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#043432]">
               {icono}
@@ -118,7 +131,7 @@ export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
       <Seccion dato={`${hechos} de ${presupuesto.pagos.length} hechos`}>Pagos de esta semana</Seccion>
       <div className="flex flex-col gap-2">
         {presupuesto.pagos.map((pago) => {
-          const pagado = pagados[pago.id] ?? false
+          const pagado = pago.pagado
           return (
             <Tarjeta key={pago.id}>
               <Fila
@@ -126,7 +139,15 @@ export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
                   <Casilla
                     marcada={pagado}
                     etiqueta={pago.nombre}
-                    alCambiar={() => setPagados((p) => ({ ...p, [pago.id]: !pagado }))}
+                    ocupada={ocupado === pago.id}
+                    alCambiar={
+                      alMarcarPago
+                        ? () => {
+                            setOcupado(pago.id)
+                            void alMarcarPago(pago).finally(() => setOcupado(null))
+                          }
+                        : undefined
+                    }
                   />
                 }
                 titulo={pago.nombre}
@@ -158,6 +179,13 @@ export function MiSemana({ presupuesto }: { presupuesto: Presupuesto }) {
           <Sobre key={sobre.id} {...sobre} />
         ))}
       </div>
+      {anotando && alAnotar && (
+        <Anotar
+          presupuesto={presupuesto}
+          alAnotar={alAnotar}
+          alCerrar={() => setAnotando(false)}
+        />
+      )}
     </>
   )
 }

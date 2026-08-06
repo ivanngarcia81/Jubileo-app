@@ -45,6 +45,8 @@ const categorias = [
   { id: 'c-comida', hogar_id: H, nombre: 'Comida',   grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
 ]
 let lineas = []            // el estado del "servidor"
+let asignaciones = []
+let transacciones = []
 const escrituras = []
 
 const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
@@ -62,9 +64,27 @@ await p.route('**/*', async (r) => {
     if (url.pathname === '/auth/v1/verify') return json({ access_token:'x', token_type:'bearer', expires_in:3600, refresh_token:'y', user: USUARIO })
     if (url.pathname === '/auth/v1/user') return json(USUARIO)
     const t = url.pathname.replace('/rest/v1/', '')
+    if (m === 'DELETE') {
+      const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+      transacciones = transacciones.filter((x) => x.id !== id)
+      escrituras.push({ tabla: t, borrado: id })
+      return json([])
+    }
     if (m === 'POST' || m === 'PATCH') {
       const cuerpo = JSON.parse(r.request().postData() ?? '[]')
       escrituras.push({ tabla: t, cuerpo })
+      if (t === 'asignaciones') {
+        for (const a of [cuerpo].flat()) {
+          const i = asignaciones.findIndex((x) => x.linea_presupuesto_id === a.linea_presupuesto_id && x.periodo_id === a.periodo_id)
+          i === -1 ? asignaciones.push(a) : (asignaciones[i] = a)
+        }
+      }
+      if (t === 'transacciones') {
+        const f = [cuerpo].flat()[0]
+        const id = `t-${transacciones.length + 1}`
+        transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente' })
+        return json([{ id }])
+      }
       if (t === 'lineas_presupuesto') {
         for (const f of [cuerpo].flat()) {
           const i = lineas.findIndex((l) => l.categoria_id === f.categoria_id)
@@ -79,6 +99,8 @@ await p.route('**/*', async (r) => {
     if (t === 'periodos') return json(periodos)
     if (t === 'categorias') return json(categorias)
     if (t === 'lineas_presupuesto') return json(lineas)
+    if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
+    if (t === 'transacciones') return json(transacciones)
     return json([])
   }
   const f = normalize(join(dir, url.pathname === '/' ? '/index.html' : url.pathname))
@@ -124,6 +146,54 @@ await p.waitForTimeout(500)
 const pantalla = await p.locator('body').innerText()
 ok(pantalla.includes('$600'), 'y la pantalla ya enseña el monto nuevo')
 await p.screenshot({ path: RAIZ + 'capturas/app-mes-repartido.png' })
+
+// ---- Anotar un gasto ------------------------------------------------------
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+
+const antes = await p.locator('body').innerText()
+await p.getByRole('button', { name: 'Anotar' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+// `innerText` devuelve lo que se ve, y ese rótulo va en versalitas por CSS.
+const hoja = (await p.getByRole('dialog').first().innerText()).toLowerCase()
+ok(hoja.includes('¿de qué sobre sale?'), 'anotar pregunta de qué sobre sale: nunca lo adivina')
+
+const anotarBtn = p.getByRole('button', { name: 'Anotar', exact: true }).last()
+await p.getByLabel('Cuánto gastaste').first().fill('25.50')
+ok(await anotarBtn.isDisabled(), 'sin escoger sobre no deja anotar')
+
+await p.getByRole('button', { name: /^Comida/ }).first().click()
+await p.getByLabel('En qué gastaste').first().fill('Supermercado')
+await p.screenshot({ path: RAIZ + 'capturas/app-anotar.png' })
+await anotarBtn.click()
+await p.waitForTimeout(1200)
+
+const gasto = transacciones.at(-1)
+ok(gasto?.monto_cents === 2550, `el gasto se guarda en centavos enteros: ${gasto?.monto_cents}`)
+ok(gasto?.tipo === 'gasto' && gasto?.estado === 'asignada' && gasto?.categoria_id === 'c-comida',
+   'con su categoría, ya asignado y sin signo negativo')
+ok(gasto?.periodo_id === 'p1', 'colgado del cheque en curso, no del mes')
+
+// Los sobres enseñan cifras redondeadas: $25.50 gastados se ven como $26.
+const despues = await p.locator('body').innerText()
+ok(antes !== despues && /\$26\s*de\s*\$150/.test(despues), 'y el sobre ya enseña lo gastado')
+await p.screenshot({ path: RAIZ + 'capturas/app-semana-con-gasto.png' })
+
+// ---- Marcar y desmarcar un pago -------------------------------------------
+const casilla = p.getByRole('checkbox').first()
+await casilla.click()
+await p.waitForTimeout(1200)
+const pago = transacciones.at(-1)
+ok(pago?.categoria_id === 'c-serv' && pago?.estado === 'asignada',
+   'marcar un pago anota el gasto del fijo')
+ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'true',
+   'y la casilla queda marcada al volver del servidor')
+
+await p.getByRole('checkbox').first().click()
+await p.waitForTimeout(1200)
+ok(escrituras.some((e) => e.borrado), 'desmarcarlo lo borra en vez de dejar basura')
+ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'false',
+   'y la casilla se apaga')
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

@@ -192,9 +192,16 @@ describe('el mes armado desde la base', () => {
     expect(p.pagos.map((x) => x.montoCents)).toEqual([40000, 13000, 15000])
   })
 
-  it('marca como pagado lo que ya tiene su movimiento', () => {
-    expect(p.pagos.find((x) => x.nombre === 'Luz y agua')!.pagado).toBe(true)
-    expect(p.pagos.find((x) => x.nombre === 'Renta')!.pagado).toBe(false)
+  it('marca como pagado lo que ya tiene su movimiento, y dice cuál es', () => {
+    const luz = p.pagos.find((x) => x.nombre === 'Luz y agua')!
+    expect(luz.pagado).toBe(true)
+    // Sin la llave del movimiento la casilla se podría marcar pero no
+    // desmarcar: hay que saber qué borrar.
+    expect(luz.transaccionId).toBe('t1')
+
+    const renta = p.pagos.find((x) => x.nombre === 'Renta')!
+    expect(renta.pagado).toBe(false)
+    expect(renta.transaccionId).toBeNull()
   })
 
   it('señala la deuda de enfoque, amarrada por llave y no por nombre', () => {

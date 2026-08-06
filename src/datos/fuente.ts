@@ -1,3 +1,4 @@
+import { type FechaCivil, fecha } from '../lib/fecha'
 import type { MesObjetivo } from '../lib/periodos'
 import { PRESUPUESTO_EJEMPLO } from './ejemplo'
 import type { Presupuesto } from './tipos'
@@ -34,8 +35,20 @@ export function usaServidor(): boolean {
  * `lib/fecha`, que es puro a propósito.
  */
 export function mesActual(): MesObjetivo {
-  const hoy = new Date()
-  return { anio: hoy.getFullYear(), mes: hoy.getMonth() + 1 }
+  const ahora = new Date()
+  return { anio: ahora.getFullYear(), mes: ahora.getMonth() + 1 }
+}
+
+/**
+ * El día de hoy en el calendario del usuario, no en UTC. Un gasto anotado a
+ * las nueve de la noche en California es de hoy, no de mañana — y con `toISOString`
+ * sería de mañana.
+ */
+export function hoy(): FechaCivil {
+  const a = new Date()
+  return fecha(
+    `${a.getFullYear()}-${String(a.getMonth() + 1).padStart(2, '0')}-${String(a.getDate()).padStart(2, '0')}`,
+  )
 }
 
 /** El mes que muestra la demostración con datos de ejemplo. */

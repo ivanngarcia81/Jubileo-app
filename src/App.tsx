@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { MES_DEL_EJEMPLO, mesActual, usaServidor } from './datos/fuente'
-import type { Presupuesto } from './datos/tipos'
+import { MES_DEL_EJEMPLO, hoy, mesActual, usaServidor } from './datos/fuente'
+import type { Pago, Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
 import { usarSesion } from './datos/usarSesion'
 import { Entrar } from './componentes/Entrar'
@@ -70,15 +70,23 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
   }
 }
 
+/** Lo que la pantalla puede escribir. Ausente con datos de ejemplo. */
+interface Acciones {
+  alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+  alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
+  alMarcarPago?: (pago: Pago) => Promise<void>
+}
+
 function Contenido({
   ruta,
   presupuesto,
-  alPonerMonto,
+  acciones,
 }: {
   ruta: Ruta
   presupuesto: Presupuesto
-  alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+  acciones: Acciones
 }) {
+  const { alPonerMonto, alAnotar, alMarcarPago } = acciones
   switch (ruta) {
     case 'mes':
       return <ElMes presupuesto={presupuesto} {...(alPonerMonto ? { alPonerMonto } : {})} />
@@ -87,7 +95,13 @@ function Contenido({
     case 'metas':
       return <Metas presupuesto={presupuesto} />
     default:
-      return <MiSemana presupuesto={presupuesto} />
+      return (
+        <MiSemana
+          presupuesto={presupuesto}
+          {...(alAnotar ? { alAnotar } : {})}
+          {...(alMarcarPago ? { alMarcarPago } : {})}
+        />
+      )
   }
 }
 
@@ -175,6 +189,52 @@ export function App() {
       }
     : undefined
 
+  // Anotar cuelga del cheque en curso, no del mes: es lo que hace que un gasto
+  // de hoy baje el dinero de esta semana.
+  const puedeAnotar = presupuesto.hogarId && presupuesto.periodoActivoId && usuarioId
+  const alAnotar = puedeAnotar
+    ? async (categoriaId: string, montoCents: Centavos, descripcion: string) => {
+        const { anotarGasto } = await import('./servidor/repositorios/anotar')
+        await anotarGasto({
+          hogarId: presupuesto.hogarId!,
+          usuarioId,
+          periodoId: presupuesto.periodoActivoId!,
+          categoriaId,
+          fecha: hoy(),
+          montoCents,
+          descripcion,
+        })
+        fuente.recargar()
+      }
+    : undefined
+
+  // Marcar un pago es anotar el gasto completo; desmarcarlo es borrarlo.
+  const alMarcarPago = puedeAnotar
+    ? async (pago: Pago) => {
+        const { anotarGasto, borrarMovimiento } = await import('./servidor/repositorios/anotar')
+        if (pago.transaccionId) {
+          await borrarMovimiento(pago.transaccionId)
+        } else {
+          await anotarGasto({
+            hogarId: presupuesto.hogarId!,
+            usuarioId,
+            periodoId: presupuesto.periodoActivoId!,
+            categoriaId: pago.id,
+            fecha: hoy(),
+            montoCents: pago.montoCents,
+            descripcion: pago.nombre,
+          })
+        }
+        fuente.recargar()
+      }
+    : undefined
+
+  const acciones: Acciones = {
+    ...(alPonerMonto ? { alPonerMonto } : {}),
+    ...(alAnotar ? { alAnotar } : {}),
+    ...(alMarcarPago ? { alMarcarPago } : {}),
+  }
+
   const extraActual = centavos(
     suma(presupuesto.deudas.map((d) => d.pagoActualCents)) -
       suma(presupuesto.deudas.map((d) => d.pagoMinimoCents)),
@@ -186,7 +246,7 @@ export function App() {
     <>
       <div className="lg:hidden">
         <Marco cabecera={cabeceraDe(enMovil, presupuesto, ir)} activa={enMovil} ir={ir}>
-          <Contenido ruta={enMovil} presupuesto={presupuesto} {...(alPonerMonto ? { alPonerMonto } : {})} />
+          <Contenido ruta={enMovil} presupuesto={presupuesto} acciones={acciones} />
         </Marco>
       </div>
 
@@ -201,11 +261,7 @@ export function App() {
             {enEscritorio === 'ajustes' ? (
               <Ajustes />
             ) : (
-              <Contenido
-                ruta={enEscritorio}
-                presupuesto={presupuesto}
-                {...(alPonerMonto ? { alPonerMonto } : {})}
-              />
+              <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
             )}
           </div>
         )}

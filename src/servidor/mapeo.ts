@@ -200,14 +200,16 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
         )
         .map((c) => {
           const deuda = c.deuda_id ? deudaPorId.get(c.deuda_id) : undefined
+          const movimiento = filas.transacciones.find(
+            (t) => t.categoria_id === c.id && t.periodo_id === enCurso.id && t.estado === 'asignada',
+          )
           return {
             id: c.id,
             nombre: c.nombre,
             diaVencimiento: c.dia_vencimiento!,
             montoCents: asignadoAlPeriodo(c.id, enCurso.id),
-            pagado: filas.transacciones.some(
-              (t) => t.categoria_id === c.id && t.periodo_id === enCurso.id && t.estado === 'asignada',
-            ),
+            pagado: Boolean(movimiento),
+            transaccionId: movimiento?.id ?? null,
             ...(deuda?.es_enfoque ? { esEnfoque: true } : {}),
           }
         })
@@ -285,6 +287,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     },
 
     mesId: filas.mes.id,
+    hogarId: filas.mes.hogar_id,
     mes: {
       anio: filas.mes.anio,
       mes: filas.mes.mes,
@@ -293,6 +296,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
 
     periodos,
     periodoActivo,
+    periodoActivoId: enCurso?.id ?? null,
     ingresoPorChequeCents: enCurso ? ingresoDe(enCurso) : centavos(0),
     libreporPeriodoCents,
 

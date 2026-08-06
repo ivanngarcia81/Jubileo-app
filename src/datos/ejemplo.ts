@@ -41,9 +41,11 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
 
   // Sin mes en el servidor: la demostración se ve pero no se edita.
   mesId: null,
+  hogarId: null,
   mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
   periodos: PERIODOS,
   periodoActivo: 1,
+  periodoActivoId: null,
   ingresoPorChequeCents: centavos(124000),
   libreporPeriodoCents: [centavos(0), centavos(6500), centavos(120000)],
 
@@ -55,13 +57,21 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   variacionSale: '+4%',
 
   pagos: [
-    { id: 'renta', nombre: 'Renta', diaVencimiento: 3, montoCents: centavos(90000), pagado: true },
+    {
+      id: 'renta',
+      nombre: 'Renta',
+      diaVencimiento: 3,
+      montoCents: centavos(90000),
+      pagado: true,
+      transaccionId: null,
+    },
     {
       id: 'luz',
       nombre: 'Luz — PSE&G',
       diaVencimiento: 4,
       montoCents: centavos(8500),
       pagado: true,
+      transaccionId: null,
     },
     {
       id: 'capital-one',
@@ -69,6 +79,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       diaVencimiento: 9,
       montoCents: centavos(15000),
       pagado: false,
+      transaccionId: null,
       esEnfoque: true,
     },
     {
@@ -77,6 +88,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       diaVencimiento: 10,
       montoCents: centavos(20000),
       pagado: false,
+      transaccionId: null,
     },
   ],
 
