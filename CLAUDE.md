@@ -26,6 +26,19 @@ Subtítulo del producto: **presupuesto cheque a cheque**
   "EveryDollar", no "Debt Snowball" como nombre de función. Ver sección 3 de `SPEC.md`.
 - **Nunca auto-categorizar transacciones sin confirmación del usuario.** Presupuestar
   es un acto, no un reporte.
+- **Las migraciones solo van hacia adelante.** Una migración que ya corrió contra el
+  proyecto de Supabase **no se edita nunca más**, ni para arreglar un error, ni para
+  cambiarle un comentario. El cambio va en un archivo nuevo: `0002_…`, `0003_…`. Si
+  editas una que ya corrió, tu base y la del proyecto dejan de coincidir en silencio
+  y nadie se entera hasta que algo truena en producción. `0001_esquema.sql` se
+  reescribió varias veces mientras no existía el proyecto; desde que existe, se
+  acabó.
+- **Toda tabla nueva nace con RLS y con al menos una política**, y **toda columna de
+  dinero nace en `bigint` con su `CHECK`.** No hace falta acordarse:
+  `supabase/pruebas/04-reglas-del-esquema.sql` descubre las tablas y las columnas
+  solo, y revienta si falta alguna. Si una tabla debe negar todo a propósito, escribe
+  la política que niega — una tabla sin políticas también niega, pero no se distingue
+  de un olvido.
 - Fechas en UTC en la base; toda la lógica de periodos y avisos corre en la zona
   horaria del usuario.
 - Interfaz en español, trato de tú. El texto en español ocupa ~20% más que en inglés:
@@ -57,8 +70,15 @@ design/              contrato visual — no rediseñar
   movil.html
   design-tokens.css
 src/
-  lib/periodos/      módulo puro + pruebas. Empezar por aquí.
-  ...
+  lib/periodos/      módulo puro + pruebas. El corazón.
+  lib/dinero/        centavos enteros; el único lugar donde se divide dinero
+  lib/fecha/         fechas civiles AAAA-MM-DD, sin zona horaria
+  lib/deudas/        simulador de la fecha de libertad
+  servidor/          mapeo puro + repositorios delgados
+  componentes/       las pantallas, extraídas de design/
+supabase/
+  migraciones/       solo hacia adelante: 0001, 0002, 0003…
+  pruebas/           se corren con ./supabase/pruebas/probar-esquema.sh
 ```
 
 ## Cómo trabajar
@@ -68,3 +88,6 @@ src/
   toque fechas o asignaciones.
 - Commits en español, en imperativo: "agrega generador de periodos quincenales".
 - Las llaves van en `.env`, nunca en el código ni en un commit.
+- Al tocar el esquema, correr `./supabase/pruebas/probar-esquema.sh`. Levanta un
+  Postgres desechable, aplica las migraciones y comprueba restricciones, modo pareja
+  y políticas de RLS. No toca ninguna base real.

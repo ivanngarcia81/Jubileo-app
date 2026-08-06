@@ -19,11 +19,10 @@ begin;
 \set rosa   '''dddddddd-0000-0000-0000-000000000002'''
 \set ajeno  '''dddddddd-0000-0000-0000-000000000003'''
 
-insert into auth.users (id) values (:ivan), (:rosa), (:ajeno);
-insert into usuarios (id, correo, nombre) values
-  (:ivan,  'ivan@casa.com', 'Iván'),
-  (:rosa,  'rosa@casa.com', 'Rosa'),
-  (:ajeno, 'otro@otra.com', 'Ajeno');
+insert into auth.users (id, email, raw_user_meta_data) values
+  (:ivan,  'ivan@casa.com', '{"nombre":"Iván"}'),
+  (:rosa,  'rosa@casa.com', '{"nombre":"Rosa"}'),
+  (:ajeno, 'otro@otra.com', '{"nombre":"Ajeno"}');
 
 -- Rosa se muda al hogar de Iván: el presupuesto es uno solo.
 delete from miembros_hogar where usuario_id = :rosa;

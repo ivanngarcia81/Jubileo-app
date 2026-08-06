@@ -5,12 +5,12 @@
 
 begin;
 
-insert into auth.users (id) values ('11111111-1111-1111-1111-111111111111');
-insert into usuarios (id, correo, nombre)
-  values ('11111111-1111-1111-1111-111111111111', 'a@b.com', 'Iván');
+-- Registrarse es esto y nada más: una fila en `auth.users`. El perfil y el
+-- hogar tienen que aparecer solos.
+insert into auth.users (id, email, raw_user_meta_data)
+  values ('11111111-1111-1111-1111-111111111111', 'a@b.com', '{"nombre":"Iván"}');
 
--- El disparador `al_crear_usuario` ya le creó su hogar. Se guarda aquí para no
--- repetir la consulta en cada caso.
+-- Se guarda el hogar aquí para no repetir la consulta en cada caso.
 create temporary table ctx as
   select hogar_id from miembros_hogar where usuario_id = '11111111-1111-1111-1111-111111111111';
 
@@ -55,10 +55,16 @@ end $$;
 
 \echo ''
 \echo '--- al registrarse ---'
-select case when (select count(*) from miembros_hogar
-                   where usuario_id = '11111111-1111-1111-1111-111111111111' and rol = 'titular') = 1
-            then '  ok     se crea solo un hogar de un miembro'
-            else '  FALLA  no se creó el hogar al registrarse' end;
+select case when count(*) = 1 then '  ok     el perfil aparece solo desde auth.users'
+            else '  FALLA  perfiles creados: ' || count(*) end
+  from usuarios where id = '11111111-1111-1111-1111-111111111111';
+select case when nombre = 'Iván' then '  ok     el nombre viaja desde los metadatos del registro'
+            else '  FALLA  nombre: ' || coalesce(nombre, '(nulo)') end
+  from usuarios where id = '11111111-1111-1111-1111-111111111111';
+select case when count(*) = 1 then '  ok     y con él, su hogar de un miembro como titular'
+            else '  FALLA  hogares: ' || count(*) end
+  from miembros_hogar
+ where usuario_id = '11111111-1111-1111-1111-111111111111' and rol = 'titular';
 
 \echo '--- categorías ---'
 select probar('categoría fija sin día de vencimiento',

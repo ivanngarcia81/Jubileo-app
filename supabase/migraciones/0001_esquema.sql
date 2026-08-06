@@ -133,7 +133,7 @@ create table periodos (
 
   ingreso_esperado_cents bigint check (ingreso_esperado_cents is null or ingreso_esperado_cents >= 0),
   -- Nulo hasta que el usuario confirma cuánto entró de verdad.
-  ingreso_real_cents     bigint,
+  ingreso_real_cents     bigint check (ingreso_real_cents is null or ingreso_real_cents >= 0),
 
   -- Tercer cheque de un mes de 3. No se reparte entre categorías.
   es_extra               boolean not null default false,
@@ -290,7 +290,9 @@ create table transacciones (
   categoria_id uuid references categorias (id) on delete set null,
 
   fecha        date not null,
-  monto_cents  bigint not null,
+  -- Siempre en positivo. Si suma o resta lo dice `tipo`, no el signo: un
+  -- monto negativo con tipo 'gasto' significaría dos cosas a la vez.
+  monto_cents  bigint not null check (monto_cents > 0),
   tipo         tipo_transaccion not null,
   descripcion  text,
   comercio     text,
@@ -417,9 +419,19 @@ end $$;
 
 -- ---------------------------------------------------------------------------
 -- Al registrarse, cada quien estrena su hogar de un miembro.
+--
+-- Van dos disparadores encadenados, y el primero es el que importa:
+--
+--   auth.users  →  usuarios  →  hogares + miembros_hogar
+--
+-- Supabase crea la fila en `auth.users` cuando alguien se registra, y ahí se
+-- acaba su trabajo: el perfil en `public.usuarios` no aparece solo. Si el
+-- disparador colgara únicamente de `usuarios`, nunca se dispararía y el primer
+-- registro se quedaría sin hogar — o sea, sin nada de dónde colgar su
+-- presupuesto. Por eso la cadena arranca en `auth.users`.
 -- ---------------------------------------------------------------------------
 
-create or replace function al_crear_usuario()
+create or replace function al_crear_perfil()
 returns trigger
 language plpgsql
 security definer
@@ -429,7 +441,7 @@ declare
   nuevo uuid;
 begin
   insert into hogares (nombre)
-       values (coalesce(new.nombre, split_part(new.correo, '@', 1)))
+       values (coalesce(nullif(trim(new.nombre), ''), split_part(new.correo, '@', 1)))
     returning id into nuevo;
 
   insert into miembros_hogar (hogar_id, usuario_id, rol)
@@ -438,9 +450,32 @@ begin
   return new;
 end $$;
 
-create trigger al_crear_usuario
+create trigger al_crear_perfil
   after insert on usuarios
-  for each row execute function al_crear_usuario();
+  for each row execute function al_crear_perfil();
+
+-- El eslabón que faltaba: del registro de Supabase al perfil de la app.
+create or replace function al_registrarse()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into usuarios (id, correo, nombre)
+       values (
+         new.id,
+         new.email,
+         nullif(trim(coalesce(new.raw_user_meta_data ->> 'nombre',
+                              new.raw_user_meta_data ->> 'full_name', '')), '')
+       )
+  on conflict (id) do nothing;
+  return new;
+end $$;
+
+create trigger al_registrarse
+  after insert on auth.users
+  for each row execute function al_registrarse();
 
 -- ---------------------------------------------------------------------------
 -- Seguridad a nivel de fila
@@ -549,5 +584,12 @@ create policy propio on preferencias_aviso
 create policy propio_lectura on envios_aviso
   for select using (usuario_id = auth.uid());
 
--- Los códigos de cortesía se canjean desde el servidor. Nadie los lee desde el
--- cliente: si se pudieran listar, se podrían adivinar.
+-- Los códigos de cortesía se canjean desde el servidor, con la llave de
+-- servicio, que se salta el RLS. Desde el cliente no se lee ni una fila: si se
+-- pudieran listar, se podrían adivinar.
+--
+-- La política existe y niega todo a propósito. Una tabla con RLS y sin ninguna
+-- política también niega todo, pero no se distingue de un olvido — y
+-- `04-reglas-del-esquema.sql` no tiene forma de saber cuál de las dos es.
+create policy nadie_desde_el_cliente on codigos_cortesia
+  for all using (false) with check (false);

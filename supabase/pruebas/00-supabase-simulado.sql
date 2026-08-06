@@ -8,7 +8,13 @@
 
 create schema if not exists auth;
 
-create table auth.users (id uuid primary key default gen_random_uuid());
+-- Las columnas de `auth.users` que el disparador `al_registrarse` necesita.
+-- En el proyecto real las pone Supabase; aquí solo se imitan las tres.
+create table auth.users (
+  id                   uuid primary key default gen_random_uuid(),
+  email                text,
+  raw_user_meta_data   jsonb not null default '{}'::jsonb
+);
 
 create or replace function auth.uid()
 returns uuid

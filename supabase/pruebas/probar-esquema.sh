@@ -35,7 +35,7 @@ psql -h "$socket" -p "$puerto" -U postgres -d jubileo -q -v ON_ERROR_STOP=1 \
   -f "$raiz/supabase/migraciones/0001_esquema.sql"
 
 salida=""
-for prueba in 01-restricciones 02-modo-pareja 03-rls; do
+for prueba in 01-restricciones 02-modo-pareja 03-rls 04-reglas-del-esquema; do
   echo
   echo "=== $prueba ==="
   parcial=$(psql -h "$socket" -p "$puerto" -U postgres -d jubileo \

@@ -22,11 +22,16 @@ begin;
 \set ivan  '''aaaaaaaa-0000-0000-0000-000000000001'''
 \set rosa  '''aaaaaaaa-0000-0000-0000-000000000002'''
 
-insert into auth.users (id) values (:ivan), (:rosa);
-insert into usuarios (id, correo, nombre, frecuencia_pago, fecha_ancla, ingreso_esperado_cents)
-  values (:ivan, 'ivan@casa.com', 'Iván', 'cada_dos_semanas', '2026-08-03', 124000);
-insert into usuarios (id, correo, nombre, frecuencia_pago, fecha_ancla, dias_pago, ingreso_esperado_cents)
-  values (:rosa, 'rosa@casa.com', 'Rosa', 'dos_veces_al_mes', '2026-08-01', '{1,15}', 90000);
+-- Los dos se registran; el perfil y el hogar de cada quien aparecen solos.
+insert into auth.users (id, email, raw_user_meta_data) values
+  (:ivan, 'ivan@casa.com', '{"nombre":"Iván"}'),
+  (:rosa, 'rosa@casa.com', '{"nombre":"Rosa"}');
+
+-- Y cada quien configura cómo le pagan. Iván cada dos semanas, Rosa los 1 y 15.
+update usuarios set frecuencia_pago = 'cada_dos_semanas', fecha_ancla = '2026-08-03',
+                    ingreso_esperado_cents = 124000 where id = :ivan;
+update usuarios set frecuencia_pago = 'dos_veces_al_mes', fecha_ancla = '2026-08-01',
+                    dias_pago = '{1,15}', ingreso_esperado_cents = 90000 where id = :rosa;
 
 -- Cada quien estrenó su hogar al registrarse. En modo pareja, Rosa se muda al
 -- de Iván: el presupuesto es uno solo.
