@@ -73,6 +73,13 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
 /** Lo que la pantalla puede escribir. Ausente con datos de ejemplo. */
 interface Acciones {
   alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+  alRenombrar?: (categoriaId: string, nombre: string) => Promise<void>
+  alQuitar?: (categoriaId: string) => Promise<void>
+  alCrearCategoria?: (
+    grupo: 'fijo' | 'variable',
+    nombre: string,
+    diaVencimiento: number | undefined,
+  ) => Promise<void>
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
 }
@@ -86,10 +93,19 @@ function Contenido({
   presupuesto: Presupuesto
   acciones: Acciones
 }) {
-  const { alPonerMonto, alAnotar, alMarcarPago } = acciones
+  const { alPonerMonto, alRenombrar, alQuitar, alCrearCategoria, alAnotar, alMarcarPago } =
+    acciones
   switch (ruta) {
     case 'mes':
-      return <ElMes presupuesto={presupuesto} {...(alPonerMonto ? { alPonerMonto } : {})} />
+      return (
+        <ElMes
+          presupuesto={presupuesto}
+          {...(alPonerMonto ? { alPonerMonto } : {})}
+          {...(alRenombrar ? { alRenombrar } : {})}
+          {...(alQuitar ? { alQuitar } : {})}
+          {...(alCrearCategoria ? { alCrearCategoria } : {})}
+        />
+      )
     case 'deudas':
       return <Deudas presupuesto={presupuesto} />
     case 'metas':
@@ -189,6 +205,45 @@ export function App() {
       }
     : undefined
 
+  const hogarId = presupuesto.hogarId
+  const alRenombrar = mesId
+    ? async (categoriaId: string, nombre: string) => {
+        const { renombrarCategoria } = await import('./servidor/repositorios/categorias')
+        await renombrarCategoria(categoriaId, nombre)
+        fuente.recargar()
+      }
+    : undefined
+
+  const alQuitar = mesId
+    ? async (categoriaId: string) => {
+        const { quitarDelMes } = await import('./servidor/repositorios/categorias')
+        await quitarDelMes(categoriaId, mesId)
+        fuente.recargar()
+      }
+    : undefined
+
+  const alCrearCategoria =
+    mesId && hogarId
+      ? async (
+          grupo: 'fijo' | 'variable',
+          nombre: string,
+          diaVencimiento: number | undefined,
+        ) => {
+          const { crearCategoria } = await import('./servidor/repositorios/categorias')
+          // Se pone al final de su grupo, que es donde uno espera lo recién hecho.
+          const cuantas =
+            grupo === 'fijo' ? presupuesto.fijos.length : presupuesto.variables.length
+          await crearCategoria({
+            hogarId,
+            nombre,
+            grupo,
+            ...(diaVencimiento === undefined ? {} : { diaVencimiento }),
+            orden: 10 + cuantas,
+          })
+          fuente.recargar()
+        }
+      : undefined
+
   // Anotar cuelga del cheque en curso, no del mes: es lo que hace que un gasto
   // de hoy baje el dinero de esta semana.
   const puedeAnotar = presupuesto.hogarId && presupuesto.periodoActivoId && usuarioId
@@ -231,6 +286,9 @@ export function App() {
 
   const acciones: Acciones = {
     ...(alPonerMonto ? { alPonerMonto } : {}),
+    ...(alRenombrar ? { alRenombrar } : {}),
+    ...(alQuitar ? { alQuitar } : {}),
+    ...(alCrearCategoria ? { alCrearCategoria } : {}),
     ...(alAnotar ? { alAnotar } : {}),
     ...(alMarcarPago ? { alMarcarPago } : {}),
   }

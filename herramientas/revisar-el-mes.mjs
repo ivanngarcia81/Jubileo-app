@@ -38,7 +38,7 @@ const periodos = [1,2,3,4].map((n) => ({
   fecha_pago: `2026-08-${String(4+(n-1)*7).padStart(2,'0')}`,
   ingreso_esperado_cents: 171000, ingreso_real_cents: null, es_extra: false, estado: n === 1 ? 'abierto' : 'futuro',
 }))
-const categorias = [
+let categorias = [
   { id: 'c-diezmo', hogar_id: H, nombre: 'Diezmo y ofrenda', grupo: 'mayordomia', orden: 0, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
   { id: 'c-renta',  hogar_id: H, nombre: 'Renta',    grupo: 'fijo',     orden: 1, activa: true, es_fija: true,  dia_vencimiento: 1, deuda_id: null },
   { id: 'c-serv',   hogar_id: H, nombre: 'Servicios',grupo: 'fijo',     orden: 2, activa: true, es_fija: true,  dia_vencimiento: 5, deuda_id: null },
@@ -65,6 +65,15 @@ await p.route('**/*', async (r) => {
     if (url.pathname === '/auth/v1/user') return json(USUARIO)
     const t = url.pathname.replace('/rest/v1/', '')
     if (m === 'DELETE') {
+      if (t === 'lineas_presupuesto') {
+        const cat = (url.searchParams.get('categoria_id') ?? '').replace('eq.', '')
+        const fuera = lineas.filter((l) => l.categoria_id === cat).map((l) => l.id)
+        lineas = lineas.filter((l) => l.categoria_id !== cat)
+        // Las asignaciones se van en cascada tras su línea, como en el esquema.
+        asignaciones = asignaciones.filter((a) => !fuera.includes(a.linea_presupuesto_id))
+        escrituras.push({ tabla: t, borrado: cat })
+        return json([])
+      }
       const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
       transacciones = transacciones.filter((x) => x.id !== id)
       escrituras.push({ tabla: t, borrado: id })
@@ -85,6 +94,21 @@ await p.route('**/*', async (r) => {
         transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente' })
         return json([{ id }])
       }
+      if (t === 'categorias') {
+        const f = [cuerpo].flat()[0]
+        if (m === 'POST') {
+          if (categorias.some((c) => c.nombre === f.nombre)) {
+            return json({ code: '23505', message: 'duplicate key' }, 409)
+          }
+          const id = `c-nueva-${categorias.length}`
+          categorias.push({ id, activa: true, deuda_id: null, ...f })
+          return json([{ id }])
+        }
+        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+        const i = categorias.findIndex((c) => c.id === id)
+        if (i !== -1) categorias[i] = { ...categorias[i], ...f }
+        return json([])
+      }
       if (t === 'lineas_presupuesto') {
         for (const f of [cuerpo].flat()) {
           const i = lineas.findIndex((l) => l.categoria_id === f.categoria_id)
@@ -97,7 +121,7 @@ await p.route('**/*', async (r) => {
     if (t === 'meses')  return json([{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }])
     if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: 'gratis', nivel_vence_en: null, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: '2026-08-06T00:00:00Z' }])
     if (t === 'periodos') return json(periodos)
-    if (t === 'categorias') return json(categorias)
+    if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
     if (t === 'lineas_presupuesto') return json(lineas)
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
     if (t === 'transacciones') return json(transacciones)
@@ -194,6 +218,58 @@ await p.waitForTimeout(1200)
 ok(escrituras.some((e) => e.borrado), 'desmarcarlo lo borra en vez de dejar basura')
 ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'false',
    'y la casilla se apaga')
+
+// ---- Crear, renombrar y quitar --------------------------------------------
+await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+
+await p.getByRole('button', { name: 'Agregar un sobre' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Nombre de la categoría').first().fill('Comida')
+await p.getByRole('button', { name: 'Crear' }).first().click()
+await p.waitForTimeout(900)
+ok((await p.getByRole('alert').first().innerText()).includes('Ya tienes una categoría'),
+   'un nombre repetido se explica en español, no con el error de Postgres')
+
+await p.getByLabel('Nombre de la categoría').first().fill('Ropa')
+await p.getByRole('button', { name: 'Crear' }).first().click()
+await p.waitForTimeout(1200)
+ok(categorias.some((c) => c.nombre === 'Ropa' && c.grupo === 'variable'), 'se crea el sobre nuevo')
+ok((await p.locator('body').innerText()).includes('Ropa'), 'y aparece en la pantalla')
+
+// Un fijo sin día no debe poderse crear: sin él el aviso pierde la mitad.
+await p.getByRole('button', { name: 'Agregar un gasto fijo' }).first().click()
+await p.getByLabel('Nombre de la categoría').first().fill('Seguro')
+ok(await p.getByRole('button', { name: 'Crear' }).first().isDisabled(),
+   'un gasto fijo sin día de vencimiento no se puede crear')
+await p.getByLabel('¿Qué día del mes se vence?').first().fill('18')
+await p.screenshot({ path: RAIZ + 'capturas/app-nueva-categoria.png' })
+await p.getByRole('button', { name: 'Crear' }).first().click()
+await p.waitForTimeout(1200)
+const seguro = categorias.find((c) => c.nombre === 'Seguro')
+ok(seguro?.dia_vencimiento === 18 && seguro?.es_fija === true, 'con su día guardado y marcado como fijo')
+
+// Renombrar
+await p.getByRole('button', { name: 'Poner el monto de Ropa' }).first().click()
+await p.getByRole('button', { name: 'Renombrar' }).first().click()
+await p.getByLabel('Nombre de Ropa').first().fill('Ropa y calzado')
+await p.getByRole('button', { name: 'Guardar el nombre' }).first().click()
+await p.waitForTimeout(1200)
+ok(categorias.some((c) => c.nombre === 'Ropa y calzado'), 'se renombra')
+
+// Quitar: su linea se va, y con ella el dinero que contaba en "sale".
+const saleAntes = lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0)
+await p.getByRole('button', { name: 'Poner el monto de Comida' }).first().click()
+await p.getByRole('button', { name: 'Quitar del mes' }).first().click()
+const aviso = await p.getByRole('dialog').first().innerText()
+ok(aviso.includes('$600') && aviso.includes('sin repartir'), `avisa qué pasa con el dinero: ${aviso.match(/Se quita[^.]*\./)?.[0] ?? '—'}`)
+await p.getByRole('button', { name: 'Quitar del mes' }).last().click()
+await p.waitForTimeout(1400)
+ok(!lineas.some((l) => l.categoria_id === 'c-comida'), 'quitar borra su línea del mes')
+ok(!asignaciones.some((a) => a.linea_presupuesto_id === 'l-c-comida'), 'y sus asignaciones se van en cascada')
+ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000,
+   'el dinero deja de contar en lo que sale, en vez de quedarse invisible')
+ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

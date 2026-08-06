@@ -34,37 +34,49 @@ export function PonerMonto({
   linea,
   cheques,
   alGuardar,
+  alRenombrar,
+  alQuitar,
   alCerrar,
 }: {
   linea: LineaMes
   /** Cuántos cheques se reparten este mes. */
   cheques: number
   alGuardar: (montoCents: Centavos) => Promise<void>
+  alRenombrar?: ((nombre: string) => Promise<void>) | undefined
+  alQuitar?: (() => Promise<void>) | undefined
   alCerrar: () => void
 }) {
   const [texto, setTexto] = useState(() =>
     linea.montoMensualCents === 0 ? '' : (linea.montoMensualCents / 100).toFixed(2),
   )
+  const [nombre, setNombre] = useState(linea.nombre)
+  const [renombrando, setRenombrando] = useState(false)
+  const [confirmandoQuitar, setConfirmandoQuitar] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const campo = useRef<HTMLInputElement>(null)
 
   useEffect(() => campo.current?.focus(), [])
 
+  /** Corre una acción del servidor y deja dicho si falló, sin cerrar la hoja. */
+  async function intentar(accion: () => Promise<void>) {
+    setGuardando(true)
+    setError(null)
+    try {
+      await accion()
+      alCerrar()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo.')
+      setGuardando(false)
+    }
+  }
+
   const monto = aCentavos(texto)
   const porCheque = monto !== null && cheques > 0 ? repartirParejo(monto, cheques) : []
 
   async function guardar() {
     if (monto === null) return
-    setGuardando(true)
-    setError(null)
-    try {
-      await alGuardar(monto)
-      alCerrar()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo guardar.')
-      setGuardando(false)
-    }
+    await intentar(() => alGuardar(monto))
   }
 
   return (
@@ -79,10 +91,24 @@ export function PonerMonto({
         role="dialog"
         aria-label={`Monto de ${linea.nombre}`}
       >
-        <div className="text-texto font-serif text-[22px] leading-tight">{linea.nombre}</div>
-        <div className="text-texto-2 mt-1 text-[12.5px]">
-          {linea.detalle || 'Cuánto va a esta categoría en el mes'}
-        </div>
+        {renombrando ? (
+          <input
+            type="text"
+            value={nombre}
+            autoFocus
+            disabled={guardando}
+            onChange={(e) => setNombre(e.target.value)}
+            aria-label={`Nombre de ${linea.nombre}`}
+            className="border-linea text-texto font-serif min-h-11 w-full rounded-[11px] border px-3 text-[22px] focus:outline-none"
+          />
+        ) : (
+          <>
+            <div className="text-texto font-serif text-[22px] leading-tight">{linea.nombre}</div>
+            <div className="text-texto-2 mt-1 text-[12.5px]">
+              {linea.detalle || 'Cuánto va a esta categoría en el mes'}
+            </div>
+          </>
+        )}
 
         <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
           <span className="text-texto-2 font-serif text-[26px]">$</span>
@@ -134,6 +160,69 @@ export function PonerMonto({
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
+
+        {(alRenombrar || alQuitar) && !confirmandoQuitar && (
+          <div className="border-linea mt-4 flex gap-4 border-t pt-3">
+            {alRenombrar && (
+              <button
+                type="button"
+                disabled={guardando}
+                onClick={() =>
+                  renombrando ? void intentar(() => alRenombrar(nombre)) : setRenombrando(true)
+                }
+                className="text-teal-osc min-h-11 text-[13.5px] font-semibold"
+              >
+                {renombrando ? 'Guardar el nombre' : 'Renombrar'}
+              </button>
+            )}
+            {alQuitar && (
+              <button
+                type="button"
+                disabled={guardando}
+                onClick={() => setConfirmandoQuitar(true)}
+                className="text-texto-2 min-h-11 text-[13.5px]"
+              >
+                Quitar del mes
+              </button>
+            )}
+          </div>
+        )}
+
+        {confirmandoQuitar && alQuitar && (
+          <div className="border-linea mt-4 border-t pt-3">
+            <p className="text-texto text-[13.5px] leading-[1.55]">
+              {linea.montoMensualCents > 0 ? (
+                <>
+                  Se quita <b>{linea.nombre}</b> del mes junto con sus{' '}
+                  <b>{formatear(linea.montoMensualCents)}</b>, y ese dinero vuelve a quedar sin
+                  repartir. Lo que ya anotaste ahí no se borra.
+                </>
+              ) : (
+                <>
+                  Se quita <b>{linea.nombre}</b> del mes. Lo que ya anotaste ahí no se borra.
+                </>
+              )}
+            </p>
+            <div className="mt-3 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmandoQuitar(false)}
+                disabled={guardando}
+                className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+              >
+                Mejor no
+              </button>
+              <button
+                type="button"
+                onClick={() => void intentar(alQuitar)}
+                disabled={guardando}
+                className="bg-carbon min-h-11 flex-1 rounded-[11px] text-[14px] font-bold text-white disabled:opacity-50"
+              >
+                Quitar del mes
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -3,6 +3,7 @@ import { ALTURAS_MESES } from '../../datos/ejemplo'
 import type { LineaMes, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
+import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
 
 /**
@@ -71,15 +72,40 @@ function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
   )
 }
 
+/** Fila de "agregar", con el mismo aire que las tarjetas pero sin peso. */
+function Agregar({ texto, alTocar }: { texto: string; alTocar: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={alTocar}
+      className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-[15px] border border-dashed px-[14px] py-3 text-left text-[13.5px]"
+    >
+      <span className="text-teal-osc text-[17px] leading-none">+</span>
+      {texto}
+    </button>
+  )
+}
+
 export function ElMes({
   presupuesto,
   alPonerMonto,
+  alRenombrar,
+  alQuitar,
+  alCrearCategoria,
 }: {
   presupuesto: Presupuesto
-  /** Ausente con los datos de ejemplo: la demostración se ve pero no se edita. */
+  /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
   alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+  alRenombrar?: (categoriaId: string, nombre: string) => Promise<void>
+  alQuitar?: (categoriaId: string) => Promise<void>
+  alCrearCategoria?: (
+    grupo: 'fijo' | 'variable',
+    nombre: string,
+    diaVencimiento: number | undefined,
+  ) => Promise<void>
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
+  const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
   const editable = Boolean(alPonerMonto && presupuesto.mesId)
   // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
   const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
@@ -116,12 +142,18 @@ export function ElMes({
       {filaEditable(presupuesto.mayordomia)}
 
       <Seccion dato={`${presupuesto.fijos.length} categorías`}>Gastos fijos</Seccion>
-      <div className="flex flex-col gap-2">{presupuesto.fijos.map(filaEditable)}</div>
+      <div className="flex flex-col gap-2">
+        {presupuesto.fijos.map(filaEditable)}
+        {alCrearCategoria && <Agregar texto="Agregar un gasto fijo" alTocar={() => setCreando('fijo')} />}
+      </div>
 
-      {presupuesto.variables.length > 0 && (
+      {(presupuesto.variables.length > 0 || alCrearCategoria) && (
         <>
           <Seccion dato={`${presupuesto.variables.length} sobres`}>Gastos variables</Seccion>
-          <div className="flex flex-col gap-2">{presupuesto.variables.map(filaEditable)}</div>
+          <div className="flex flex-col gap-2">
+            {presupuesto.variables.map(filaEditable)}
+            {alCrearCategoria && <Agregar texto="Agregar un sobre" alTocar={() => setCreando('variable')} />}
+          </div>
         </>
       )}
 
@@ -130,7 +162,17 @@ export function ElMes({
           linea={editando}
           cheques={chequesQueSeReparten}
           alGuardar={(monto) => alPonerMonto(editando.id, monto)}
+          {...(alRenombrar ? { alRenombrar: (n: string) => alRenombrar(editando.id, n) } : {})}
+          {...(alQuitar ? { alQuitar: () => alQuitar(editando.id) } : {})}
           alCerrar={() => setEditando(null)}
+        />
+      )}
+
+      {creando && alCrearCategoria && (
+        <NuevaCategoria
+          grupo={creando}
+          alCrear={(nombre, dia) => alCrearCategoria(creando, nombre, dia)}
+          alCerrar={() => setCreando(null)}
         />
       )}
 
