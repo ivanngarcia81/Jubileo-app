@@ -9,8 +9,9 @@
  * de mentiras y se sirve desde el disco, sin levantar nada.
  *
  * Comprueba:
- *   · que tras pedir el código aparezca el campo de seis dígitos
+ *   · que tras pedir el código aparezca el campo
  *   · que un código malo se explique en español y deje el campo limpio
+ *   · que un código de más de seis dígitos quepa y se pueda enviar
  *   · que `supabase-js` no viaje en el paquete de arranque
  *   · que una llave mal pegada se diga al abrir, con qué hacer
  *   · que no haya errores en la consola
@@ -155,7 +156,7 @@ try {
   await p.getByLabel('Tu correo').fill('ana@ejemplo.com')
   await p.getByRole('button', { name: 'Mándame el código' }).click()
 
-  const campo = p.getByLabel('Código de seis dígitos')
+  const campo = p.getByLabel('Código del correo')
   await campo.waitFor({ state: 'visible', timeout: 5000 })
   revisar(true, 'tras pedirlo, aparece el campo del código')
   revisar(
@@ -168,6 +169,20 @@ try {
   const dicho = await p.getByRole('alert').innerText()
   revisar(dicho.includes('venció'), `un código vencido se dice en español: “${dicho.trim()}”`)
   revisar((await campo.inputValue()) === '', 'el campo queda limpio para volver a teclear')
+
+  // Pasó de verdad: `Email OTP Length` de Supabase estaba en 8 y la app se
+  // mandaba sola al sexto dígito. Enviaba los primeros seis, fallaba, y no
+  // había botón — la pantalla no tenía salida.
+  await campo.fill('82348847')
+  revisar(
+    (await campo.inputValue()) === '82348847',
+    'un código más largo que seis cabe entero en el campo',
+  )
+  const entrar = p.getByRole('button', { name: 'Entrar', exact: true })
+  revisar(await entrar.isEnabled(), 'y el botón de entrar lo acepta')
+  await entrar.click()
+  await p.getByRole('alert').waitFor({ state: 'visible', timeout: 5000 })
+  revisar(pedidos.filter((r) => r === '/auth/v1/verify').length === 2, 'que sí llega al servidor')
 
   await ctx.close()
 

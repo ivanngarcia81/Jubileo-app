@@ -167,8 +167,10 @@ igual que el enlace, así que no quedan cuentas a medias.
 
 **4. Supabase → Authentication → Providers → Email**
 
-- **Email OTP Length: 6.** La pantalla se manda sola al sexto dígito — es `LARGO`
-  en `src/componentes/Entrar.tsx`. Cambiarlo aquí rompe la app.
+- **Email OTP Length: 6.** La pantalla se manda sola al sexto dígito, que es lo
+  normal y ahorra un toque. Si aquí se pone otro número la app no se rompe —
+  el campo aguanta hasta diez y el botón de entrar sirve desde seis — pero se
+  pierde el envío automático.
 - **Email OTP Expiration: 3600.** El correo dice "vence en una hora".
 
 **5. Supabase → Authentication → URL Configuration**

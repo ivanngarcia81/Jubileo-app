@@ -16,7 +16,18 @@ type Paso =
   | { paso: 'codigo' }
   | { paso: 'verificando' }
 
-const LARGO = 6
+/**
+ * Cuántos dígitos trae el código lo decide el servidor, no la app: es el ajuste
+ * `Email OTP Length` de Supabase, que va de 6 a 10. Aquí solo se sabe cuál es
+ * el más común, y por eso el campo aguanta hasta el máximo y el botón sirve
+ * desde el mínimo. Antes se mandaba solo al sexto dígito y nada más: cuando el
+ * servidor mandó ocho, la app enviaba los primeros seis y no había forma de
+ * seguir — un callejón sin salida en la única pantalla que no puede tenerlo.
+ */
+const MINIMO = 6
+const MAXIMO = 10
+/** Al llegar aquí se manda solo, que es lo normal y ahorra un toque. */
+const ESPERADO = 6
 
 export function Entrar() {
   const [correo, setCorreo] = useState('')
@@ -59,10 +70,11 @@ export function Entrar() {
   }
 
   function alEscribirCodigo(valor: string) {
-    const soloDigitos = valor.replace(/\D/g, '').slice(0, LARGO)
+    const soloDigitos = valor.replace(/\D/g, '').slice(0, MAXIMO)
     setCodigo(soloDigitos)
-    // Se manda solo al completarse: un botón menos que tocar.
-    if (soloDigitos.length === LARGO) void verificar(soloDigitos)
+    // Se manda solo al largo de siempre: un toque menos. Si el servidor manda
+    // más dígitos, se siguen tecleando y se entra con el botón.
+    if (soloDigitos.length === ESPERADO) void verificar(soloDigitos)
   }
 
   const pidiendoCodigo = estado.paso === 'codigo' || estado.paso === 'verificando'
@@ -93,7 +105,7 @@ export function Entrar() {
               Tu código
             </label>
             <p className="mt-1 text-[13px] leading-[1.55] text-[#6E7473]">
-              Le mandamos seis números a <b className="text-white">{correo}</b>. Tecléalos aquí.
+              Le mandamos un código a <b className="text-white">{correo}</b>. Tecléalo aquí.
             </p>
 
             <input
@@ -102,12 +114,12 @@ export function Entrar() {
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={LARGO}
+              maxLength={MAXIMO}
               value={codigo}
               disabled={estado.paso === 'verificando'}
               onChange={(e) => alEscribirCodigo(e.target.value)}
               placeholder="······"
-              aria-label="Código de seis dígitos"
+              aria-label="Código del correo"
               className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-[28px] tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-[#4A4F4E] focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
             />
 
@@ -120,6 +132,17 @@ export function Entrar() {
                 {error}
               </p>
             )}
+
+            {/* Siempre hay un botón. Si el código trae más dígitos de los que
+                disparan el envío automático, esta es la salida. */}
+            <button
+              type="button"
+              onClick={() => void verificar(codigo)}
+              disabled={codigo.length < MINIMO || estado.paso === 'verificando'}
+              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#043432] disabled:opacity-50"
+            >
+              Entrar
+            </button>
 
             <div className="mt-5 flex flex-col gap-3">
               <button
