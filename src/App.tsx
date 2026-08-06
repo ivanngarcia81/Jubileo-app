@@ -1,5 +1,10 @@
+import { useMemo } from 'react'
+import { MES_DEL_EJEMPLO, mesActual, usaServidor } from './datos/fuente'
 import type { Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
+import { usarSesion } from './datos/usarSesion'
+import { Entrar } from './componentes/Entrar'
+import { PrimerMes } from './componentes/PrimerMes'
 import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
 import { Resumen } from './componentes/escritorio/Resumen'
 import { Aviso } from './componentes/movil/Aviso'
@@ -101,12 +106,44 @@ function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
 }
 
 export function App() {
-  const fuente = usarPresupuesto()
+  const sesion = usarSesion()
   const [ruta, ir] = useRuta()
+
+  // Sin servidor, la app enseña el mes del ejemplo. Con servidor, el mes en el
+  // que está parado el usuario.
+  const mes = useMemo(() => (usaServidor() ? mesActual() : MES_DEL_EJEMPLO), [])
+  const usuarioId = sesion.estado === 'dentro' ? sesion.usuarioId : null
+  const fuente = usarPresupuesto(mes, usuarioId)
+
+  if (sesion.estado === 'cargando') return <Mensaje titulo="Un momento…" />
+  if (sesion.estado === 'fuera') return <Entrar />
 
   if (fuente.estado === 'cargando') return <Mensaje titulo="Un momento…" />
   if (fuente.estado === 'error')
     return <Mensaje titulo="No pudimos traer tu mes" cuerpo={fuente.mensaje} />
+
+  // Cuenta nueva: todavía no hay mes. No es un error, es el principio.
+  if (fuente.estado === 'sin_mes') {
+    return (
+      <PrimerMes
+        mes={mes}
+        alArmar={async (datos) => {
+          const { armarPrimerMes } = await import('./servidor/repositorios/arranque')
+          const { centavos: aCentavos } = await import('./lib/dinero')
+          const { fecha: aFecha } = await import('./lib/fecha')
+          await armarPrimerMes(usuarioId!, mes, {
+            frecuencia: datos.frecuencia,
+            fechaAncla: aFecha(datos.fechaAncla),
+            diasPago: datos.diasPago,
+            ingresoEsperadoCents:
+              datos.ingresoEsperadoCents === null ? null : aCentavos(datos.ingresoEsperadoCents),
+          })
+          fuente.recargar()
+        }}
+      />
+    )
+  }
+
   const presupuesto = fuente.presupuesto
 
   // El aviso no es una pantalla de la app: es la notificación. Se ve entera,
