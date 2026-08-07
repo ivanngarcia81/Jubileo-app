@@ -12,6 +12,7 @@ import { Deudas } from './componentes/movil/Deudas'
 import { ElMes } from './componentes/movil/ElMes'
 import { Cabecera, Marco } from './componentes/movil/Marco'
 import { Metas } from './componentes/movil/Metas'
+import type { RespuestaCierre } from './componentes/movil/CerrarSemana'
 import { MiSemana } from './componentes/movil/MiSemana'
 import { mesYAnio } from './componentes/textos'
 import { simular } from './lib/deudas'
@@ -82,6 +83,7 @@ interface Acciones {
   ) => Promise<void>
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
+  alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
 }
 
 function Contenido({
@@ -93,8 +95,15 @@ function Contenido({
   presupuesto: Presupuesto
   acciones: Acciones
 }) {
-  const { alPonerMonto, alRenombrar, alQuitar, alCrearCategoria, alAnotar, alMarcarPago } =
-    acciones
+  const {
+    alPonerMonto,
+    alRenombrar,
+    alQuitar,
+    alCrearCategoria,
+    alAnotar,
+    alMarcarPago,
+    alCerrarSemana,
+  } = acciones
   switch (ruta) {
     case 'mes':
       return (
@@ -116,6 +125,7 @@ function Contenido({
           presupuesto={presupuesto}
           {...(alAnotar ? { alAnotar } : {})}
           {...(alMarcarPago ? { alMarcarPago } : {})}
+          {...(alCerrarSemana ? { alCerrarSemana } : {})}
         />
       )
   }
@@ -284,6 +294,23 @@ export function App() {
       }
     : undefined
 
+  const alCerrarSemana =
+    puedeAnotar && hogarId
+      ? async (r: RespuestaCierre) => {
+          const { cerrarSemana } = await import('./servidor/repositorios/cerrar')
+          await cerrarSemana({
+            hogarId,
+            usuarioId,
+            periodoId: presupuesto.periodoActivoId!,
+            fecha: hoy(),
+            ingresoRealCents: r.ingresoRealCents,
+            sobres: r.sobres,
+            pagosHechos: r.pagosHechos,
+          })
+          fuente.recargar()
+        }
+      : undefined
+
   const acciones: Acciones = {
     ...(alPonerMonto ? { alPonerMonto } : {}),
     ...(alRenombrar ? { alRenombrar } : {}),
@@ -291,6 +318,7 @@ export function App() {
     ...(alCrearCategoria ? { alCrearCategoria } : {}),
     ...(alAnotar ? { alAnotar } : {}),
     ...(alMarcarPago ? { alMarcarPago } : {}),
+    ...(alCerrarSemana ? { alCerrarSemana } : {}),
   }
 
   const extraActual = centavos(

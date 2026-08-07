@@ -1,3 +1,4 @@
+import { hoy } from '../../datos/fuente'
 import type { Presupuesto } from '../../datos/tipos'
 import type { MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
@@ -123,5 +124,6 @@ export async function cargarPresupuestoDelMes(
     usuarioActual,
   }
 
-  return aPresupuesto(filas)
+  // El día de hoy entra desde afuera: `mapeo` es puro y no pregunta la hora.
+  return aPresupuesto(filas, { hoy: hoy() })
 }

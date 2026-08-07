@@ -14,6 +14,7 @@ import {
   porcentaje,
 } from '../base'
 import { Anotar } from './Anotar'
+import { CerrarSemana, type RespuestaCierre } from './CerrarSemana'
 
 /**
  * Mi semana — la pantalla de inicio.
@@ -94,13 +95,16 @@ export function MiSemana({
   presupuesto,
   alAnotar,
   alMarcarPago,
+  alCerrarSemana,
 }: {
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
+  alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
 }) {
   const [anotando, setAnotando] = useState(false)
+  const [cerrando, setCerrando] = useState(false)
   // Cuál casilla está esperando al servidor. Se marca al volver, no al tocar:
   // una palomita que aparece y se deshace sola es peor que una que tarda.
   const [ocupado, setOcupado] = useState<string | null>(null)
@@ -116,8 +120,16 @@ export function MiSemana({
           <button
             key={texto}
             type="button"
-            onClick={texto === 'Anotar' && alAnotar ? () => setAnotando(true) : undefined}
-            disabled={texto === 'Anotar' && !alAnotar}
+            onClick={
+              texto === 'Anotar' && alAnotar
+                ? () => setAnotando(true)
+                : texto === 'Semana' && alCerrarSemana
+                  ? () => setCerrando(true)
+                  : undefined
+            }
+            disabled={
+              (texto === 'Anotar' && !alAnotar) || (texto === 'Semana' && !alCerrarSemana)
+            }
             className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold disabled:opacity-50"
           >
             <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#043432]">
@@ -179,6 +191,14 @@ export function MiSemana({
           <Sobre key={sobre.id} {...sobre} />
         ))}
       </div>
+      {cerrando && alCerrarSemana && (
+        <CerrarSemana
+          presupuesto={presupuesto}
+          alCerrarSemana={alCerrarSemana}
+          alCerrar={() => setCerrando(false)}
+        />
+      )}
+
       {anotando && alAnotar && (
         <Anotar
           presupuesto={presupuesto}

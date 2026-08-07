@@ -94,6 +94,13 @@ await p.route('**/*', async (r) => {
         transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente' })
         return json([{ id }])
       }
+      if (t === 'periodos' && m === 'PATCH') {
+        const f = [cuerpo].flat()[0]
+        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+        const i = periodos.findIndex((x) => x.id === id)
+        if (i !== -1) periodos[i] = { ...periodos[i], ...f }
+        return json([])
+      }
       if (t === 'categorias') {
         const f = [cuerpo].flat()[0]
         if (m === 'POST') {
@@ -270,6 +277,37 @@ ok(!asignaciones.some((a) => a.linea_presupuesto_id === 'l-c-comida'), 'y sus as
 ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000,
    'el dinero deja de contar en lo que sale, en vez de quedarse invisible')
 ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
+
+// ---- Cerrar la semana -----------------------------------------------------
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Semana' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+ok((await p.getByRole('dialog').first().innerText()).includes('¿Entró lo que esperabas?'),
+   'cerrar la semana arranca preguntando qué entró')
+
+// Viene contestada con lo que la app ya sabe: si cuadra, es dar siguiente.
+ok((await p.getByLabel('Cuánto entró de verdad').first().inputValue()) === '1710.00',
+   'con el ingreso esperado ya puesto')
+await p.getByLabel('Cuánto entró de verdad').first().fill('1650')
+await p.getByRole('button', { name: 'Siguiente' }).first().click()
+
+const gastadoAntes = transacciones.filter((t) => t.categoria_id === 'c-ropa-o-comida').length
+ok((await p.getByRole('dialog').first().innerText()).includes('¿Cuánto gastaste en los sobres?'),
+   'la segunda pregunta son los sobres')
+await p.screenshot({ path: RAIZ + 'capturas/app-cerrar-semana.png' })
+await p.getByRole('button', { name: 'Siguiente' }).first().click()
+
+ok((await p.getByRole('dialog').first().innerText()).includes('¿Pagaste lo que faltaba?'),
+   'y la tercera los pagos pendientes')
+const cuantasAntes = transacciones.length
+await p.getByRole('button', { name: 'Cerrar la semana' }).first().click()
+await p.waitForTimeout(1500)
+
+ok(periodos[0].ingreso_real_cents === 165000, 'guarda lo que entró de verdad, no lo esperado')
+ok(periodos[0].estado === 'cerrado', 'y deja el cheque cerrado')
+ok(transacciones.length === cuantasAntes, 'sin ajustes que inventar, no anota nada de más')
+void gastadoAntes
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

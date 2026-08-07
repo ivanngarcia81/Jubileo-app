@@ -101,6 +101,38 @@ export function mesesEntre(desde: FechaCivil, hasta: FechaCivil | null): number 
 export interface OpcionesMapeo {
   /** Historial para las barras del selector de mes. Vacío si no se pidió. */
   mesesPasados?: Presupuesto['mesesPasados']
+  /**
+   * El día de hoy, para saber en qué cheque está parado el usuario. Entra por
+   * aquí y no se pregunta adentro porque este módulo es puro: sin reloj se
+   * puede probar el 31 de diciembre igual que cualquier día.
+   */
+  hoy?: FechaCivil
+}
+
+/**
+ * En qué cheque está parado el usuario.
+ *
+ * Manda la fecha, no el estado guardado. El estado dice qué se cerró —lo que
+ * el usuario ya contestó—, que es otra cosa: si nunca cierra su semana, el
+ * cheque igual avanza, porque el calendario avanza. Amarrarlo al estado dejaría
+ * a quien no contesta viendo para siempre el cheque de la primera semana.
+ */
+export function chequeEnCurso(
+  periodos: readonly Pick<FilaPeriodo, 'fecha_inicio' | 'fecha_fin' | 'estado'>[],
+  hoy: FechaCivil | undefined,
+): number {
+  if (periodos.length === 0) return 0
+  if (hoy) {
+    const dentro = periodos.findIndex((p) => p.fecha_inicio <= hoy && hoy <= p.fecha_fin)
+    if (dentro !== -1) return dentro
+    // Fuera del mes: si ya pasó, el último; si no ha llegado, el primero.
+    const ultimo = periodos.at(-1)!
+    if (hoy > ultimo.fecha_fin) return periodos.length - 1
+    if (hoy < periodos[0]!.fecha_inicio) return 0
+  }
+  // Sin fecha, el primero que quede sin cerrar.
+  const abierto = periodos.findIndex((p) => p.estado !== 'cerrado')
+  return abierto === -1 ? periodos.length - 1 : abierto
 }
 
 export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): Presupuesto {
@@ -133,11 +165,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     libreDelPeriodo(p, asignadoPorPeriodo.get(p.id) ?? 0),
   )
 
-  const activo = Math.max(
-    0,
-    periodosOrdenados.findIndex((p) => p.estado === 'activo'),
-  )
-  const periodoActivo = periodosOrdenados.some((p) => p.estado === 'activo') ? activo : 0
+  const periodoActivo = chequeEnCurso(periodosOrdenados, opciones.hoy)
   const enCurso = periodosOrdenados[periodoActivo]
 
   // ---- Índices -----------------------------------------------------------

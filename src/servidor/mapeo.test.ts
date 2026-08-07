@@ -4,6 +4,7 @@ import { fecha } from '../lib/fecha'
 import type { FilasDelMes } from './esquema'
 import {
   aPresupuesto,
+  chequeEnCurso,
   iniciales,
   ingresoDe,
   libreDelPeriodo,
@@ -142,6 +143,47 @@ describe('piezas del mapeo', () => {
     expect(mesesEntre(fecha('2026-08-01'), fecha('2026-12-01'))).toBe(4)
     expect(mesesEntre(fecha('2026-08-01'), null)).toBe(0)
     expect(mesesEntre(fecha('2026-08-01'), fecha('2026-05-01'))).toBe(0)
+  })
+})
+
+describe('en qué cheque está parado el usuario', () => {
+  // Cheques del 3 al 16, del 17 al 30, y el extra del 31 al 13 de septiembre.
+  const riel = [
+    { fecha_inicio: '2026-08-03', fecha_fin: '2026-08-16', estado: 'cerrado' as const },
+    { fecha_inicio: '2026-08-17', fecha_fin: '2026-08-30', estado: 'futuro' as const },
+    { fecha_inicio: '2026-08-31', fecha_fin: '2026-09-13', estado: 'futuro' as const },
+  ]
+
+  it('manda la fecha, no el estado guardado', () => {
+    // El primero está marcado como cerrado y aun así es el que corre el día 10:
+    // cerrar es lo que el usuario contestó, no dónde está parado.
+    expect(chequeEnCurso(riel, fecha('2026-08-10'))).toBe(0)
+    expect(chequeEnCurso(riel, fecha('2026-08-17'))).toBe(1)
+    expect(chequeEnCurso(riel, fecha('2026-08-30'))).toBe(1)
+    expect(chequeEnCurso(riel, fecha('2026-09-02'))).toBe(2)
+  })
+
+  it('los bordes del cheque cuentan como adentro', () => {
+    expect(chequeEnCurso(riel, fecha('2026-08-03'))).toBe(0)
+    expect(chequeEnCurso(riel, fecha('2026-08-16'))).toBe(0)
+  })
+
+  it('si ya pasó todo el riel, el último; si no ha llegado, el primero', () => {
+    expect(chequeEnCurso(riel, fecha('2026-12-25'))).toBe(2)
+    expect(chequeEnCurso(riel, fecha('2026-01-01'))).toBe(0)
+  })
+
+  it('sin fecha, el primero sin cerrar', () => {
+    expect(chequeEnCurso(riel, undefined)).toBe(1)
+  })
+
+  it('con todo cerrado se queda en el último, no se sale del riel', () => {
+    const todos = riel.map((p) => ({ ...p, estado: 'cerrado' as const }))
+    expect(chequeEnCurso(todos, undefined)).toBe(2)
+  })
+
+  it('sin cheques no revienta', () => {
+    expect(chequeEnCurso([], fecha('2026-08-10'))).toBe(0)
   })
 })
 
