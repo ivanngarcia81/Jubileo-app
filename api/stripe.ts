@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
-import { nivelDeSuscripcion, type Plan } from '../src/lib/membresia'
+import { nivelDeSuscripcion, type Plan } from '../src/lib/membresia/index.js'
 
 /**
  * Membresía: cobrar, administrar y —lo que de verdad importa— enterarse.

@@ -1,2 +1,2 @@
-export * from './contenido'
-export * from './correo'
+export * from './contenido.js'
+export * from './correo.js'

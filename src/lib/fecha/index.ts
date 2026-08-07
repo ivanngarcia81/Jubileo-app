@@ -21,4 +21,4 @@ export {
   min,
   max,
   retrocederA,
-} from './civil'
+} from './civil.js'

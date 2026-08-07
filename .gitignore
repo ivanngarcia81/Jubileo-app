@@ -62,3 +62,6 @@ yarn-error.log*
 pnpm-debug.log*
 tmp/
 temp/
+
+# Lo que deja la revisión de las funciones de servidor.
+.tmp-funciones/

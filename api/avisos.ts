@@ -5,9 +5,9 @@ import {
   avisoEnTexto,
   type PagoDelAviso,
   type SobreDelAviso,
-} from '../src/lib/aviso'
-import { centavos } from '../src/lib/dinero'
-import { fecha } from '../src/lib/fecha'
+} from '../src/lib/aviso/index.js'
+import { centavos } from '../src/lib/dinero/index.js'
+import { fecha } from '../src/lib/fecha/index.js'
 
 /**
  * El aviso de arranque de periodo.

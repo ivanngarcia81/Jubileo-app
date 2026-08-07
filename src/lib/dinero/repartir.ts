@@ -1,4 +1,4 @@
-import { type Centavos, centavos, suma } from './centavos'
+import { type Centavos, centavos, suma } from './centavos.js'
 
 /**
  * Reparte un monto entre varias partes sin perder ni inventar un centavo.

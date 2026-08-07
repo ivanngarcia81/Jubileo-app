@@ -1,4 +1,4 @@
-import type { Centavos } from './centavos'
+import type { Centavos } from './centavos.js'
 
 /**
  * Formateo. Vive aparte a propósito: es capa de presentación y no debe

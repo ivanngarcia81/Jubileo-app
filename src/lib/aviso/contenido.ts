@@ -1,5 +1,5 @@
-import { type Centavos, suma, centavos } from '../dinero'
-import type { FechaCivil } from '../fecha'
+import { type Centavos, suma, centavos } from '../dinero/index.js'
+import type { FechaCivil } from '../fecha/index.js'
 
 /**
  * Qué dice el aviso de arranque de periodo.

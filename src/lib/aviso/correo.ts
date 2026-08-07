@@ -1,5 +1,5 @@
-import type { Aviso } from './contenido'
-import { formatearDolares } from './contenido'
+import type { Aviso } from './contenido.js'
+import { formatearDolares } from './contenido.js'
 
 /**
  * El aviso, hecho correo.
