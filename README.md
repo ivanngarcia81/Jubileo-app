@@ -255,6 +255,40 @@ herramientas/
   foráneas de `asignaciones`, así que no hay forma de cuadrar una línea con
   dinero de otro mes.
 
+## El aviso del domingo
+
+`api/avisos.ts` corre en Vercel una vez por hora y le manda el aviso a quien
+ese día arranca un cheque, a la hora que eligió **en su reloj**, no en el del
+servidor. El contenido no se calcula ahí: sale de `src/lib/aviso`, que es puro
+y tiene sus 24 pruebas.
+
+La idempotencia no la pone el cron: la pone `envios_aviso` con su
+`unique (usuario_id, periodo_id, tipo, canal)`. El registro se inserta **antes**
+de mandar, así que un cron que corra dos veces choca contra la llave y no manda
+dos correos. Un cron no tiene que ser confiable para que el usuario no reciba lo
+mismo dos veces.
+
+Variables que necesita, **ninguna con prefijo `VITE_`** porque ninguna debe
+llegar al navegador:
+
+| Nombre | Para qué |
+| --- | --- |
+| `SUPABASE_URL` | la misma del frontend |
+| `SUPABASE_SERVICE_ROLE_KEY` | se salta el RLS: hace falta para leer los periodos de todos los hogares |
+| `CORREO_API_KEY` | la llave `re_…` de Resend |
+| `CORREO_REMITENTE` | `hola@jubileofinanciero.com` |
+| `URL_APP` | a dónde lleva el botón del correo |
+| `CRON_SECRET` | lo pone Vercel solo; sin él cualquiera con la URL dispara los correos |
+
+Para probarlo sin esperar a la hora:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://tu-app.vercel.app/api/avisos
+```
+
+Contesta cuántos mandó y qué falló, por usuario. Un usuario que revienta no
+tumba el aviso de los demás.
+
 ## Estado
 
 Fase 1, en construcción.
