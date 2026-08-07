@@ -32,3 +32,16 @@ export async function irAPagar(plan: 'mensual' | 'anual'): Promise<void> {
 export async function irAlPortal(): Promise<void> {
   window.location.href = await pedir('portal')
 }
+
+/**
+ * Canjea un código de cortesía y devuelve hasta cuándo queda premium.
+ *
+ * Pasa por una función de la base y no por la tabla: `codigos_cortesia` niega
+ * todo desde el cliente a propósito. Con permiso directo, cualquiera podría
+ * leer la lista de códigos y probarlos uno por uno.
+ */
+export async function canjearCodigo(codigo: string): Promise<string> {
+  const { data, error } = await cliente().rpc('canjear_codigo', { codigo_dado: codigo })
+  if (error) throw new Error(error.message)
+  return data as string
+}

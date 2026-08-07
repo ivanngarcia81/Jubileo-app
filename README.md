@@ -67,6 +67,10 @@ como usuarios de verdad:
 ./supabase/pruebas/probar-esquema.sh
 ```
 
+Aplica **todas** las migraciones, no solo la primera. Nombrarlas a mano dejaría
+a las nuevas sin probar en silencio, y con la regla de "solo hacia adelante"
+todo lo nuevo vive precisamente en las de después.
+
 ## Desplegar
 
 La app es estática: cualquier hosting sirve. En Vercel se conecta el repo y se
@@ -320,6 +324,21 @@ customer.subscription.deleted
 | `STRIPE_PRECIO_ANUAL` | el otro `price_…` |
 
 Ninguna lleva prefijo `VITE_`.
+
+### Códigos de cortesía
+
+Premium gratis por unos meses para clientes de coaching. Se meten a mano en
+`codigos_cortesia` con su vencimiento, y se canjean desde Ajustes.
+
+El canje pasa por `canjear_codigo(text)` y no por la tabla: `codigos_cortesia`
+niega todo desde el cliente a propósito, porque con permiso directo cualquiera
+podría leer la lista de códigos y probarlos uno por uno. La función es
+`security definer` con `search_path` fijo, y marca el código como usado y sube
+el nivel en la misma transacción — comprobar y después marcar dejaría una
+rendija por la que dos canjes simultáneos pasarían los dos.
+
+Los meses se **suman** a lo que le quedaba al usuario, no lo reemplazan: nadie
+debe perder tiempo pagado por canjear un regalo.
 
 Traducir un estado de Stripe a un nivel vive en `src/lib/membresia`, puro y con
 sus pruebas, porque tiene orillas: un pago atrasado sigue siendo premium

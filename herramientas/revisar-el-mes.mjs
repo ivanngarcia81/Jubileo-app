@@ -56,6 +56,7 @@ let categorias = [
 let lineas = []            // el estado del "servidor"
 let asignaciones = []
 let transacciones = []
+let canjeado = null
 let nivelUsuario = 'gratis'
 let venceEn = null
 let onboardingListo = '2026-08-06T00:00:00Z'
@@ -111,6 +112,12 @@ await p.route('**/*', async (r) => {
     if (m === 'POST' || m === 'PATCH') {
       const cuerpo = JSON.parse(r.request().postData() ?? '[]')
       escrituras.push({ tabla: t, cuerpo })
+      if (t === 'rpc/canjear_codigo') {
+        canjeado = [cuerpo].flat()[0]?.codigo_dado ?? null
+        nivelUsuario = 'premium'
+        venceEn = '2026-11-07T00:00:00Z'
+        return json('2026-11-07T00:00:00Z')
+      }
       if (t === 'usuarios') {
         const f = [cuerpo].flat()[0]
         if ('onboarding_terminado_en' in f) onboardingListo = f.onboarding_terminado_en
@@ -192,6 +199,7 @@ await p.route('**/*', async (r) => {
     if (t === 'transacciones') return json(transacciones)
     if (t === 'deudas') return json(deudas)
     if (t === 'fondos_reserva') return json(fondos)
+    if (t === 'rpc/canjear_codigo') return json('2026-11-07T00:00:00Z')
     return json([])
   }
   const f = normalize(join(dir, url.pathname === '/' ? '/index.html' : url.pathname))
@@ -525,6 +533,45 @@ await p.reload({ waitUntil: 'networkidle' })
 await p.waitForTimeout(700)
 ok((await p.locator('body').innerText()).includes('Hacerme Premium'),
    'un premium vencido baja a gratis al leer, sin que nadie borre nada')
+await p.setViewportSize({ width: 390, height: 844 })
+
+// ---- El tope del nivel gratis ---------------------------------------------
+// La regla existia en `lib/membresia` pero nadie la llamaba: un usuario gratis
+// podia crear fondos sin fin.
+nivelUsuario = 'gratis'
+venceEn = null
+fondos = [1, 2, 3].map((n) => ({
+  id: `f${n}`, hogar_id: H, nombre: `Fondo ${n}`, meta_cents: 60000,
+  acumulado_cents: 0, fecha_objetivo: null,
+}))
+await p.setViewportSize({ width: 390, height: 844 })
+await p.goto(SITIO + '/#/metas', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+const conTope = await p.locator('body').innerText()
+ok(conTope.includes('El nivel gratis lleva 3 fondos'), 'con tres fondos, el nivel gratis topa')
+ok(!conTope.includes('Agregar un fondo'), 'y ya no se ofrece agregar otro')
+ok(conTope.includes('Fondo 1') && conTope.includes('Fondo 3'),
+   'pero los que ya tiene se quedan: bajar de nivel no borra datos')
+
+// ---- Canjear un código de cortesía ----------------------------------------
+await p.setViewportSize({ width: 1280, height: 900 })
+await p.goto(SITIO + '/#/ajustes', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: /código de tu coach/ }).first().click()
+await p.getByLabel('Tu código').first().fill('coach2026')
+ok((await p.getByLabel('Tu código').first().inputValue()) === 'COACH2026',
+   'el código se pone en mayúsculas solo, para que no falle por cómo se teclea')
+await p.getByRole('button', { name: 'Canjear', exact: true }).first().click()
+await esperarA(() => canjeado !== null)
+ok(canjeado === 'COACH2026', 'canjear llama a la función de la base, no a la tabla')
+ok(
+  await esperarA(async () =>
+    (await p.locator('body').innerText()).toLowerCase().includes('cuenta premium'),
+  ),
+  'y la cuenta queda premium sin pasar por Stripe',
+)
 await p.setViewportSize({ width: 390, height: 844 })
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)

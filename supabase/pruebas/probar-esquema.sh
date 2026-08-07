@@ -30,12 +30,18 @@ psql -h "$socket" -p "$puerto" -U postgres -d jubileo -q -v ON_ERROR_STOP=1 \
   -c 'create extension if not exists "pgcrypto"' \
   -f "$raiz/supabase/pruebas/00-supabase-simulado.sql"
 
-echo "Aplicando la migración…"
-psql -h "$socket" -p "$puerto" -U postgres -d jubileo -q -v ON_ERROR_STOP=1 \
-  -f "$raiz/supabase/migraciones/0001_esquema.sql"
+# Todas las migraciones, en orden. Nombrarlas a mano dejaría a las nuevas sin
+# probar en silencio, que es justo lo que la regla de "solo hacia adelante"
+# vuelve peligroso: nadie edita 0001, así que todo lo nuevo vive en las de
+# después.
+echo "Aplicando las migraciones…"
+for migracion in "$raiz"/supabase/migraciones/[0-9]*.sql; do
+  echo "  · $(basename "$migracion")"
+  psql -h "$socket" -p "$puerto" -U postgres -d jubileo -q -v ON_ERROR_STOP=1 -f "$migracion"
+done
 
 salida=""
-for prueba in 01-restricciones 02-modo-pareja 03-rls 04-reglas-del-esquema; do
+for prueba in 01-restricciones 02-modo-pareja 03-rls 04-reglas-del-esquema 05-cortesia; do
   echo
   echo "=== $prueba ==="
   parcial=$(psql -h "$socket" -p "$puerto" -U postgres -d jubileo \

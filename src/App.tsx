@@ -176,7 +176,13 @@ function Contenido({
   }
 }
 
-function Ajustes({ presupuesto }: { presupuesto: Presupuesto }) {
+function Ajustes({
+  presupuesto,
+  recargar,
+}: {
+  presupuesto: Presupuesto
+  recargar: () => void
+}) {
   return (
     <div className="flex flex-col gap-3">
       <Membresia
@@ -189,6 +195,11 @@ function Ajustes({ presupuesto }: { presupuesto: Presupuesto }) {
         alAdministrar={async () => {
           const { irAlPortal } = await import('./servidor/repositorios/membresia')
           await irAlPortal()
+        }}
+        alCanjear={async (codigo) => {
+          const { canjearCodigo } = await import('./servidor/repositorios/membresia')
+          await canjearCodigo(codigo)
+          recargar()
         }}
       />
       <TarjetaEscritorio icono="⚙" titulo="Lo demás">
@@ -504,7 +515,7 @@ export function App() {
         ) : (
           <div className="mx-auto max-w-[720px] p-[22px]">
             {enEscritorio === 'ajustes' ? (
-              <Ajustes presupuesto={presupuesto} />
+              <Ajustes presupuesto={presupuesto} recargar={fuente.recargar} />
             ) : (
               <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
             )}

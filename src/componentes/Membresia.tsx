@@ -35,14 +35,18 @@ export function Membresia({
   venceEn,
   alPagar,
   alAdministrar,
+  alCanjear,
 }: {
   nivel: 'gratis' | 'premium'
   /** Cuándo se acaba lo pagado, si hay fecha. */
   venceEn: string | null
   alPagar?: (plan: Plan) => Promise<void>
   alAdministrar?: () => Promise<void>
+  alCanjear?: (codigo: string) => Promise<void>
 }) {
   const [plan, setPlan] = useState<Plan>('mensual')
+  const [codigo, setCodigo] = useState('')
+  const [canjeando, setCanjeando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -171,6 +175,62 @@ export function Membresia({
           no se borra nada.
         </p>
       </div>
+
+      {alCanjear && (
+        <div className="bg-blanco border-linea rounded-[15px] border p-5">
+          {canjeando ? (
+            <>
+              <label
+                htmlFor="codigo-cortesia"
+                className="text-texto-2 block text-[11.5px] font-bold tracking-[.06em] uppercase"
+              >
+                Tu código
+              </label>
+              <input
+                id="codigo-cortesia"
+                type="text"
+                value={codigo}
+                autoFocus
+                autoCapitalize="characters"
+                onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                placeholder="COACH2026"
+                className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] tracking-[.12em] placeholder:tracking-normal placeholder:text-[#9AA09E] focus:outline-none"
+              />
+              <div className="mt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCanjeando(false)}
+                  disabled={ocupado}
+                  className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void intentar(() => alCanjear(codigo))}
+                  disabled={ocupado || codigo.trim() === ''}
+                  className="bg-carbon min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-white disabled:opacity-50"
+                >
+                  {ocupado ? 'Canjeando…' : 'Canjear'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCanjeando(true)}
+              className="text-texto-2 min-h-11 w-full text-left text-[13.5px]"
+            >
+              ¿Tienes un código de tu coach?
+            </button>
+          )}
+          {error && (
+            <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

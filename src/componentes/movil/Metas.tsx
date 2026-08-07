@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Fondo, Presupuesto } from '../../datos/tipos'
 import { type Centavos, centavos } from '../../lib/dinero'
+import { FONDOS_GRATIS, puede } from '../../lib/membresia'
 import { FilaFondo, Moneda, Seccion, Tarjeta } from '../base'
 import { meses } from '../textos'
 import { EditarFondo } from './EditarFondo'
@@ -32,6 +33,11 @@ export function Metas({
 }) {
   const [editando, setEditando] = useState<Fondo | null | undefined>(undefined)
   const editable = Boolean(alCrearFondo && alGuardarAcumulado && alBorrarFondo)
+  // La única regla de la membresía que se aplica de verdad hoy. Los que ya
+  // existen no se tocan: bajar de nivel no borra datos (sección 10).
+  const puedeCrearMas =
+    puede(presupuesto.usuario.nivel, 'fondos_ilimitados') ||
+    presupuesto.fondos.length < FONDOS_GRATIS
   const apartadoPorCheque = centavos(
     presupuesto.fondos.reduce((total, f) => total + f.porChequeCents, 0),
   )
@@ -67,14 +73,21 @@ export function Metas({
           />
           </div>
         ))}
-        <button
-          type="button"
-          onClick={editable ? () => setEditando(null) : undefined}
-          disabled={!editable}
-          className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold disabled:opacity-50"
-        >
-          Agregar un fondo
-        </button>
+        {puedeCrearMas ? (
+          <button
+            type="button"
+            onClick={editable ? () => setEditando(null) : undefined}
+            disabled={!editable}
+            className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold disabled:opacity-50"
+          >
+            Agregar un fondo
+          </button>
+        ) : (
+          <p className="text-texto-2 mt-[14px] text-[12.5px] leading-[1.55]">
+            El nivel gratis lleva {FONDOS_GRATIS} fondos. Con Premium no hay tope — y los que ya
+            tienes se quedan como están.
+          </p>
+        )}
       </Tarjeta>
 
       <Seccion>Lo que apartas</Seccion>
