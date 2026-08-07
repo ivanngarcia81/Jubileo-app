@@ -234,3 +234,108 @@ export function FilaFondo({
     </div>
   )
 }
+
+/**
+ * El marco de una hoja que sube desde abajo.
+ *
+ * Todas las decisiones que tocan dinero se toman en una de estas, y todas
+ * comparten lo mismo: fondo oscuro que cierra al tocarlo, esquinas redondeadas
+ * arriba, y espacio para la barra del teléfono. Tenerlo en un solo lugar evita
+ * que se vayan separando de a poquito, que es como los diseños se rompen.
+ */
+export function Hoja({
+  etiqueta,
+  alCerrar,
+  children,
+}: {
+  etiqueta: string
+  alCerrar: () => void
+  children: ReactNode
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end bg-black/45"
+      onClick={alCerrar}
+      role="presentation"
+    >
+      <div
+        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={etiqueta}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/** Campo de dinero: el signo fijo y el número en serif, como las cifras héroe. */
+export function CampoDinero({
+  valor,
+  alCambiar,
+  etiqueta,
+  autoFoco = false,
+  desactivado = false,
+}: {
+  valor: string
+  alCambiar: (v: string) => void
+  etiqueta: string
+  autoFoco?: boolean
+  desactivado?: boolean
+}) {
+  return (
+    <div className="border-linea mt-2 flex items-center gap-2 rounded-[13px] border px-4">
+      <span className="text-texto-2 font-serif text-[26px]">$</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={valor}
+        autoFocus={autoFoco}
+        disabled={desactivado}
+        onChange={(e) => alCambiar(e.target.value)}
+        placeholder="0.00"
+        aria-label={etiqueta}
+        className="text-texto font-serif min-h-14 w-full bg-transparent text-[30px] [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+      />
+    </div>
+  )
+}
+
+/** Los dos botones del pie de una hoja. */
+export function PieDeHoja({
+  alCancelar,
+  alConfirmar,
+  confirmar,
+  cancelar = 'Cancelar',
+  listo,
+  ocupado = false,
+}: {
+  alCancelar: () => void
+  alConfirmar: () => void
+  confirmar: string
+  cancelar?: string
+  listo: boolean
+  ocupado?: boolean
+}) {
+  return (
+    <div className="mt-5 flex gap-3">
+      <button
+        type="button"
+        onClick={alCancelar}
+        disabled={ocupado}
+        className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+      >
+        {cancelar}
+      </button>
+      <button
+        type="button"
+        onClick={alConfirmar}
+        disabled={!listo || ocupado}
+        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+      >
+        {ocupado ? 'Guardando…' : confirmar}
+      </button>
+    </div>
+  )
+}

@@ -1,7 +1,9 @@
-import type { Presupuesto } from '../../datos/tipos'
-import { centavos } from '../../lib/dinero'
+import { useState } from 'react'
+import type { Fondo, Presupuesto } from '../../datos/tipos'
+import { type Centavos, centavos } from '../../lib/dinero'
 import { FilaFondo, Moneda, Seccion, Tarjeta } from '../base'
 import { meses } from '../textos'
+import { EditarFondo } from './EditarFondo'
 
 /**
  * Metas — los fondos de reserva.
@@ -11,7 +13,25 @@ import { meses } from '../textos'
  * define — la del panel de escritorio, con su barra y sus cifras — sin
  * inventar nada nuevo.
  */
-export function Metas({ presupuesto }: { presupuesto: Presupuesto }) {
+export function Metas({
+  presupuesto,
+  alCrearFondo,
+  alGuardarAcumulado,
+  alBorrarFondo,
+}: {
+  presupuesto: Presupuesto
+  /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
+  alCrearFondo?: (
+    nombre: string,
+    metaCents: Centavos,
+    acumuladoCents: Centavos,
+    fechaObjetivo: string | null,
+  ) => Promise<void>
+  alGuardarAcumulado?: (fondoId: string, acumuladoCents: Centavos) => Promise<void>
+  alBorrarFondo?: (fondoId: string) => Promise<void>
+}) {
+  const [editando, setEditando] = useState<Fondo | null | undefined>(undefined)
+  const editable = Boolean(alCrearFondo && alGuardarAcumulado && alBorrarFondo)
   const apartadoPorCheque = centavos(
     presupuesto.fondos.reduce((total, f) => total + f.porChequeCents, 0),
   )
@@ -21,6 +41,18 @@ export function Metas({ presupuesto }: { presupuesto: Presupuesto }) {
       <Seccion dato={`${presupuesto.fondos.length} fondos`}>Fondos de reserva</Seccion>
       <Tarjeta>
         {presupuesto.fondos.map((fondo) => (
+          <div
+            key={fondo.id}
+            {...(editable
+              ? {
+                  role: 'button',
+                  tabIndex: 0,
+                  'aria-label': `Editar ${fondo.nombre}`,
+                  onClick: () => setEditando(fondo),
+                  onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && setEditando(fondo),
+                }
+              : {})}
+          >
           <FilaFondo
             key={fondo.id}
             nombre={fondo.nombre}
@@ -33,10 +65,13 @@ export function Metas({ presupuesto }: { presupuesto: Presupuesto }) {
               </>
             }
           />
+          </div>
         ))}
         <button
           type="button"
-          className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
+          onClick={editable ? () => setEditando(null) : undefined}
+          disabled={!editable}
+          className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold disabled:opacity-50"
         >
           Agregar un fondo
         </button>
@@ -52,6 +87,16 @@ export function Metas({ presupuesto }: { presupuesto: Presupuesto }) {
           para tus fondos de reserva.
         </div>
       </Tarjeta>
+      {editando !== undefined && editable && (
+        <EditarFondo
+          fondo={editando}
+          alCrear={alCrearFondo!}
+          alGuardarAcumulado={(a) => alGuardarAcumulado!(editando!.id, a)}
+          alBorrar={() => alBorrarFondo!(editando!.id)}
+          alCerrar={() => setEditando(undefined)}
+        />
+      )}
+
     </>
   )
 }

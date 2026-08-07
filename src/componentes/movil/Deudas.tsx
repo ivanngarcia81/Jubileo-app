@@ -1,7 +1,8 @@
 import { useId, useMemo, useState } from 'react'
 import type { Presupuesto } from '../../datos/tipos'
+import { EditarDeuda, type DeudaDelPresupuesto } from './EditarDeuda'
 import { simular } from '../../lib/deudas'
-import { centavos, formatearRedondo, suma } from '../../lib/dinero'
+import { type Centavos, centavos, formatearRedondo, suma } from '../../lib/dinero'
 import { Barra, Etiqueta, Fila, Moneda, Seccion, Tarjeta, porcentaje } from '../base'
 import { mesYAnio, mesYAnioEnFrase, meses } from '../textos'
 
@@ -16,8 +17,28 @@ import { mesYAnio, mesYAnioEnFrase, meses } from '../textos'
 const EXTRA_MAXIMO = 35000
 const PASO = 1000
 
-export function Deudas({ presupuesto }: { presupuesto: Presupuesto }) {
+export function Deudas({
+  presupuesto,
+  alCrearDeuda,
+  alGuardarSaldo,
+  alEnfocar,
+  alBorrarDeuda,
+}: {
+  presupuesto: Presupuesto
+  /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
+  alCrearDeuda?: (
+    nombre: string,
+    saldoCents: Centavos,
+    pagoMinimoCents: Centavos,
+    tasa: number | null,
+  ) => Promise<void>
+  alGuardarSaldo?: (deudaId: string, saldoCents: Centavos, saldoInicialCents: Centavos) => Promise<void>
+  alEnfocar?: (deudaId: string) => Promise<void>
+  alBorrarDeuda?: (deudaId: string) => Promise<void>
+}) {
   const [extra, setExtra] = useState(15000)
+  const [editando, setEditando] = useState<DeudaDelPresupuesto | null | undefined>(undefined)
+  const editable = Boolean(alCrearDeuda && alGuardarSaldo && alEnfocar && alBorrarDeuda)
   // El teléfono y el escritorio se montan a la vez, así que el id no puede
   // estar escrito a mano: se duplicaría y el <label> dejaría de apuntar.
   const idDeslizador = useId()
@@ -122,7 +143,19 @@ export function Deudas({ presupuesto }: { presupuesto: Presupuesto }) {
       <div className="flex flex-col gap-2">
         {pendientes.map((deuda) => (
           <Tarjeta key={deuda.id}>
-            <div className={deuda.esEnfoque ? 'mb-[10px]' : undefined}>
+            <div
+              className={deuda.esEnfoque ? 'mb-[10px]' : undefined}
+              {...(editable
+                ? {
+                    role: 'button',
+                    tabIndex: 0,
+                    'aria-label': `Editar ${deuda.nombre}`,
+                    onClick: () => setEditando(deuda),
+                    onKeyDown: (e: React.KeyboardEvent) =>
+                      e.key === 'Enter' && setEditando(deuda),
+                  }
+                : {})}
+            >
               <Fila
                 titulo={
                   <>
@@ -156,6 +189,30 @@ export function Deudas({ presupuesto }: { presupuesto: Presupuesto }) {
           </Tarjeta>
         ))}
       </div>
+
+      {editable && (
+        <button
+          type="button"
+          onClick={() => setEditando(null)}
+          className="border-linea text-texto-2 mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[13px] border border-dashed py-3 text-[13.5px]"
+        >
+          <span className="text-teal-osc text-[17px] leading-none">+</span>
+          Agregar una deuda
+        </button>
+      )}
+
+      {editando !== undefined && editable && (
+        <EditarDeuda
+          deuda={editando}
+          alCrear={alCrearDeuda!}
+          alGuardarSaldo={(saldo) =>
+            alGuardarSaldo!(editando!.id, saldo, editando!.saldoInicialCents)
+          }
+          alEnfocar={() => alEnfocar!(editando!.id)}
+          alBorrar={() => alBorrarDeuda!(editando!.id)}
+          alCerrar={() => setEditando(undefined)}
+        />
+      )}
 
       {presupuesto.observacion && (
         <>

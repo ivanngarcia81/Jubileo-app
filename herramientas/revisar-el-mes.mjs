@@ -47,6 +47,8 @@ let categorias = [
 let lineas = []            // el estado del "servidor"
 let asignaciones = []
 let transacciones = []
+let deudas = []
+let fondos = []
 const escrituras = []
 
 const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
@@ -65,6 +67,13 @@ await p.route('**/*', async (r) => {
     if (url.pathname === '/auth/v1/user') return json(USUARIO)
     const t = url.pathname.replace('/rest/v1/', '')
     if (m === 'DELETE') {
+      if (t === 'deudas' || t === 'fondos_reserva') {
+        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+        if (t === 'deudas') deudas = deudas.filter((x) => x.id !== id)
+        else fondos = fondos.filter((x) => x.id !== id)
+        escrituras.push({ tabla: t, borrado: id })
+        return json([])
+      }
       if (t === 'lineas_presupuesto') {
         const cat = (url.searchParams.get('categoria_id') ?? '').replace('eq.', '')
         const fuera = lineas.filter((l) => l.categoria_id === cat).map((l) => l.id)
@@ -93,6 +102,29 @@ await p.route('**/*', async (r) => {
         const id = `t-${transacciones.length + 1}`
         transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente' })
         return json([{ id }])
+      }
+      if (t === 'deudas' || t === 'fondos_reserva') {
+        const tabla = t === 'deudas' ? deudas : fondos
+        const f = [cuerpo].flat()[0]
+        if (m === 'POST') {
+          const id = `${t}-${tabla.length}`
+          // Postgres devuelve todas las columnas, con sus valores por omisión.
+          // Sin ellas el mock miente: `mapeo` filtra con `pagada_en === null` y
+          // un `undefined` haría desaparecer la deuda sin que se vea por qué.
+          const porOmision =
+            t === 'deudas'
+              ? { orden: 0, es_enfoque: false, pagada_en: null, tasa_interes: null }
+              : { fecha_objetivo: null, acumulado_cents: 0 }
+          tabla.push({ id, ...porOmision, ...f })
+          escrituras.push({ tabla: t, cuerpo: f })
+          return json([{ id }])
+        }
+        const filtro = url.searchParams.get('id')?.replace('eq.', '')
+        for (const fila of tabla) {
+          if (filtro ? fila.id === filtro : true) Object.assign(fila, f)
+        }
+        escrituras.push({ tabla: t, cuerpo: f, filtro })
+        return json([])
       }
       if (t === 'periodos' && m === 'PATCH') {
         const f = [cuerpo].flat()[0]
@@ -132,6 +164,8 @@ await p.route('**/*', async (r) => {
     if (t === 'lineas_presupuesto') return json(lineas)
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
     if (t === 'transacciones') return json(transacciones)
+    if (t === 'deudas') return json(deudas)
+    if (t === 'fondos_reserva') return json(fondos)
     return json([])
   }
   const f = normalize(join(dir, url.pathname === '/' ? '/index.html' : url.pathname))
@@ -308,6 +342,56 @@ ok(periodos[0].ingreso_real_cents === 165000, 'guarda lo que entró de verdad, n
 ok(periodos[0].estado === 'cerrado', 'y deja el cheque cerrado')
 ok(transacciones.length === cuantasAntes, 'sin ajustes que inventar, no anota nada de más')
 void gastadoAntes
+
+// ---- Deudas ---------------------------------------------------------------
+await p.goto(SITIO + '/#/deudas', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Agregar una deuda' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Nombre de la deuda').first().fill('Capital One')
+await p.getByLabel('Cuánto debes').first().fill('1240')
+ok(await p.getByRole('button', { name: 'Agregar', exact: true }).first().isDisabled(),
+   'una deuda sin pago mínimo no se puede agregar: el simulador lo necesita')
+await p.getByLabel('Pago mínimo al mes').first().fill('35')
+await p.getByLabel('Tasa de interés anual').first().fill('24.9')
+await p.screenshot({ path: RAIZ + 'capturas/app-nueva-deuda.png' })
+await p.getByRole('button', { name: 'Agregar', exact: true }).first().click()
+await p.waitForTimeout(1400)
+
+const d = deudas[0]
+ok(d?.saldo_cents === 124000 && d?.pago_minimo_cents === 3500, `se guarda en centavos: ${d?.saldo_cents}/${d?.pago_minimo_cents}`)
+ok(d?.saldo_inicial_cents === d?.saldo_cents,
+   'y arranca con saldo inicial igual al saldo: la barra mide desde hoy')
+const conDeuda = await p.locator('body').innerText()
+ok(conDeuda.includes('Capital One'), 'la deuda aparece en la pantalla')
+ok(/TU FECHA DE LIBERTAD/i.test(conDeuda) && !conDeuda.includes('Sin fecha todavía'),
+   `la fecha de libertad ya sale de una deuda de verdad: ${conDeuda.match(/LIBERTAD\s*\n?\s*([^\n]+)/i)?.[1] ?? '—'}`)
+
+// Bajar el saldo y ponerle el enfoque.
+await p.getByRole('button', { name: 'Editar Capital One' }).first().click()
+await p.getByRole('button', { name: 'Atacar esta primero' }).first().click()
+await p.waitForTimeout(1300)
+ok(deudas[0].es_enfoque === true, 'el enfoque se puede poner desde la pantalla')
+
+// ---- Fondos ---------------------------------------------------------------
+await p.goto(SITIO + '/#/metas', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Agregar un fondo' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Nombre del fondo').first().fill('Llantas')
+await p.getByLabel('Cuánto necesitas juntar').first().fill('600')
+await p.getByLabel('Cuánto llevas juntado').first().fill('120')
+await p.getByLabel('Para cuándo lo necesitas').first().fill('2026-12-01')
+await p.getByRole('button', { name: 'Agregar', exact: true }).first().click()
+await p.waitForTimeout(1400)
+
+const f2 = fondos[0]
+ok(f2?.meta_cents === 60000 && f2?.acumulado_cents === 12000, 'el fondo se guarda en centavos')
+ok(f2?.fecha_objetivo === '2026-12-01', 'con su fecha objetivo')
+const conFondo = await p.locator('body').innerText()
+ok(conFondo.includes('Llantas') && conFondo.includes('20%'),
+   'y la barra ya enseña el avance calculado, no uno inventado')
+await p.screenshot({ path: RAIZ + 'capturas/app-metas.png' })
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

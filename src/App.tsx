@@ -84,6 +84,27 @@ interface Acciones {
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
+  alCrearDeuda?: (
+    nombre: string,
+    saldoCents: Centavos,
+    pagoMinimoCents: Centavos,
+    tasa: number | null,
+  ) => Promise<void>
+  alGuardarSaldo?: (
+    deudaId: string,
+    saldoCents: Centavos,
+    saldoInicialCents: Centavos,
+  ) => Promise<void>
+  alEnfocar?: (deudaId: string) => Promise<void>
+  alBorrarDeuda?: (deudaId: string) => Promise<void>
+  alCrearFondo?: (
+    nombre: string,
+    metaCents: Centavos,
+    acumuladoCents: Centavos,
+    fechaObjetivo: string | null,
+  ) => Promise<void>
+  alGuardarAcumulado?: (fondoId: string, acumuladoCents: Centavos) => Promise<void>
+  alBorrarFondo?: (fondoId: string) => Promise<void>
 }
 
 function Contenido({
@@ -103,6 +124,13 @@ function Contenido({
     alAnotar,
     alMarcarPago,
     alCerrarSemana,
+    alCrearDeuda,
+    alGuardarSaldo,
+    alEnfocar,
+    alBorrarDeuda,
+    alCrearFondo,
+    alGuardarAcumulado,
+    alBorrarFondo,
   } = acciones
   switch (ruta) {
     case 'mes':
@@ -116,9 +144,24 @@ function Contenido({
         />
       )
     case 'deudas':
-      return <Deudas presupuesto={presupuesto} />
+      return (
+        <Deudas
+          presupuesto={presupuesto}
+          {...(alCrearDeuda ? { alCrearDeuda } : {})}
+          {...(alGuardarSaldo ? { alGuardarSaldo } : {})}
+          {...(alEnfocar ? { alEnfocar } : {})}
+          {...(alBorrarDeuda ? { alBorrarDeuda } : {})}
+        />
+      )
     case 'metas':
-      return <Metas presupuesto={presupuesto} />
+      return (
+        <Metas
+          presupuesto={presupuesto}
+          {...(alCrearFondo ? { alCrearFondo } : {})}
+          {...(alGuardarAcumulado ? { alGuardarAcumulado } : {})}
+          {...(alBorrarFondo ? { alBorrarFondo } : {})}
+        />
+      )
     default:
       return (
         <MiSemana
@@ -311,7 +354,70 @@ export function App() {
         }
       : undefined
 
+  // Deudas y fondos cuelgan del hogar, no del mes: sobreviven a que se acabe
+  // agosto, que es justamente de lo que se tratan.
+  const metas = hogarId
+    ? {
+        alCrearDeuda: async (
+          nombre: string,
+          saldoCents: Centavos,
+          pagoMinimoCents: Centavos,
+          tasaInteres: number | null,
+        ) => {
+          const { crearDeuda } = await import('./servidor/repositorios/metas')
+          await crearDeuda({ hogarId, nombre, saldoCents, pagoMinimoCents, tasaInteres })
+          fuente.recargar()
+        },
+        alGuardarSaldo: async (
+          deudaId: string,
+          saldoCents: Centavos,
+          saldoInicialCents: Centavos,
+        ) => {
+          const { actualizarSaldo } = await import('./servidor/repositorios/metas')
+          await actualizarSaldo(deudaId, saldoCents, saldoInicialCents)
+          fuente.recargar()
+        },
+        alEnfocar: async (deudaId: string) => {
+          const { ponerEnfoque } = await import('./servidor/repositorios/metas')
+          await ponerEnfoque(hogarId, deudaId)
+          fuente.recargar()
+        },
+        alBorrarDeuda: async (deudaId: string) => {
+          const { borrarDeuda } = await import('./servidor/repositorios/metas')
+          await borrarDeuda(deudaId)
+          fuente.recargar()
+        },
+        alCrearFondo: async (
+          nombre: string,
+          metaCents: Centavos,
+          acumuladoCents: Centavos,
+          cuando: string | null,
+        ) => {
+          const { crearFondo } = await import('./servidor/repositorios/metas')
+          await crearFondo({
+            hogarId,
+            nombre,
+            metaCents,
+            acumuladoCents,
+            fechaObjetivo: cuando ? fecha(cuando) : null,
+          })
+          fuente.recargar()
+        },
+        alGuardarAcumulado: async (fondoId: string, acumuladoCents: Centavos) => {
+          const { actualizarAcumulado } = await import('./servidor/repositorios/metas')
+          await actualizarAcumulado(fondoId, acumuladoCents)
+          fuente.recargar()
+        },
+        alBorrarFondo: async (fondoId: string) => {
+          const { borrarFondo } = await import('./servidor/repositorios/metas')
+          await borrarFondo(fondoId)
+          fuente.recargar()
+        },
+      }
+    : {}
+
   const acciones: Acciones = {
+    ...metas,
     ...(alPonerMonto ? { alPonerMonto } : {}),
     ...(alRenombrar ? { alRenombrar } : {}),
     ...(alQuitar ? { alQuitar } : {}),
