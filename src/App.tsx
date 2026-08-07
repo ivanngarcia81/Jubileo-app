@@ -4,6 +4,7 @@ import type { Pago, Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
 import { usarSesion } from './datos/usarSesion'
 import { Entrar } from './componentes/Entrar'
+import { Membresia } from './componentes/Membresia'
 import { Onboarding } from './componentes/Onboarding'
 import { PrimerMes } from './componentes/PrimerMes'
 import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
@@ -175,14 +176,27 @@ function Contenido({
   }
 }
 
-function Ajustes() {
+function Ajustes({ presupuesto }: { presupuesto: Presupuesto }) {
   return (
-    <TarjetaEscritorio icono="⚙" titulo="Ajustes">
-      <p className="text-texto-2 text-[13px] leading-[1.6]">
-        Aquí va el control para cambiar tu frecuencia de pago, la hora y el canal de tu aviso, y tu
-        membresía. Todavía no está construido.
-      </p>
-    </TarjetaEscritorio>
+    <div className="flex flex-col gap-3">
+      <Membresia
+        nivel={presupuesto.usuario.nivel}
+        venceEn={presupuesto.usuario.nivelVenceEn}
+        alPagar={async (plan) => {
+          const { irAPagar } = await import('./servidor/repositorios/membresia')
+          await irAPagar(plan)
+        }}
+        alAdministrar={async () => {
+          const { irAlPortal } = await import('./servidor/repositorios/membresia')
+          await irAlPortal()
+        }}
+      />
+      <TarjetaEscritorio icono="⚙" titulo="Lo demás">
+        <p className="text-texto-2 text-[13px] leading-[1.6]">
+          Cambiar tu frecuencia de pago y la hora de tu aviso todavía no está construido.
+        </p>
+      </TarjetaEscritorio>
+    </div>
   )
 }
 
@@ -490,7 +504,7 @@ export function App() {
         ) : (
           <div className="mx-auto max-w-[720px] p-[22px]">
             {enEscritorio === 'ajustes' ? (
-              <Ajustes />
+              <Ajustes presupuesto={presupuesto} />
             ) : (
               <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
             )}

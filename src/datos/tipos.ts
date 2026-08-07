@@ -69,6 +69,8 @@ export interface Presupuesto {
     nombre: string
     iniciales: string
     nivel: 'gratis' | 'premium'
+    /** Cuándo se acaba lo pagado, ya en texto. Nulo si no hay fecha. */
+    nivelVenceEn: string | null
     frecuencia: string
     /** Falso mientras falten pasos del onboarding de la sección 7. */
     onboardingTerminado: boolean

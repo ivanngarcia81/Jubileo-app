@@ -16,7 +16,10 @@ export type Ruta = (typeof RUTAS)[number]
 const RUTA_INICIAL: Ruta = 'semana'
 
 function leerRuta(): Ruta {
-  const fragmento = window.location.hash.replace(/^#\/?/, '')
+  // Lo que venga después de `?` se ignora: Stripe regresa al usuario a
+  // `#/ajustes?pago=listo`, y sin recortarlo la ruta no existiría y caería al
+  // inicio — o sea, pagarías y aterrizarías en la pantalla equivocada.
+  const fragmento = window.location.hash.replace(/^#\/?/, '').split('?')[0] ?? ''
   return (RUTAS as readonly string[]).includes(fragmento) ? (fragmento as Ruta) : RUTA_INICIAL
 }
 

@@ -289,6 +289,45 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://tu-app.vercel.app/api/aviso
 Contesta cuántos mandó y qué falló, por usuario. Un usuario que revienta no
 tumba el aviso de los demás.
 
+## La membresía
+
+Los webhooks son **la única fuente de verdad del nivel** (sección 10 del SPEC).
+El navegador nunca dice "ya pagué": puede mentir, puede cerrarse a media
+redirección, y puede quedarse en una pantalla de éxito mientras el cargo falló.
+
+`api/stripe.ts` atiende tres caminos: `/checkout` abre el pago, `/portal` abre
+el Customer Portal para cambiar tarjeta o cancelar, y `/webhook` es el único
+lugar donde el nivel cambia. Los dos primeros verifican el token de la sesión
+contra Supabase — un `usuario_id` mandado desde el navegador se podría cambiar a
+mano, y con él alguien abriría el portal de cobro de otro.
+
+En Stripe hay que crear dos precios recurrentes, $8 al mes y $79 al año, y un
+webhook apuntando a `https://tu-app.vercel.app/api/stripe/webhook` con estos
+eventos:
+
+```
+checkout.session.completed
+customer.subscription.created
+customer.subscription.updated
+customer.subscription.deleted
+```
+
+| Variable | Para qué |
+| --- | --- |
+| `STRIPE_SECRET_KEY` | la llave secreta, `sk_…` |
+| `STRIPE_WEBHOOK_SECRET` | el `whsec_…` del webhook |
+| `STRIPE_PRECIO_MENSUAL` | el id del precio, `price_…` |
+| `STRIPE_PRECIO_ANUAL` | el otro `price_…` |
+
+Ninguna lleva prefijo `VITE_`.
+
+Traducir un estado de Stripe a un nivel vive en `src/lib/membresia`, puro y con
+sus pruebas, porque tiene orillas: un pago atrasado sigue siendo premium
+mientras Stripe reintenta, y una suscripción cancelada vale hasta el final del
+periodo que ya se pagó. El nivel también se corrige **al leer**: si el webhook
+del vencimiento se pierde, la base seguiría diciendo premium, y bajar a gratis
+no borra nada.
+
 ## Estado
 
 Fase 1, en construcción.
@@ -301,7 +340,9 @@ consulta.
 Sin `VITE_SUPABASE_URL` en el `.env`, la app corre con datos de ejemplo y se ve
 igual. Con la llave puesta, lee del servidor: es el único interruptor.
 
-Se entra con el correo, sin contraseña, y se arma el primer mes.
+La fase 1 está completa: se entra con el correo, se arman los 6 pasos del
+onboarding, se reparte el mes, se anotan gastos, se cierra la semana, se meten
+deudas y fondos, sale el aviso del domingo y se cobra la membresía.
 
-Falta: el onboarding completo de 6 pasos, el webhook de Stripe, el cron de
-avisos con un proveedor de correo propio y la caché de IndexedDB.
+Falta, ya fuera de la fase 1: la caché de IndexedDB, los avisos al teléfono
+(push y SMS), y Plaid — que el SPEC pone en la fase 3 y no antes.

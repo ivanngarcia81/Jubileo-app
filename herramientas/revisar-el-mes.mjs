@@ -56,6 +56,8 @@ let categorias = [
 let lineas = []            // el estado del "servidor"
 let asignaciones = []
 let transacciones = []
+let nivelUsuario = 'gratis'
+let venceEn = null
 let onboardingListo = '2026-08-06T00:00:00Z'
 let deudas = []
 let fondos = []
@@ -70,7 +72,15 @@ p.on('console', (m) => m.type() === 'error' && !m.text().includes('status of 4')
 
 await p.route('**/*', async (r) => {
   const url = new URL(r.request().url()), m = r.request().method()
-  const json = (b, s = 200) => r.fulfill({ status: s, contentType: 'application/json', body: JSON.stringify(b) })
+  // `no-store` a propósito: sin él Chromium se guarda las respuestas y una
+  // prueba que cambia el estado del servidor sigue viendo el estado viejo.
+  const json = (b, s = 200) =>
+    r.fulfill({
+      status: s,
+      contentType: 'application/json',
+      headers: { 'cache-control': 'no-store' },
+      body: JSON.stringify(b),
+    })
   if (url.origin === SRV) {
     if (url.pathname === '/auth/v1/otp') return json({})
     if (url.pathname === '/auth/v1/verify') return json({ access_token:'x', token_type:'bearer', expires_in:3600, refresh_token:'y', user: USUARIO })
@@ -174,7 +184,7 @@ await p.route('**/*', async (r) => {
       return json([])
     }
     if (t === 'meses')  return json([{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }])
-    if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: 'gratis', nivel_vence_en: null, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: onboardingListo }])
+    if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: nivelUsuario, nivel_vence_en: venceEn, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: onboardingListo }])
     if (t === 'periodos') return json(periodos)
     if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
     if (t === 'lineas_presupuesto') return json(lineas)
@@ -459,6 +469,63 @@ ok(
   ),
   'y cae en su primera semana armada, nunca en una pantalla vacía',
 )
+
+// ---- Membresía ------------------------------------------------------------
+// El botón de pagar tiene que llegar a nuestro servidor con el token de la
+// sesión, no con un usuario_id que el navegador podría cambiar a mano.
+let pedidoDePago = null
+await p.route('**/api/stripe/**', async (r) => {
+  pedidoDePago = {
+    camino: new URL(r.request().url()).pathname,
+    auth: r.request().headers()['authorization'] ?? '',
+    cuerpo: JSON.parse(r.request().postData() ?? '{}'),
+  }
+  await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ url: SITIO + '/#/ajustes?pago=simulado' }) })
+})
+
+await p.setViewportSize({ width: 1280, height: 900 })
+await p.goto(SITIO + '/#/ajustes', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+const ajustes = await p.locator('body').innerText()
+ok(ajustes.includes('Lo que ya tienes') && ajustes.includes('cheque a cheque'),
+   'la membresía se ofrece por lo que agrega, no por lo que retiene')
+ok(/\$8 al mes/.test(ajustes) && /\$79 al año/.test(ajustes), 'con los dos precios del SPEC')
+ok(ajustes.includes('ahorras $17'), 'y el ahorro del anual calculado, no escrito a mano')
+await p.screenshot({ path: RAIZ + 'capturas/app-membresia.png' })
+
+await p.getByRole('button', { name: /^\$79 al año/ }).first().click()
+await p.getByRole('button', { name: /Hacerme Premium/ }).first().click()
+await esperarA(() => pedidoDePago !== null)
+ok(pedidoDePago?.camino === '/api/stripe/checkout', 'pagar pasa por nuestro servidor, no por Stripe directo')
+await esperarA(async () => (await p.evaluate(() => location.hash)).includes('pago='))
+ok(
+  (await p.locator('body').innerText()).includes('Lo que ya tienes'),
+  'al volver de Stripe con ?pago= en el fragmento, se sigue cayendo en Ajustes',
+)
+ok(pedidoDePago?.auth?.startsWith('Bearer '), 'con el token de la sesión, que el servidor verifica')
+ok(pedidoDePago?.cuerpo?.plan === 'anual', 'y el plan que se escogió')
+
+// Ya premium: la pantalla cambia y ofrece administrar, no volver a pagar.
+nivelUsuario = 'premium'
+venceEn = '2026-09-06T00:00:00Z'
+pedidoDePago = null
+// `goto` a la misma dirección cambiando solo el fragmento no recarga nada.
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+const yaPremium = await p.locator('body').innerText()
+ok(yaPremium.includes('6 de septiembre de 2026'), 'un premium ve hasta cuándo pagó, en español')
+ok(!yaPremium.includes('Hacerme Premium'), 'y ya no se le ofrece pagar otra vez')
+await p.getByRole('button', { name: /Administrar mi membresía/ }).first().click()
+await esperarA(() => pedidoDePago !== null)
+ok(pedidoDePago?.camino === '/api/stripe/portal', 'administrar abre el portal de Stripe')
+
+// Un premium vencido baja a gratis al leer, aunque la base siga diciendo otra cosa.
+venceEn = '2026-07-01T00:00:00Z'
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+ok((await p.locator('body').innerText()).includes('Hacerme Premium'),
+   'un premium vencido baja a gratis al leer, sin que nadie borre nada')
+await p.setViewportSize({ width: 390, height: 844 })
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

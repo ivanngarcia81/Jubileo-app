@@ -1,6 +1,7 @@
 import type { Fondo, LineaMes, Movimiento, Pago, Presupuesto, Sobre } from '../datos/tipos'
 import { type Centavos, centavos, suma } from '../lib/dinero'
 import { type FechaCivil, anioDe, diaDelMesRecortado, fecha, mesDe } from '../lib/fecha'
+import { nivelVigente } from '../lib/membresia'
 import type { Periodo } from '../lib/periodos'
 import type { FilasDelMes, FilaPeriodo } from './esquema'
 
@@ -34,6 +35,13 @@ const MESES = [
   'Noviembre',
   'Diciembre',
 ]
+
+/** "6 de septiembre de 2026", para decirle al usuario hasta cuándo pagó. */
+export function enPalabrasCortas(iso: string): string {
+  const f = iso.slice(0, 10)
+  const [a, m, d] = f.split('-').map(Number) as [number, number, number]
+  return `${d} de ${(MESES[m - 1] ?? '').toLowerCase()} de ${a}`
+}
 
 export function iniciales(nombre: string | null, correo: string): string {
   const base = (nombre ?? correo.split('@')[0] ?? '').trim()
@@ -310,7 +318,14 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     usuario: {
       nombre: (yo.nombre ?? yo.correo.split('@')[0] ?? '').split(/\s+/)[0] ?? '',
       iniciales: iniciales(yo.nombre, yo.correo),
-      nivel: yo.nivel,
+      // El nivel se corrige al leer: si el webhook del vencimiento se perdió,
+      // la base seguiría diciendo premium. Bajar a gratis no borra nada.
+      nivel: nivelVigente(
+        yo.nivel,
+        yo.nivel_vence_en ? Date.parse(yo.nivel_vence_en) : null,
+        opciones.hoy ? Date.parse(`${opciones.hoy}T00:00:00Z`) : 0,
+      ),
+      nivelVenceEn: yo.nivel_vence_en ? enPalabrasCortas(yo.nivel_vence_en) : null,
       onboardingTerminado: yo.onboarding_terminado_en !== null,
       frecuencia: yo.frecuencia_pago ? (ETIQUETAS_FRECUENCIA[yo.frecuencia_pago] ?? '') : '',
     },
