@@ -3,6 +3,7 @@ import { MES_DEL_EJEMPLO, hoy, mesActual, usaServidor } from './datos/fuente'
 import type { Pago, Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
 import { usarSesion } from './datos/usarSesion'
+import { ComoMePagan, type DatosDePago } from './componentes/ComoMePagan'
 import { Entrar } from './componentes/Entrar'
 import { Membresia } from './componentes/Membresia'
 import { Onboarding } from './componentes/Onboarding'
@@ -20,7 +21,10 @@ import { mesYAnio } from './componentes/textos'
 import { simular } from './lib/deudas'
 import { type Centavos, centavos, suma } from './lib/dinero'
 import { fecha } from './lib/fecha'
+import type { MesObjetivo } from './lib/periodos'
 import { type Ruta, rutaEscritorio, rutaMovil, useRuta } from './rutas'
+
+type ComoMePaganCallback = (datos: DatosDePago) => Promise<void>
 
 /**
  * Un solo frontend responsivo para computadora y teléfono, como pide la
@@ -60,10 +64,23 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
           accion="⋯"
         />
       )
+    case 'ajustes':
+      return (
+        <Cabecera
+          avatar="◀"
+          alTocarAvatar={() => ir('semana')}
+          titulo="Ajustes"
+          subtitulo={`${presupuesto.usuario.frecuencia} · ${presupuesto.periodos.length} cheques`}
+          accion="⚙"
+        />
+      )
     default:
       return (
         <Cabecera
           avatar={presupuesto.usuario.iniciales}
+          // El avatar es la puerta a ajustes. En el teléfono no hay otra: la
+          // píldora tiene cuatro destinos y así se queda.
+          alTocarAvatar={() => ir('ajustes')}
           titulo={`Buenos días, ${presupuesto.usuario.nombre}`}
           subtitulo={presupuesto.usuario.nivel === 'premium' ? 'Cuenta Premium' : 'Cuenta gratis'}
           accion="◔"
@@ -178,13 +195,20 @@ function Contenido({
 
 function Ajustes({
   presupuesto,
+  mes,
   recargar,
+  alCambiarComoMePagan,
 }: {
   presupuesto: Presupuesto
+  mes: MesObjetivo
   recargar: () => void
+  alCambiarComoMePagan?: ComoMePaganCallback
 }) {
   return (
     <div className="flex flex-col gap-3">
+      {alCambiarComoMePagan && (
+        <ComoMePagan presupuesto={presupuesto} mes={mes} alGuardar={alCambiarComoMePagan} />
+      )}
       <Membresia
         nivel={presupuesto.usuario.nivel}
         venceEn={presupuesto.usuario.nivelVenceEn}
@@ -204,7 +228,7 @@ function Ajustes({
       />
       <TarjetaEscritorio icono="⚙" titulo="Lo demás">
         <p className="text-texto-2 text-[13px] leading-[1.6]">
-          Cambiar tu frecuencia de pago y la hora de tu aviso todavía no está construido.
+          Cambiar la hora de tu aviso todavía no está construido.
         </p>
       </TarjetaEscritorio>
     </div>
@@ -387,6 +411,23 @@ export function App() {
       }
     : undefined
 
+  // Cambiar cómo te pagan rehace los cheques del mes, no el presupuesto: los
+  // montos mensuales se quedan y solo se reparten distinto. Regla 3 de la
+  // sección 6.
+  const alCambiarComoMePagan: ComoMePaganCallback | undefined =
+    mesId && hogarId && usuarioId
+      ? async (datos) => {
+          const { cambiarComoMePagan } = await import('./servidor/repositorios/comoMePagan')
+          await cambiarComoMePagan(usuarioId, mesId, hogarId, mes, {
+            frecuencia: datos.frecuencia,
+            fechaAncla: fecha(datos.fechaAncla),
+            diasPago: datos.diasPago,
+            ingresoEsperadoCents: datos.ingresoEsperadoCents,
+          })
+          fuente.recargar()
+        }
+      : undefined
+
   const alCerrarSemana =
     puedeAnotar && hogarId
       ? async (r: RespuestaCierre) => {
@@ -524,7 +565,16 @@ export function App() {
 
       <div className="lg:hidden">
         <Marco cabecera={cabeceraDe(enMovil, presupuesto, ir)} activa={enMovil} ir={ir}>
-          <Contenido ruta={enMovil} presupuesto={presupuesto} acciones={acciones} />
+          {enMovil === 'ajustes' ? (
+            <Ajustes
+              presupuesto={presupuesto}
+              mes={mes}
+              recargar={fuente.recargar}
+              {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
+            />
+          ) : (
+            <Contenido ruta={enMovil} presupuesto={presupuesto} acciones={acciones} />
+          )}
         </Marco>
       </div>
 
@@ -537,7 +587,12 @@ export function App() {
         ) : (
           <div className="mx-auto max-w-[720px] p-[22px]">
             {enEscritorio === 'ajustes' ? (
-              <Ajustes presupuesto={presupuesto} recargar={fuente.recargar} />
+              <Ajustes
+                presupuesto={presupuesto}
+                mes={mes}
+                recargar={fuente.recargar}
+                {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
+              />
             ) : (
               <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
             )}

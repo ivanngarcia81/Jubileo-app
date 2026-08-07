@@ -1,4 +1,4 @@
-import { anioDe, type FechaCivil, mesDe } from '../lib/fecha'
+import { anioDe, diaDe, type FechaCivil, mesDe } from '../lib/fecha'
 
 /** Nombres de mes en español. Solo para presentar. */
 export const MESES = [
@@ -30,6 +30,11 @@ export function mesYAnio(f: FechaCivil): string {
 /** "marzo 2028", para meterlo dentro de una frase. */
 export function mesYAnioEnFrase(f: FechaCivil): string {
   return `${nombreDeMes(mesDe(f))} ${anioDe(f)}`
+}
+
+/** "12 de agosto". Sin año: se usa dentro del mes que se está mirando. */
+export function diaYMes(f: FechaCivil): string {
+  return `${diaDe(f)} de ${nombreDeMes(mesDe(f))}`
 }
 
 /** "5 meses" / "1 mes" */

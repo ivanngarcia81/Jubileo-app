@@ -40,9 +40,16 @@ export function useRuta(): [Ruta, (ruta: Ruta) => void] {
   return [ruta, ir]
 }
 
-/** En el teléfono, el panel de escritorio no existe: su lugar lo toma Mi semana. */
+/**
+ * En el teléfono, el panel de escritorio no existe: su lugar lo toma Mi semana.
+ *
+ * Ajustes sí existe en el teléfono, aunque no esté en la píldora de navegación
+ * —que son cuatro destinos y así lo dibuja `design/movil.html`—: se llega
+ * tocando el avatar. Mandarlo a Mi semana dejaba a quien usa la app en el
+ * teléfono sin manera de cambiar cómo le pagan.
+ */
 export function rutaMovil(ruta: Ruta): Ruta {
-  return ruta === 'resumen' || ruta === 'ajustes' ? 'semana' : ruta
+  return ruta === 'resumen' ? 'semana' : ruta
 }
 
 /** En la computadora, Mi semana vive dentro del panel de Resumen. */

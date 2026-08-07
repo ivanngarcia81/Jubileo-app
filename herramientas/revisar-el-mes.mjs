@@ -53,6 +53,10 @@ let categorias = [
   { id: 'c-serv',   hogar_id: H, nombre: 'Servicios',grupo: 'fijo',     orden: 2, activa: true, es_fija: true,  dia_vencimiento: 5, deuda_id: null },
   { id: 'c-comida', hogar_id: H, nombre: 'Comida',   grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
 ]
+let perfil = {
+  id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York',
+  frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000,
+}
 let lineas = []            // el estado del "servidor"
 let asignaciones = []
 let transacciones = []
@@ -104,6 +108,16 @@ await p.route('**/*', async (r) => {
         escrituras.push({ tabla: t, borrado: cat })
         return json([])
       }
+      if (t === 'periodos') {
+        const ids = (url.searchParams.get('id') ?? '').replace(/^in\.|[()"]/g, '').split(',').filter(Boolean)
+        for (let i = periodos.length - 1; i >= 0; i--) if (ids.includes(periodos[i].id)) periodos.splice(i, 1)
+        // Como en el esquema: las asignaciones caen en cascada con su cheque y
+        // los movimientos se quedan sin cheque (`on delete set null`).
+        asignaciones = asignaciones.filter((a) => !ids.includes(a.periodo_id))
+        for (const tr of transacciones) if (ids.includes(tr.periodo_id)) tr.periodo_id = null
+        escrituras.push({ tabla: t, borrado: ids })
+        return json([])
+      }
       const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
       transacciones = transacciones.filter((x) => x.id !== id)
       escrituras.push({ tabla: t, borrado: id })
@@ -121,6 +135,7 @@ await p.route('**/*', async (r) => {
       if (t === 'usuarios') {
         const f = [cuerpo].flat()[0]
         if ('onboarding_terminado_en' in f) onboardingListo = f.onboarding_terminado_en
+        perfil = { ...perfil, ...f }
         return json([])
       }
       if (t === 'preferencias_aviso') return json([])
@@ -129,6 +144,13 @@ await p.route('**/*', async (r) => {
           const i = asignaciones.findIndex((x) => x.linea_presupuesto_id === a.linea_presupuesto_id && x.periodo_id === a.periodo_id)
           i === -1 ? asignaciones.push(a) : (asignaciones[i] = a)
         }
+      }
+      if (t === 'transacciones' && m === 'PATCH') {
+        const f = [cuerpo].flat()[0]
+        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+        const fila = transacciones.find((x) => x.id === id)
+        if (fila) Object.assign(fila, f)
+        return json([])
       }
       if (t === 'transacciones') {
         const f = [cuerpo].flat()[0]
@@ -157,6 +179,15 @@ await p.route('**/*', async (r) => {
           if (filtro ? fila.id === filtro : true) Object.assign(fila, f)
         }
         escrituras.push({ tabla: t, cuerpo: f, filtro })
+        return json([])
+      }
+      if (t === 'periodos' && m === 'POST') {
+        for (const f of [cuerpo].flat()) {
+          const i = periodos.findIndex((x) => x.numero === f.numero)
+          if (i === -1) periodos.push({ id: `p${f.numero}`, ingreso_real_cents: null, estado: 'futuro', ...f })
+          else periodos[i] = { ...periodos[i], ...f }
+        }
+        periodos.sort((a, b) => a.numero - b.numero)
         return json([])
       }
       if (t === 'periodos' && m === 'PATCH') {
@@ -191,7 +222,7 @@ await p.route('**/*', async (r) => {
       return json([])
     }
     if (t === 'meses')  return json([{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }])
-    if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: nivelUsuario, nivel_vence_en: venceEn, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: onboardingListo }])
+    if (t === 'usuarios') return json([{ ...perfil, nivel: nivelUsuario, nivel_vence_en: venceEn, onboarding_terminado_en: onboardingListo }])
     if (t === 'periodos') return json(periodos)
     if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
     if (t === 'lineas_presupuesto') return json(lineas)
@@ -573,6 +604,84 @@ ok(
   'y la cuenta queda premium sin pasar por Stripe',
 )
 await p.setViewportSize({ width: 390, height: 844 })
+
+// ---- Cambiar cómo te pagan ------------------------------------------------
+// La regla 3 de la sección 6: cambiar de frecuencia **no rehace el
+// presupuesto**. Lo que aquí se comprueba es justo lo que la haría peligrosa:
+// que un gasto ya anotado no se quede colgando de un cheque que dejó de
+// existir, y que los montos mensuales sigan intactos.
+transacciones.push({
+  id: 't-planta', hogar_id: H, usuario_id: U, periodo_id: 'p2', categoria_id: 'c-comida',
+  fecha: '2026-08-12', monto_cents: 4000, tipo: 'gasto', descripcion: 'Gasolina', estado: 'confirmada',
+})
+// Un sobre con monto y ya repartido entre los cuatro cheques. El monto no es
+// divisible entre cuatro ni entre dos a propósito: si el reparto nuevo pierde
+// un centavo, se ve.
+lineas.push({ id: 'l-c-renta', mes_id: MES, categoria_id: 'c-renta', monto_mensual_cents: 100003 })
+asignaciones.push(
+  ...[['p1', 25001], ['p2', 25001], ['p3', 25001], ['p4', 25000]].map(([periodo_id, monto_cents]) => ({
+    mes_id: MES, linea_presupuesto_id: 'l-c-renta', periodo_id, monto_cents,
+  })),
+)
+
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+await p.getByRole('button', { name: 'IV' }).first().click()
+await p.waitForTimeout(700)
+const pantallaAjustes = await p.locator('body').innerText()
+ok(pantallaAjustes.toLowerCase().includes('cómo te pagan'),
+   'desde el teléfono se llega a ajustes tocando el avatar')
+ok(pantallaAjustes.includes('4 cheques este mes'), 'y ahí dice cómo te pagan hoy')
+
+// Lo que valían los sobres antes de tocar nada, para compararlo después.
+const montosAntes = JSON.stringify(lineas.map((l) => [l.categoria_id, l.monto_mensual_cents]).sort())
+
+await p.getByRole('button', { name: 'Cambiar cómo me pagan' }).first().click()
+await p.getByRole('radio', { name: /Cada dos semanas/ }).first().check()
+await p.waitForTimeout(400)
+const conPrevia = await p.locator('body').innerText()
+ok(conPrevia.includes('Cheque 2 ·') && !conPrevia.includes('Cheque 3 ·'),
+   'la previa enseña los cheques de verdad, con el mismo motor: quedan dos')
+ok(conPrevia.includes('Pasas de 4 a 2 cheques'),
+   'y avisa que cambia la cuenta antes de guardar, no después')
+await p.screenshot({ path: RAIZ + 'capturas/app-como-me-pagan.png' })
+
+await p.getByRole('button', { name: 'Guardar', exact: true }).first().click()
+ok(await esperarA(() => periodos.length === 2), `se regeneran los cheques: ${periodos.length}`)
+ok(perfil.frecuencia_pago === 'cada_dos_semanas',
+   `y se guarda cómo te pagan: ${perfil.frecuencia_pago}`)
+
+ok(JSON.stringify(lineas.map((l) => [l.categoria_id, l.monto_mensual_cents]).sort()) === montosAntes,
+   `los montos mensuales no se tocan: ${montosAntes}`)
+
+const mudado = transacciones.find((t) => t.id === 't-planta')
+ok(mudado?.periodo_id === 'p1',
+   `el gasto del 12 se va al cheque que cubre esa fecha: ${mudado?.periodo_id}`)
+ok(mudado?.categoria_id === 'c-comida', 'sin perder su sobre')
+ok(transacciones.every((t) => t.periodo_id !== null),
+   'y ningún gasto queda huérfano al borrarse los cheques viejos')
+
+// La invariante de la sección 6, ahora contra el calendario nuevo: cada línea
+// repartida entre los dos cheques que quedan, y sumando su monto al centavo.
+const descuadres = lineas
+  .map((l) => {
+    const suyas = asignaciones.filter((a) => a.linea_presupuesto_id === l.id)
+    const total = suyas.reduce((s, a) => s + a.monto_cents, 0)
+    return suyas.length === 2 && total === l.monto_mensual_cents
+      ? null
+      : `${l.categoria_id}: ${suyas.length} pedazos, ${total} de ${l.monto_mensual_cents}`
+  })
+  .filter(Boolean)
+ok(lineas.length > 0 && descuadres.length === 0,
+   `se re-reparte entre los cheques nuevos y sigue cuadrando${
+     descuadres.length ? ': ' + descuadres.join(' | ') : ` (${lineas.length === 1 ? '1 línea' : `${lineas.length} líneas`})`
+   }`)
+
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+ok((await p.locator('body').innerText()).includes('2 cheques'),
+   'y la app ya enseña la frecuencia nueva')
 
 // ---- La copia local -------------------------------------------------------
 // El público de Jubileo abre esto en el estacionamiento del trabajo, con datos
