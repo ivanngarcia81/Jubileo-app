@@ -74,7 +74,8 @@ export async function armarPrimerMes(
       fecha_ancla: como.fechaAncla,
       dias_pago: como.frecuencia === 'dos_veces_al_mes' ? (como.diasPago ?? [1, 15]) : null,
       ingreso_esperado_cents: como.ingresoEsperadoCents,
-      onboarding_terminado_en: new Date().toISOString(),
+      // El onboarding **no** se da por terminado aquí: faltan los fijos, las
+      // deudas, el aviso y la instalación. Se marca al final, en `terminar`.
     })
     .eq('id', usuarioId)
     .select(

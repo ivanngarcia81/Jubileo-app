@@ -36,6 +36,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     nombre: 'Iván',
     iniciales: 'IV',
     nivel: 'premium',
+    onboardingTerminado: true,
     frecuencia: 'Cada dos semanas',
   },
 

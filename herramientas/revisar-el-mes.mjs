@@ -22,6 +22,15 @@ const RAIZ = new URL('..', import.meta.url).pathname
 const SRV = 'https://prueba.supabase.co', SITIO = 'https://jubileo.prueba'
 const T = { html:'text/html', js:'text/javascript', css:'text/css', json:'application/json', webmanifest:'application/manifest+json', woff2:'font/woff2', png:'image/png', svg:'image/svg+xml' }
 const fallas = []
+/** Espera a que algo se cumpla, en vez de a que pase un plazo inventado. */
+const esperarA = async (condicion, ms = 8000) => {
+  const hasta = ms / 100
+  for (let i = 0; i < hasta; i++) {
+    if (await condicion()) return true
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return false
+}
 const ok = (c, m) => { console.log(`${c ? '  ok   ' : '  FALLA'}  ${m}`); if (!c) fallas.push(m) }
 
 const dir = mkdtempSync(join(tmpdir(), 'jub-mes-'))
@@ -47,6 +56,7 @@ let categorias = [
 let lineas = []            // el estado del "servidor"
 let asignaciones = []
 let transacciones = []
+let onboardingListo = '2026-08-06T00:00:00Z'
 let deudas = []
 let fondos = []
 const escrituras = []
@@ -91,6 +101,12 @@ await p.route('**/*', async (r) => {
     if (m === 'POST' || m === 'PATCH') {
       const cuerpo = JSON.parse(r.request().postData() ?? '[]')
       escrituras.push({ tabla: t, cuerpo })
+      if (t === 'usuarios') {
+        const f = [cuerpo].flat()[0]
+        if ('onboarding_terminado_en' in f) onboardingListo = f.onboarding_terminado_en
+        return json([])
+      }
+      if (t === 'preferencias_aviso') return json([])
       if (t === 'asignaciones') {
         for (const a of [cuerpo].flat()) {
           const i = asignaciones.findIndex((x) => x.linea_presupuesto_id === a.linea_presupuesto_id && x.periodo_id === a.periodo_id)
@@ -158,7 +174,7 @@ await p.route('**/*', async (r) => {
       return json([])
     }
     if (t === 'meses')  return json([{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }])
-    if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: 'gratis', nivel_vence_en: null, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: '2026-08-06T00:00:00Z' }])
+    if (t === 'usuarios') return json([{ id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York', nivel: 'gratis', nivel_vence_en: null, frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000, onboarding_terminado_en: onboardingListo }])
     if (t === 'periodos') return json(periodos)
     if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
     if (t === 'lineas_presupuesto') return json(lineas)
@@ -392,6 +408,57 @@ const conFondo = await p.locator('body').innerText()
 ok(conFondo.includes('Llantas') && conFondo.includes('20%'),
    'y la barra ya enseña el avance calculado, no uno inventado')
 await p.screenshot({ path: RAIZ + 'capturas/app-metas.png' })
+
+// ---- El onboarding a medias -----------------------------------------------
+// Una cuenta que no terminó los 6 pasos vuelve a donde se quedó, no cae a una
+// app vacía que parecería rota.
+onboardingListo = null
+await p.goto(SITIO, { waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+// `innerText` devuelve lo que se ve, y el rótulo del paso va en versalitas.
+const paso3 = (await p.locator('body').innerText()).toLowerCase()
+ok(paso3.includes('paso 3 de 6') && paso3.includes('tus gastos fijos'),
+   'una cuenta a medias vuelve al paso donde se quedó')
+
+// Agregar algo recarga el presupuesto. Si al recargar la app cayera a la
+// pantalla de espera, desmontaría el onboarding y lo regresaría al paso 1.
+await p.getByRole('button', { name: 'Agregar un gasto fijo' }).first().click()
+await p.getByLabel('Nombre de la categoría').first().fill('Internet')
+await p.getByLabel('¿Qué día del mes se vence?').first().fill('12')
+await p.getByRole('button', { name: 'Crear' }).first().click()
+await esperarA(async () => (await p.locator('body').innerText()).includes('Internet'))
+const trasAgregar = (await p.locator('body').innerText()).toLowerCase()
+ok(trasAgregar.includes('paso 3 de 6') && trasAgregar.includes('internet'),
+   'agregar algo no regresa al paso 1: lo recargado no desmonta la pantalla')
+
+await p.getByRole('button', { name: 'Siguiente' }).first().click()
+await p.waitForTimeout(300)
+ok((await p.locator('body').innerText()).includes('Tus deudas'), 'paso 4: las deudas')
+await p.getByRole('button', { name: 'Siguiente' }).first().click()
+await p.waitForTimeout(300)
+ok((await p.locator('body').innerText()).includes('Tu aviso'), 'paso 5: el aviso')
+
+await p.getByLabel('A qué hora quieres el aviso').first().fill('07:30')
+await p.getByRole('button', { name: 'Siguiente' }).first().click()
+await p.waitForTimeout(1200)
+const pref = escrituras.find((e) => e.tabla === 'preferencias_aviso')
+ok(pref?.cuerpo?.hora_local === '07:30' && pref?.cuerpo?.activo === true,
+   `la hora del aviso se guarda al salir del paso, no al final: ${pref?.cuerpo?.hora_local}`)
+const zona = escrituras.filter((e) => e.tabla === 'usuarios').find((e) => e.cuerpo?.zona_horaria)
+ok(Boolean(zona), 'y con ella la zona horaria del navegador, que es quien la sabe')
+
+const paso6 = (await p.locator('body').innerText()).toLowerCase()
+ok(paso6.includes('paso 6 de 6') && paso6.includes('pantalla de inicio'), 'paso 6: instalarla')
+await p.screenshot({ path: RAIZ + 'capturas/app-onboarding.png' })
+await p.getByRole('button', { name: 'Ver mi primera semana' }).first().click()
+ok(await esperarA(() => onboardingListo !== null),
+   'al terminar se marca el onboarding, y solo entonces')
+ok(
+  await esperarA(async () =>
+    (await p.locator('body').innerText()).toLowerCase().includes('te queda esta semana'),
+  ),
+  'y cae en su primera semana armada, nunca en una pantalla vacía',
+)
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

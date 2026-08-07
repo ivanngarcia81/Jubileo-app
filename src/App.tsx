@@ -4,6 +4,7 @@ import type { Pago, Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
 import { usarSesion } from './datos/usarSesion'
 import { Entrar } from './componentes/Entrar'
+import { Onboarding } from './componentes/Onboarding'
 import { PrimerMes } from './componentes/PrimerMes'
 import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
 import { Resumen } from './componentes/escritorio/Resumen'
@@ -232,6 +233,10 @@ export function App() {
             ingresoEsperadoCents:
               datos.ingresoEsperadoCents === null ? null : centavos(datos.ingresoEsperadoCents),
           })
+          if (datos.nombre.trim()) {
+            const { guardarNombre } = await import('./servidor/repositorios/onboarding')
+            await guardarNombre(usuarioId!, datos.nombre)
+          }
           fuente.recargar()
         }}
       />
@@ -425,6 +430,40 @@ export function App() {
     ...(alAnotar ? { alAnotar } : {}),
     ...(alMarcarPago ? { alMarcarPago } : {}),
     ...(alCerrarSemana ? { alCerrarSemana } : {}),
+  }
+
+  // El onboarding quedó a medias: se vuelve a donde se quedó en vez de caer a
+  // una app sin fijos, sin deudas y sin aviso, que se vería vacía por culpa
+  // nuestra y no del usuario.
+  if (
+    !presupuesto.usuario.onboardingTerminado &&
+    alPonerMonto &&
+    alCrearCategoria &&
+    metas.alCrearDeuda &&
+    usuarioId
+  ) {
+    return (
+      <Onboarding
+        presupuesto={presupuesto}
+        alPonerMonto={alPonerMonto}
+        alCrearCategoria={alCrearCategoria}
+        alCrearDeuda={metas.alCrearDeuda}
+        alGuardarAviso={async (horaLocal, activo) => {
+          const { guardarAviso, guardarZonaHoraria } = await import(
+            './servidor/repositorios/onboarding'
+          )
+          // La zona sale del navegador: es el único lugar que la sabe de verdad.
+          const zona = Intl.DateTimeFormat().resolvedOptions().timeZone
+          if (zona) await guardarZonaHoraria(usuarioId, zona)
+          await guardarAviso(usuarioId, horaLocal, activo)
+        }}
+        alTerminar={async () => {
+          const { terminarOnboarding } = await import('./servidor/repositorios/onboarding')
+          await terminarOnboarding(usuarioId)
+          fuente.recargar()
+        }}
+      />
+    )
   }
 
   const extraActual = centavos(

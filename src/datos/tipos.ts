@@ -70,6 +70,8 @@ export interface Presupuesto {
     iniciales: string
     nivel: 'gratis' | 'premium'
     frecuencia: string
+    /** Falso mientras falten pasos del onboarding de la sección 7. */
+    onboardingTerminado: boolean
   }
   /**
    * La llave del mes en el servidor. Nula con los datos de ejemplo, y es

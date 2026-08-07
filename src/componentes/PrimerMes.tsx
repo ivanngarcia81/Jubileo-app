@@ -33,12 +33,14 @@ export function PrimerMes({
     fechaAncla: string
     diasPago: number[]
     ingresoEsperadoCents: number | null
+    nombre: string
   }) => Promise<void>
 }) {
   const [frecuencia, setFrecuencia] = useState<FrecuenciaPago>('cada_dos_semanas')
   const [ancla, setAncla] = useState('')
   const [dias, setDias] = useState<[number, number]>([1, 15])
   const [ingreso, setIngreso] = useState('')
+  const [nombre, setNombre] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,6 +75,7 @@ export function PrimerMes({
         fechaAncla: ancla,
         diasPago: dias,
         ingresoEsperadoCents: esVariable || ingreso === '' ? null : deDolares(Number(ingreso)),
+        nombre,
       })
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : 'No se pudo armar el mes.')
@@ -87,8 +90,25 @@ export function PrimerMes({
           Vamos a armar {nombreDeMes(mes.mes).toLowerCase()}
         </h1>
         <p className="text-texto-2 mt-2 text-[15px] leading-[1.6]">
-          Dos preguntas y ya. Con eso la app sabe cuántos cheques te caen este mes y cuándo.
+          Empezamos por cómo te pagan. Con eso la app sabe cuántos cheques te caen este mes y
+          cuándo.
         </p>
+
+        <label
+          htmlFor="tu-nombre"
+          className="text-texto-2 mt-7 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+        >
+          ¿Cómo te llamas?
+        </label>
+        <input
+          id="tu-nombre"
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Iván"
+          autoComplete="given-name"
+          className="border-linea bg-blanco text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] placeholder:text-[#9AA09E] focus:outline-none"
+        />
 
         <fieldset className="mt-7">
           <legend className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">

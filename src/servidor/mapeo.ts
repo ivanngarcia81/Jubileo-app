@@ -311,6 +311,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       nombre: (yo.nombre ?? yo.correo.split('@')[0] ?? '').split(/\s+/)[0] ?? '',
       iniciales: iniciales(yo.nombre, yo.correo),
       nivel: yo.nivel,
+      onboardingTerminado: yo.onboarding_terminado_en !== null,
       frecuencia: yo.frecuencia_pago ? (ETIQUETAS_FRECUENCIA[yo.frecuencia_pago] ?? '') : '',
     },
 
