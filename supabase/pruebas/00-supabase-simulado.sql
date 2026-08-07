@@ -24,14 +24,33 @@ as $$
   select nullif(current_setting('request.jwt.claims', true)::json ->> 'sub', '')::uuid;
 $$;
 
--- El rol con el que PostgREST atiende a alguien con sesión iniciada. Las
--- políticas de RLS no se aplican al dueño de las tablas, así que sin este rol
--- las pruebas de RLS no probarían nada.
+-- Los roles con los que PostgREST atiende. `authenticated` es alguien con
+-- sesión; `anon` es cualquiera que tenga la llave publicable, que es pública
+-- por diseño. Las políticas de RLS no se aplican al dueño de las tablas, así
+-- que sin estos roles las pruebas de RLS no probarían nada.
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then
     create role authenticated nologin;
   end if;
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin bypassrls;
+  end if;
 end $$;
 
-grant usage on schema public, auth to authenticated;
+grant usage on schema public, auth to authenticated, anon, service_role;
+
+-- Esto es lo que más importa de todo el archivo.
+--
+-- Supabase le regala `execute` sobre cada función nueva de `public` a los tres
+-- roles, por privilegios por omisión. Sin esta línea, un Postgres pelado nace
+-- con lo contrario —solo `public` tiene execute— y un `revoke ... from public`
+-- en una migración parece suficiente cuando en el proyecto real no quita nada:
+-- el permiso de `anon` sigue ahí, concedido aparte. Así fue como
+-- `canjear_codigo` quedó abierta a cualquiera con la llave publicable mientras
+-- las pruebas locales pasaban en verde.
+alter default privileges in schema public
+  grant execute on functions to anon, authenticated, service_role;

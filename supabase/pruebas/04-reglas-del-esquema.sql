@@ -12,6 +12,10 @@
 --   2. Todo el dinero va en `bigint` de centavos y con un CHECK que lo
 --      acota. `bigint` ya garantiza el entero; el CHECK es lo que impide un
 --      saldo negativo o una meta en cero.
+--   3. Ninguna función de `public` se queda con el `search_path` heredado, y
+--      ninguna queda publicada a `anon` sin decirlo. Todo lo que vive en
+--      `public` sale por `/rest/v1/rpc/` en cuanto existe: una función nueva
+--      nace publicada, no privada.
 -- ============================================================================
 \set QUIET on
 \pset tuples_only on
@@ -93,3 +97,42 @@ select case when count(*) = 0 then '  ok     ninguna columna usa punto flotante'
             else '  FALLA  ' || count(*) || ' columna(s) en punto flotante' end
   from information_schema.columns
  where table_schema = 'public' and data_type in ('real', 'double precision');
+
+\echo '--- 4. las funciones: search_path fijo y quién puede llamarlas ---'
+
+create temporary view funciones_de_public as
+  select p.oid, p.proname,
+         pg_get_function_identity_arguments(p.oid) as args,
+         exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
+                  where c like 'search_path=%') as fija_el_camino
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prokind = 'f'
+     -- Las de una extensión no son nuestras. Aquí `pgcrypto` cae en `public`
+     -- porque es un Postgres pelado; en Supabase vive en su propio esquema.
+     and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e');
+
+select '  FALLA  ' || proname || '(' || args || ') no fija su search_path'
+  from funciones_de_public where not fija_el_camino;
+
+-- Las que se dejan abiertas a `anon` a propósito, y por qué. Cualquier otra
+-- que aparezca aquí es un olvido: en Supabase una función nace con `execute`
+-- para `anon`, así que abrirse es lo que pasa solo — cerrarse hay que
+-- escribirlo.
+create temporary view abiertas_a_proposito (proname, motivo) as values
+  ('es_miembro_del_hogar',  'la usan las políticas de RLS, que corren con los permisos de quien consulta'),
+  ('comparte_hogar_conmigo','la usan las políticas de RLS, que corren con los permisos de quien consulta');
+
+select '  FALLA  ' || f.proname || '(' || f.args || ') la puede llamar cualquiera con la llave publicable'
+  from funciones_de_public f
+ where has_function_privilege('anon', f.oid, 'execute')
+   and f.proname not in (select proname from abiertas_a_proposito);
+
+select case when count(*) = 0
+            then '  ok     las ' || (select count(*) from funciones_de_public)
+                 || ' funciones fijan su search_path y ninguna se publicó sin querer'
+            else '  FALLA  ' || count(*) || ' función(es) mal puestas' end
+  from funciones_de_public f
+ where not f.fija_el_camino
+    or (has_function_privilege('anon', f.oid, 'execute')
+        and f.proname not in (select proname from abiertas_a_proposito));
