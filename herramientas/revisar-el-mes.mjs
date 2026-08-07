@@ -69,7 +69,7 @@ const ctx = await nav.newContext({ viewport: { width: 390, height: 844 }, device
 const p = await ctx.newPage()
 const errores = []
 p.on('pageerror', (e) => errores.push(String(e)))
-p.on('console', (m) => m.type() === 'error' && !m.text().includes('status of 4') && errores.push(m.text()))
+p.on('console', (m) => m.type() === 'error' && !m.text().includes('status of 4') && !/Failed to (load resource|fetch)/i.test(m.text()) && errores.push(m.text()))
 
 await p.route('**/*', async (r) => {
   const url = new URL(r.request().url()), m = r.request().method()
@@ -573,6 +573,50 @@ ok(
   'y la cuenta queda premium sin pasar por Stripe',
 )
 await p.setViewportSize({ width: 390, height: 844 })
+
+// ---- La copia local -------------------------------------------------------
+// El público de Jubileo abre esto en el estacionamiento del trabajo, con datos
+// contados. Sin copia, mala señal es una pantalla en blanco.
+nivelUsuario = 'gratis'
+venceEn = null
+await p.setViewportSize({ width: 390, height: 844 })
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await esperarA(async () => (await p.locator('body').innerText()).toLowerCase().includes('te queda esta semana'))
+
+const copiaGuardada = await p.evaluate(
+  () =>
+    new Promise((r) => {
+      const req = indexedDB.open('jubileo', 1)
+      req.onsuccess = () => {
+        const t = req.result.transaction('presupuestos', 'readonly')
+        const todo = t.objectStore('presupuestos').getAllKeys()
+        todo.onsuccess = () => r(todo.result)
+      }
+      req.onerror = () => r([])
+    }),
+)
+ok(Array.isArray(copiaGuardada) && copiaGuardada.length > 0,
+   `el mes se guarda en IndexedDB: ${JSON.stringify(copiaGuardada)}`)
+ok(String(copiaGuardada[0]).endsWith(':2026-08'), 'con una llave por usuario y por mes')
+
+// Ahora el servidor deja de contestar: la app tiene que seguir sirviendo.
+let servidorCaido = true
+await p.route('**/rest/v1/**', async (r) => {
+  if (servidorCaido) return r.abort('failed')
+  await r.fallback()
+})
+await p.reload({ waitUntil: 'domcontentloaded' })
+ok(
+  await esperarA(async () =>
+    (await p.locator('body').innerText()).toLowerCase().includes('te queda esta semana'),
+  ),
+  'sin servidor, la app sigue abriendo con la copia',
+)
+const caido = await p.locator('body').innerText()
+ok(caido.includes('Sin conexión'), 'y lo dice, en vez de dejar creer que los números son de hoy')
+await p.screenshot({ path: RAIZ + 'capturas/app-sin-conexion.png' })
+servidorCaido = false
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

@@ -100,6 +100,10 @@ function traducir(mensaje: string): string {
 
 export async function salir(): Promise<void> {
   await cliente().auth.signOut()
+  // La copia local se borra al salir. Un teléfono prestado no debe seguir
+  // enseñando el presupuesto de quien lo usó antes.
+  const { olvidarTodo } = await import('../datos/cache')
+  await olvidarTodo()
 }
 
 export async function usuarioConSesion(): Promise<string | null> {

@@ -293,6 +293,25 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://tu-app.vercel.app/api/aviso
 Contesta cuántos mandó y qué falló, por usuario. Un usuario que revienta no
 tumba el aviso de los demás.
 
+## La copia local
+
+`src/datos/cache.ts` guarda el mes en IndexedDB y la app lo enseña **antes** de
+preguntarle al servidor. En un teléfono con datos contados la diferencia es
+abrir la app y ver tu semana, o quedarte mirando "Un momento…" hasta que la red
+conteste o se rinda.
+
+La verdad sigue viviendo en el servidor. La caché guarda **lo que se lee, nunca
+lo que se escribe**: una cola de escrituras pendientes suena bien y es otra cosa
+—hay que resolver conflictos— y un presupuesto que se resuelve solo en contra
+del usuario es peor que uno que dice "no hay señal, inténtalo cuando la tengas".
+
+Cuando se está viendo la copia, la app lo dice con una franja ámbar. Sin eso el
+usuario decidiría si le alcanza con números que quizá ya no son los de hoy.
+
+Una copia de más de una semana se descarta, y al salir de la sesión se borra
+todo: un teléfono prestado no debe seguir enseñando el presupuesto de quien lo
+usó antes.
+
 ## La membresía
 
 Los webhooks son **la única fuente de verdad del nivel** (sección 10 del SPEC).
@@ -363,5 +382,5 @@ La fase 1 está completa: se entra con el correo, se arman los 6 pasos del
 onboarding, se reparte el mes, se anotan gastos, se cierra la semana, se meten
 deudas y fondos, sale el aviso del domingo y se cobra la membresía.
 
-Falta, ya fuera de la fase 1: la caché de IndexedDB, los avisos al teléfono
-(push y SMS), y Plaid — que el SPEC pone en la fase 3 y no antes.
+Falta, ya fuera de la fase 1: los avisos al teléfono (push y SMS), y Plaid —
+que el SPEC pone en la fase 3 y no antes.

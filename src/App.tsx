@@ -211,6 +211,23 @@ function Ajustes({
   )
 }
 
+/**
+ * La franja de "esto es una copia".
+ *
+ * No es un error: la app funciona y los números son los últimos que se supieron.
+ * Lo que no se puede es dejar creer que son de hoy.
+ */
+function SinConexion() {
+  return (
+    <div
+      role="status"
+      className="bg-ambar fixed inset-x-0 top-0 z-40 px-4 py-[6px] text-center text-[12px] font-semibold text-[#3A2A08]"
+    >
+      Sin conexión — estás viendo tu última copia guardada
+    </div>
+  )
+}
+
 /** Un mes que todavía no llega, o que no se pudo traer. */
 function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
   return (
@@ -269,6 +286,9 @@ export function App() {
   }
 
   const presupuesto = fuente.presupuesto
+  // Sin decirlo, el usuario decidiría si le alcanza con números que quizá ya
+  // no son los de hoy. Con decirlo, sabe qué está viendo y por qué.
+  const sinConexion = fuente.desdeLaCopia
 
   // El aviso no es una pantalla de la app: es la notificación. Se ve entera,
   // sin barra ni navegación.
@@ -500,6 +520,8 @@ export function App() {
 
   return (
     <>
+      {sinConexion && <SinConexion />}
+
       <div className="lg:hidden">
         <Marco cabecera={cabeceraDe(enMovil, presupuesto, ir)} activa={enMovil} ir={ir}>
           <Contenido ruta={enMovil} presupuesto={presupuesto} acciones={acciones} />
