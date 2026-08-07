@@ -1,0 +1,57 @@
+# El reloj del aviso de arranque de periodo.
+#
+# Vive aquí y no en `vercel.json` por una razón de plan: el gratis de Vercel
+# limita los crons a uno al día, y el aviso tiene que salir a la hora que cada
+# quien eligió **en su reloj** (sección 9 del SPEC). Con un solo disparo diario
+# solo acertaría a quien viva en la zona horaria del servidor.
+#
+# Lo único que hace este archivo es tocar el timbre cada hora. Quién recibe
+# correo y quién no lo decide `api/avisos.ts`, que compara la hora local de cada
+# usuario con la que eligió. Y que suene de más no importa: `envios_aviso` tiene
+# `unique (usuario_id, periodo_id, tipo, canal)` y el registro se inserta antes
+# de mandar, así que un disparo repetido choca contra la llave en vez de mandar
+# el correo dos veces.
+#
+# Lo que hace falta en Settings del repositorio:
+#   · Secrets → Actions → `CRON_SECRET`, el mismo valor que en Vercel.
+#   · Variables → Actions → `URL_APP`, la dirección pública de la app.
+#     Si no está, se usa la de abajo.
+#
+# GitHub apaga los crons de un repositorio que lleva 60 días sin commits. Si
+# algún día los avisos dejan de salir sin que nadie haya tocado nada, es esto:
+# se vuelven a prender desde la pestaña Actions.
+
+name: Aviso de arranque de periodo
+
+on:
+  schedule:
+    # Cada hora en punto, en UTC. GitHub puede atrasarlo unos minutos cuando
+    # está cargado; para un aviso de la mañana da igual.
+    - cron: '0 * * * *'
+  # Para probarlo sin esperar a la hora, desde la pestaña Actions.
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tocar el timbre
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          URL_APP: ${{ vars.URL_APP || 'https://jubileo-app.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Falta el secreto CRON_SECRET en Settings → Secrets → Actions."
+            echo "Sin él, /api/avisos contesta 401 y nadie recibe su aviso."
+            exit 1
+          fi
+          # `--fail-with-body` para que un 500 tumbe el paso y se vea en la
+          # pestaña Actions, pero enseñando lo que contestó el servidor: la
+          # respuesta trae cuántos mandó y qué falló, por usuario.
+          curl --silent --show-error --fail-with-body \
+               --max-time 120 --retry 2 --retry-delay 10 \
+               --header "Authorization: Bearer $CRON_SECRET" \
+               "$URL_APP/api/avisos"

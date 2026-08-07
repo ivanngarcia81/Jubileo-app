@@ -10,9 +10,13 @@ import { centavos } from '../src/lib/dinero'
 import { fecha } from '../src/lib/fecha'
 
 /**
- * El cron del aviso de arranque de periodo.
+ * El aviso de arranque de periodo.
  *
- * Corre una vez al día y manda el aviso a quien hoy empieza un cheque. Es la
+ * Se toca cada hora —el reloj vive en `.github/workflows/avisos.yml`, no en
+ * `vercel.json`, porque el plan gratis de Vercel solo permite crons diarios— y
+ * en cada toque manda el aviso a quien hoy empieza un cheque **y** son las
+ * horas que eligió en su reloj. Por hora, no por día: con un solo disparo
+ * diario el aviso solo caería a la hora correcta para una zona horaria. Es la
  * primera cosa del repositorio que se ejecuta en un servidor, y por eso es la
  * única que usa la `service_role`: tiene que leer los periodos de todos los
  * hogares, y las políticas de RLS —que existen justamente para que nadie vea el
@@ -86,7 +90,7 @@ async function mandarCorreo(para: string, asunto: string, html: string, texto: s
 }
 
 export default async function handler(req: Peticion, res: Respuesta) {
-  // Vercel firma sus crons con este encabezado. Sin él, cualquiera con la URL
+  // El que toca el timbre manda este encabezado. Sin él, cualquiera con la URL
   // dispararía los correos de todos los usuarios.
   const secreto = process.env.CRON_SECRET
   if (secreto && encabezado(req, 'authorization') !== `Bearer ${secreto}`) {

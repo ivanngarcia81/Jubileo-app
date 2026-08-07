@@ -261,12 +261,22 @@ herramientas/
 
 ## El aviso del domingo
 
-`api/avisos.ts` corre en Vercel una vez por hora y le manda el aviso a quien
-ese día arranca un cheque, a la hora que eligió **en su reloj**, no en el del
-servidor. El contenido no se calcula ahí: sale de `src/lib/aviso`, que es puro
-y tiene sus 24 pruebas.
+`api/avisos.ts` vive en Vercel y le manda el aviso a quien ese día arranca un
+cheque, a la hora que eligió **en su reloj**, no en el del servidor. El
+contenido no se calcula ahí: sale de `src/lib/aviso`, que es puro y tiene sus
+24 pruebas.
 
-La idempotencia no la pone el cron: la pone `envios_aviso` con su
+**El reloj no está en Vercel, está en `.github/workflows/avisos.yml`.** Tiene
+que sonar cada hora para acertarle a la hora local de cada quien, y el plan
+gratis de Vercel solo permite crons diarios — con uno al día el aviso llegaría
+a deshoras a todo el que no viva en la zona del servidor. GitHub Actions lo
+dispara gratis, y `vercel.json` se quedó sin `crons`.
+
+Un detalle que muerde tarde: GitHub apaga los crons de un repositorio que lleva
+60 días sin commits. Si los avisos dejan de salir sin que nadie haya tocado
+nada, se vuelven a prender desde la pestaña *Actions*.
+
+La idempotencia no la pone el reloj: la pone `envios_aviso` con su
 `unique (usuario_id, periodo_id, tipo, canal)`. El registro se inserta **antes**
 de mandar, así que un cron que corra dos veces choca contra la llave y no manda
 dos correos. Un cron no tiene que ser confiable para que el usuario no reciba lo
@@ -282,9 +292,16 @@ llegar al navegador:
 | `CORREO_API_KEY` | la llave `re_…` de Resend |
 | `CORREO_REMITENTE` | `hola@jubileofinanciero.com` |
 | `URL_APP` | a dónde lleva el botón del correo |
-| `CRON_SECRET` | lo pone Vercel solo; sin él cualquiera con la URL dispara los correos |
+| `CRON_SECRET` | lo inventas tú; sin él cualquiera con la URL dispara los correos |
 
-Para probarlo sin esperar a la hora:
+`CRON_SECRET` va en **dos** lados con el mismo valor: en Vercel, para que
+`/api/avisos` lo compare, y en GitHub → *Settings → Secrets → Actions*, para
+que el reloj lo mande. Si solo está en uno, la llamada contesta 401 y nadie
+recibe nada. La dirección de la app la toma de la variable `URL_APP` de GitHub
+(*Settings → Variables → Actions*); sin ella usa `jubileo-app.vercel.app`.
+
+Para probarlo sin esperar a la hora, desde la pestaña *Actions* con
+**Run workflow**, o a mano:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" https://tu-app.vercel.app/api/avisos
