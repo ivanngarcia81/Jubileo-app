@@ -5,3 +5,13 @@ export {
   semanaDeFecha,
   semanaEnCurso,
 } from './semanas.js'
+export {
+  type FijoDeSemana,
+  type AsignacionSemanal,
+  type ChequeDeSemana,
+  type NumeroDeSemana,
+  semanaDeFijo,
+  numerosDeSemanas,
+  presupuestoConArrastre,
+  disponibleConArrastre,
+} from './numeros.js'
