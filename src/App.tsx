@@ -217,7 +217,11 @@ function Ajustes({
   alGuardarAviso?: (horaLocal: string, activo: boolean) => Promise<void>
 }) {
   return (
-    <div className="flex flex-col gap-3">
+    // Cada tarjeta de aquí es independiente de las demás, así que en pantalla
+    // ancha van en dos columnas: es la que mejor aguanta el cambio sin tocarle
+    // nada por dentro. `items-start` para que no se estiren a la altura de la
+    // más alta.
+    <div className="flex flex-col gap-3 ancho:grid ancho:grid-cols-2 ancho:items-start ancho:gap-4">
       {alCambiarComoMePagan && (
         <ComoMePagan presupuesto={presupuesto} mes={mes} alGuardar={alCambiarComoMePagan} />
       )}
@@ -702,7 +706,10 @@ export function App() {
           {enEscritorio === 'resumen' ? (
             <Resumen presupuesto={presupuesto} />
           ) : (
-            <div className="mx-auto max-w-[720px] p-[22px]">
+            // 720px era la mitad del ancho disponible. Estas tres pantallas
+            // siguen siendo las del teléfono —darles composición propia de
+            // escritorio es otro trabajo— pero al menos respiran.
+            <div className="mx-auto max-w-[980px] p-[22px]">
               {enEscritorio === 'ajustes' ? (
                 <Ajustes
                   presupuesto={presupuesto}
