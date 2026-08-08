@@ -335,6 +335,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
         icono: t.tipo === 'ingreso' ? 'ingreso' : ((categoria?.grupo ?? 'gasto') as ClaveIcono),
         categoria: categoria?.nombre ?? (t.tipo === 'ingreso' ? 'Entró' : 'Sin asignar'),
         asignado: categoria !== undefined || t.tipo === 'ingreso',
+        revisado: t.revisada,
         fecha: fecha(t.fecha),
         montoCents: centavos(t.monto_cents),
         tipo: t.tipo,

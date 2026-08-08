@@ -185,15 +185,22 @@ await p.route('**/*', async (r) => {
       }
       if (t === 'transacciones' && m === 'PATCH') {
         const f = [cuerpo].flat()[0]
-        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
-        const fila = transacciones.find((x) => x.id === id)
-        if (fila) Object.assign(fila, f)
+        // `eq.` para una y `in.(…)` para varias: la barra de pendientes marca
+        // en bloque, y un mock que solo entiende `eq.` diría que no pasó nada.
+        const filtro = url.searchParams.get('id') ?? ''
+        const ids = filtro.startsWith('in.')
+          ? filtro.slice(4, -1).split(',').map((x) => x.replace(/^"|"$/g, ''))
+          : [filtro.replace('eq.', '')]
+        for (const fila of transacciones) if (ids.includes(fila.id)) Object.assign(fila, f)
         return json([])
       }
       if (t === 'transacciones') {
         const f = [cuerpo].flat()[0]
         const id = `t-${transacciones.length + 1}`
-        transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente' })
+        // `revisada` nace en falso en la base: el mock tiene que hacer lo
+        // mismo, o la barra de pendientes nunca aparecería aquí y sí en
+        // producción.
+        transacciones.push({ ...f, id, estado: f.estado ?? 'pendiente', revisada: f.revisada ?? false })
         return json([{ id }])
       }
       if (t === 'deudas' || t === 'fondos_reserva') {
@@ -411,14 +418,49 @@ ok(antes !== despues && /\$26\s*de\s*\$150/.test(despues), 'y el sobre ya enseñ
 await p.screenshot({ path: RAIZ + 'capturas/app-semana-con-gasto.png' })
 
 // ---- Movimientos ----------------------------------------------------------
+ok(transacciones.at(-1)?.revisada === true,
+   'lo que el usuario anota a mano nace revisado: lo acaba de escribir él')
+
+// Dos que llegan sin revisar, como llegarían del banco.
+transacciones.push(
+  { id: 't-banco-1', hogar_id: H, usuario_id: U, periodo_id: 'p1', categoria_id: null,
+    fecha: '2026-08-05', monto_cents: 1800, tipo: 'gasto', descripcion: 'Farmacia del Ahorro',
+    comercio: null, estado: 'pendiente', revisada: false },
+  { id: 't-banco-2', hogar_id: H, usuario_id: U, periodo_id: 'p1', categoria_id: null,
+    fecha: '2026-08-05', monto_cents: 2200, tipo: 'gasto', descripcion: 'Cafetería',
+    comercio: null, estado: 'pendiente', revisada: false },
+)
+// Sembrarlas no basta: la app ya tiene el mes en memoria. Sin recargar, la
+// comprobación estaría mirando datos de antes de sembrar.
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+
 // Lo que se acaba de anotar tiene que aparecer aquí, con su sobre y su cheque.
 await p.getByRole('button', { name: 'Ver todos los movimientos' }).first().click()
-await p.waitForTimeout(700)
+await p.waitForTimeout(900)
 const movs = await p.locator('main').innerText()
 ok(movs.includes('Supermercado'), 'el gasto recién anotado aparece en Movimientos')
 ok(/HOY|Hoy/.test(movs), 'agrupado por día, y el de hoy dice "hoy"')
 ok(movs.includes('Cheque 1'), 'y dice con qué cheque se pagó')
 await p.screenshot({ path: RAIZ + 'capturas/app-movimientos.png' })
+
+// ---- Revisar en bloque ----------------------------------------------------
+const enBloque = p.getByRole('button', { name: 'Marcar los 2 como revisados' }).first()
+ok(await enBloque.isVisible(), 'la barra de pendientes dice cuántos faltan por revisar')
+await enBloque.click()
+await p.waitForTimeout(1300)
+ok(transacciones.filter((t) => !t.revisada).length === 0,
+   'marcarlos en bloque los marca todos de una vez, no uno por viaje')
+ok(!(await p.getByRole('button', { name: /Marcar los .* como revisados/ }).first().isVisible()),
+   'y la barra se va sola cuando ya no hay nada que hacer')
+
+// Y se puede desmarcar uno: la casilla va en los dos sentidos.
+const casillaMov = p.getByRole('checkbox', { name: /Desmarcar Farmacia del Ahorro/ }).first()
+await casillaMov.click()
+await p.waitForTimeout(1300)
+ok(transacciones.find((t) => t.id === 't-banco-1')?.revisada === false,
+   'desmarcar uno lo regresa a por revisar')
+
 await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(600)
 

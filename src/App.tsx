@@ -144,6 +144,7 @@ interface Acciones {
   alCerrarMes?: () => Promise<void>;
   alVerMes?: (anio: number, mes: number) => void;
   alVerMovimientos?: () => void;
+  alRevisar?: (ids: readonly string[], revisado: boolean) => Promise<void>;
   alCrearDeuda?: (
     nombre: string,
     saldoCents: Centavos,
@@ -190,6 +191,7 @@ function Contenido({
     alCerrarMes,
     alVerMes,
     alVerMovimientos,
+    alRevisar,
     alCrearDeuda,
     alGuardarSaldo,
     alEnfocar,
@@ -222,7 +224,12 @@ function Contenido({
         />
       );
     case "movimientos":
-      return <Movimientos presupuesto={presupuesto} />;
+      return (
+        <Movimientos
+          presupuesto={presupuesto}
+          {...(alRevisar ? { alRevisar } : {})}
+        />
+      );
     case "metas":
       return (
         <Metas
@@ -481,6 +488,15 @@ export function App() {
       }
     : undefined;
 
+  const alRevisar = mesId
+    ? async (ids: readonly string[], revisado: boolean) => {
+        const { marcarRevisados } =
+          await import("./servidor/repositorios/anotar");
+        await marcarRevisados(ids, revisado);
+        fuente.recargar();
+      }
+    : undefined;
+
   const alCerrarMes = mesId
     ? async () => {
         const { cerrarMes } = await import("./servidor/repositorios/mes");
@@ -716,6 +732,7 @@ export function App() {
     ...(alCerrarMes ? { alCerrarMes } : {}),
     ...(usaServidor() ? { alVerMes } : {}),
     alVerMovimientos: () => ir("movimientos"),
+    ...(alRevisar ? { alRevisar } : {}),
   };
 
   // El onboarding quedó a medias: se vuelve a donde se quedó en vez de caer a

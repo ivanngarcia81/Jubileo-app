@@ -61,6 +61,8 @@ export interface Movimiento {
   categoria: string
   /** Falso cuando todavía no tiene sobre: el usuario tiene que decidirlo. */
   asignado: boolean
+  /** El usuario ya lo vio. Lo que anota a mano nace revisado; lo del banco no. */
+  revisado: boolean
   fecha: FechaCivil
   montoCents: Centavos
   tipo: 'gasto' | 'ingreso'

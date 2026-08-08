@@ -109,6 +109,8 @@ export interface FilaTransaccion {
   descripcion: string | null
   comercio: string | null
   estado: EstadoTransaccion
+  /** El usuario ya lo vio. Distinto de `estado`, que dice si tiene sobre. */
+  revisada: boolean
 }
 
 export interface FilaDeuda {

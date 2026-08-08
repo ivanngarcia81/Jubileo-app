@@ -104,7 +104,7 @@ export async function cargarPresupuestoDelMes(
     const respuesta = await db
       .from('transacciones')
       .select(
-        'id, usuario_id, periodo_id, categoria_id, fecha, monto_cents, tipo, descripcion, comercio, estado',
+        'id, usuario_id, periodo_id, categoria_id, fecha, monto_cents, tipo, descripcion, comercio, estado, revisada',
       )
       .in('periodo_id', idsPeriodo)
       .order('fecha', { ascending: false })

@@ -47,6 +47,9 @@ export async function anotarGasto(g: Gasto): Promise<string> {
       descripcion: g.descripcion?.trim() || null,
       origen: 'manual',
       estado: 'asignada',
+      // Lo escribió el usuario: ya lo vio. La columna nace en falso para que
+      // lo que llegue del banco entre sin revisar; aquí se dice que sí.
+      revisada: true,
     })
     .select('id')
     .single<{ id: string }>()
@@ -63,4 +66,18 @@ export async function anotarGasto(g: Gasto): Promise<string> {
 export async function borrarMovimiento(id: string): Promise<void> {
   const { error } = await cliente().from('transacciones').delete().eq('id', id)
   reventar('No se pudo deshacer', error)
+}
+
+/**
+ * Marca movimientos como revisados. En bloque porque así se usa: la barra de
+ * pendientes ofrece "marcar los 3", y hacerlo de uno en uno son tres viajes al
+ * servidor y tres oportunidades de quedar a medias.
+ */
+export async function marcarRevisados(ids: readonly string[], revisada = true): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await cliente()
+    .from('transacciones')
+    .update({ revisada })
+    .in('id', ids as string[])
+  reventar('No se pudo marcar como revisado', error)
 }

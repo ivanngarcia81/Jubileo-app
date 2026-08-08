@@ -91,9 +91,9 @@ function filas(): FilasDelMes {
       { id: 'a9', mes_id: MES, linea_presupuesto_id: 'l-diezmo', periodo_id: 'p1', monto_cents: 36800 },
     ],
     transacciones: [
-      { id: 't1', usuario_id: ROSA, periodo_id: 'r1', categoria_id: 'c-luz', fecha: '2026-08-04', monto_cents: 8500, tipo: 'gasto', descripcion: 'PSE&G', comercio: null, estado: 'asignada' },
-      { id: 't2', usuario_id: IVAN, periodo_id: 'r1', categoria_id: 'c-comida', fecha: '2026-08-06', monto_cents: 6200, tipo: 'gasto', descripcion: 'Supermercado', comercio: null, estado: 'asignada' },
-      { id: 't3', usuario_id: IVAN, periodo_id: 'r1', categoria_id: null, fecha: '2026-08-07', monto_cents: 1200, tipo: 'gasto', descripcion: 'Sin asignar', comercio: null, estado: 'pendiente' },
+      { id: 't1', usuario_id: ROSA, periodo_id: 'r1', categoria_id: 'c-luz', fecha: '2026-08-04', monto_cents: 8500, tipo: 'gasto', descripcion: 'PSE&G', comercio: null, estado: 'asignada', revisada: true },
+      { id: 't2', usuario_id: IVAN, periodo_id: 'r1', categoria_id: 'c-comida', fecha: '2026-08-06', monto_cents: 6200, tipo: 'gasto', descripcion: 'Supermercado', comercio: null, estado: 'asignada', revisada: true },
+      { id: 't3', usuario_id: IVAN, periodo_id: 'r1', categoria_id: null, fecha: '2026-08-07', monto_cents: 1200, tipo: 'gasto', descripcion: 'Sin asignar', comercio: null, estado: 'pendiente', revisada: false },
     ],
     deudas: [
       { id: 'd-capital', nombre: 'Capital One', saldo_inicial_cents: 387500, saldo_cents: 124000, pago_minimo_cents: 3500, tasa_interes: 24.9, orden: 0, es_enfoque: true, pagada_en: null },

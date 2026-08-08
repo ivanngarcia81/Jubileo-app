@@ -1,8 +1,17 @@
+import { useState } from 'react'
+import { hoy as hoyDelUsuario } from '../../datos/fuente'
 import type { Movimiento, Presupuesto } from '../../datos/tipos'
 import { centavos } from '../../lib/dinero'
-import { hoy as hoyDelUsuario } from '../../datos/fuente'
 import { porDia } from '../../lib/mes/dias'
-import { CeldaCifra, CeldaNombre, ChipCategoria, Fila, ListaSeccion, Moneda } from '../base'
+import {
+  Casilla,
+  CeldaCifra,
+  CeldaNombre,
+  ChipCategoria,
+  Fila,
+  ListaSeccion,
+  Moneda,
+} from '../base'
 import { IconoMovimientos } from '../iconos'
 import { etiquetaDeDia } from '../textos'
 
@@ -13,23 +22,37 @@ import { etiquetaDeDia } from '../textos'
  * renglones no se lee, se escanea buscando el día. Cada día trae su encabezado
  * con lo que entró y lo que salió, que es la pregunta que trae al usuario aquí.
  *
- * Lo que el mockup dibuja y todavía no existe: la casilla de revisado —es el
- * paso que sigue— y la línea de "Débito · 4412", que necesita la cuenta de
- * donde salió el dinero y eso llega con la conexión al banco. En su lugar va el
- * cheque, que es el marco del producto y sí lo sabemos.
+ * Lo que el mockup dibuja y todavía no existe: la línea de "Débito · 4412",
+ * que necesita la cuenta de donde salió el dinero y eso llega con la conexión
+ * al banco. En su lugar va el cheque, que es el marco del producto y sí lo
+ * sabemos.
  */
 
 const COLUMNAS = {
-  columnas: 'minmax(0,1fr) 92px',
-  columnasPanel: 'minmax(150px,1fr) 190px 110px',
+  columnas: '21px minmax(0,1fr) 92px',
+  columnasPanel: '21px minmax(150px,1fr) 190px 110px',
 }
 
-function FilaMovimiento({ movimiento: m }: { movimiento: Movimiento }) {
+function FilaMovimiento({
+  movimiento: m,
+  alRevisar,
+  ocupada,
+}: {
+  movimiento: Movimiento
+  alRevisar?: ((revisado: boolean) => void) | undefined
+  ocupada: boolean
+}) {
   const chip = (
     <ChipCategoria {...(m.asignado ? { clave: m.icono } : {})}>{m.categoria}</ChipCategoria>
   )
   return (
     <Fila className={m.asignado ? '' : 'bg-gris'}>
+      <Casilla
+        marcada={m.revisado}
+        etiqueta={`${m.nombre} como revisado`}
+        ocupada={ocupada}
+        {...(alRevisar ? { alCambiar: () => alRevisar(!m.revisado) } : {})}
+      />
       <CeldaNombre
         detalle={
           <span className="flex min-w-0 items-center gap-2">
@@ -51,23 +74,58 @@ function FilaMovimiento({ movimiento: m }: { movimiento: Movimiento }) {
   )
 }
 
-export function Movimientos({ presupuesto }: { presupuesto: Presupuesto }) {
+export function Movimientos({
+  presupuesto,
+  alRevisar,
+}: {
+  presupuesto: Presupuesto
+  /** Ausente con los datos de ejemplo: la demostración se ve pero no se toca. */
+  alRevisar?: (ids: readonly string[], revisado: boolean) => Promise<void>
+}) {
   // El hoy del calendario del usuario, no el de UTC.
   const hoy = hoyDelUsuario()
+  const [ocupados, setOcupados] = useState<readonly string[]>([])
   const dias = porDia(presupuesto.movimientos)
-  const sinAsignar = presupuesto.movimientos.filter((m) => !m.asignado).length
+  const sinRevisar = presupuesto.movimientos.filter((m) => !m.revisado)
+
+  const marcar = (ids: readonly string[], revisado: boolean) => {
+    if (!alRevisar) return
+    setOcupados(ids)
+    void alRevisar(ids, revisado).finally(() => setOcupados([]))
+  }
 
   return (
     <ListaSeccion
       titulo={`Movimientos de ${presupuesto.mes.etiqueta.toLowerCase()}`}
       icono={<IconoMovimientos tam={15} />}
-      dato={
-        sinAsignar > 0
-          ? `${sinAsignar} sin sobre`
-          : `${presupuesto.movimientos.length} movimientos`
-      }
+      dato={`${presupuesto.movimientos.length} movimientos`}
       {...COLUMNAS}
     >
+      {/* La barra solo aparece cuando hay algo que hacer. Una que diga
+          "0 pendientes" es ruido permanente. */}
+      {sinRevisar.length > 0 && (
+        <div className="bg-brillo-teal border-linea flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-[12px] py-[9px] text-[12.5px] panel:px-[18px]">
+          <span>
+            <b className="font-semibold">
+              {sinRevisar.length === 1 ? '1 movimiento' : `${sinRevisar.length} movimientos`}
+            </b>{' '}
+            sin revisar
+          </span>
+          {alRevisar && (
+            <button
+              type="button"
+              onClick={() => marcar(sinRevisar.map((m) => m.id), true)}
+              disabled={ocupados.length > 0}
+              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-[11.5px] font-bold text-[#043432] disabled:opacity-50"
+            >
+              {sinRevisar.length === 1
+                ? 'Marcarlo como revisado'
+                : `Marcar los ${sinRevisar.length} como revisados`}
+            </button>
+          )}
+        </div>
+      )}
+
       {dias.length === 0 ? (
         <p className="text-texto-2 px-[12px] py-6 text-center text-[13px] leading-[1.55] panel:px-[18px]">
           Todavía no hay nada anotado este mes.
@@ -86,11 +144,18 @@ export function Movimientos({ presupuesto }: { presupuesto: Presupuesto }) {
                   </span>
                 )}
                 {dia.entroCents > 0 && dia.salioCents > 0 && ' · '}
-                {dia.salioCents > 0 && <Moneda centavos={centavos(dia.salioCents)} redondo={false} />}
+                {dia.salioCents > 0 && (
+                  <Moneda centavos={centavos(dia.salioCents)} redondo={false} />
+                )}
               </span>
             </div>
             {dia.movimientos.map((m) => (
-              <FilaMovimiento key={m.id} movimiento={m} />
+              <FilaMovimiento
+                key={m.id}
+                movimiento={m}
+                ocupada={ocupados.includes(m.id)}
+                {...(alRevisar ? { alRevisar: (v: boolean) => marcar([m.id], v) } : {})}
+              />
             ))}
           </div>
         ))

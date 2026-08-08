@@ -128,7 +128,26 @@ select probar('transacción asignada sin categoría',
   $$insert into transacciones (hogar_id,fecha,monto_cents,tipo,estado) select hogar_id,'2026-08-04',6200,'gasto','asignada' from ctx$$, 'rechaza');
 select probar('transacción pendiente sin categoría',
   $$insert into transacciones (hogar_id,fecha,monto_cents,tipo,estado) select hogar_id,'2026-08-04',6200,'gasto','pendiente' from ctx$$, 'pasa');
+-- Revisado y asignado son dos preguntas distintas, y las cuatro combinaciones
+-- son legítimas: del banco puede llegar algo categorizado y sin ver, o visto y
+-- todavía sin sobre. Si alguien las amarra con un CHECK, esto lo dice.
+select probar('sin sobre y ya revisada',
+  $$insert into transacciones (hogar_id,fecha,monto_cents,tipo,estado,revisada) select hogar_id,'2026-08-04',6200,'gasto','pendiente',true from ctx$$, 'pasa');
+select probar('con sobre y sin revisar',
+  $$insert into transacciones (hogar_id,categoria_id,fecha,monto_cents,tipo,estado,revisada) select hogar_id,'55555555-5555-5555-5555-555555555555','2026-08-04',6200,'gasto','asignada',false from ctx$$, 'pasa');
+
 select probar('código de cortesía usado a medias',
   $$insert into codigos_cortesia (codigo,vence_en,usado_por) values ('COACH2026','2026-12-31','11111111-1111-1111-1111-111111111111')$$, 'rechaza');
+
+-- La columna nace en falso: lo del banco entra sin revisar. Si algún día
+-- alguien le pone `default true` "para no molestar", esto revienta — y esa es
+-- toda la gracia, porque al revés el error no se nota nunca.
+\echo ''
+\echo '--- lo que llega sin decir nada nace sin revisar ---'
+insert into transacciones (id, hogar_id, fecha, monto_cents, tipo, estado)
+  select '77777777-7777-7777-7777-777777777777', hogar_id, '2026-08-05', 1800, 'gasto', 'pendiente' from ctx;
+select case when not revisada then '  ok     un movimiento sin decir nada nace sin revisar'
+            else '  FALLA  nace revisado: lo del banco entraría dado por visto' end
+  from transacciones where id = '77777777-7777-7777-7777-777777777777';
 
 rollback;
