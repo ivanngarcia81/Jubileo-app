@@ -4,10 +4,13 @@
 -- Lo que se intenta romper aquí, a propósito:
 --   · Que el reparto SQL y el de src/lib/dinero se separen en silencio: los
 --     dos se fijan al mismo resultado con el mismo monto indivisible.
---   · Que un fijo vuelva a exigir reparto semanal (regresión al eje viejo).
---   · Que una semana fantasma (la 5 en un mes de 4) esconda dinero.
---   · Que el guardia deje prometer dinero antes de que entre, o que cuente
---     un cheque que llega después de que el mes termine.
+--   · Que un fijo vuelva a exigir reparto semanal, o que vuelva a entrar al
+--     guardia (contarlo hacía incerrables meses sin remedio: la renta que
+--     vence el 1 no se puede mover a otra semana).
+--   · Que una semana fantasma (la 5 en un mes de 4) esconda dinero — aunque
+--     las semanas válidas cuadren solas.
+--   · Que el extra fondee los sobres: va completo al enfoque, no se reparte.
+--   · Que el puente deje al cliente viejo con líneas huérfanas del eje nuevo.
 -- ============================================================================
 \set QUIET on
 \pset tuples_only on
@@ -86,14 +89,15 @@ select case when sum(monto_cents) = 100003
   from reparto_semanal(100003, 2026, 8);
 
 -- ---------------------------------------------------------------------------
--- Agosto 2026: cheques el 6 y el 20 (1000.00 cada uno) y un extra el 28.
--- Renta fija el día 3 (500.00); comida variable (600.00); diezmo (100.00).
+-- Agosto 2026: cheque de 500.00 el día 6, de 1,500.00 el día 20, extra de
+-- 500.00 el día 28. Renta fija el día 3 (500.00) — vence ANTES del primer
+-- cheque, como en la vida real. Comida variable (600.00); diezmo (100.00).
 -- ---------------------------------------------------------------------------
 insert into meses (id, hogar_id, anio, mes) select :mes1, hogar_id, 2026, 8 from casa;
 insert into periodos (id, hogar_id, mes_id, usuario_id, numero, fecha_inicio, fecha_fin, fecha_pago, ingreso_esperado_cents)
-  select 'b3333333-0000-0000-0000-000000000001', hogar_id, :mes1, :duena, 1, '2026-08-06','2026-08-19','2026-08-06', 100000 from casa;
+  select 'b3333333-0000-0000-0000-000000000001', hogar_id, :mes1, :duena, 1, '2026-08-06','2026-08-19','2026-08-06', 50000 from casa;
 insert into periodos (id, hogar_id, mes_id, usuario_id, numero, fecha_inicio, fecha_fin, fecha_pago, ingreso_esperado_cents)
-  select 'b3333333-0000-0000-0000-000000000002', hogar_id, :mes1, :duena, 2, '2026-08-20','2026-09-02','2026-08-20', 100000 from casa;
+  select 'b3333333-0000-0000-0000-000000000002', hogar_id, :mes1, :duena, 2, '2026-08-20','2026-09-02','2026-08-20', 150000 from casa;
 insert into periodos (id, hogar_id, mes_id, usuario_id, numero, fecha_inicio, fecha_fin, fecha_pago, es_extra, ingreso_esperado_cents)
   select 'b3333333-0000-0000-0000-000000000003', hogar_id, :mes1, :duena, 3, '2026-08-28','2026-08-28','2026-08-28', true, 50000 from casa;
 
@@ -109,44 +113,55 @@ insert into lineas_presupuesto (id, mes_id, categoria_id, monto_mensual_cents) v
   ('b5555555-0000-0000-0000-000000000002', :mes1, 'b4444444-0000-0000-0000-000000000002', 60000),
   ('b5555555-0000-0000-0000-000000000003', :mes1, 'b4444444-0000-0000-0000-000000000003', 10000);
 
+\echo '--- el puente: el cliente viejo no deja huérfano el eje nuevo ---'
+select case when count(*) = 5 and sum(monto_cents) = 60000
+            then '  ok     la línea nueva nace con su plan semanal sembrado y cuadrado'
+            else '  FALLA  comida: ' || count(*) || ' filas, suma ' || coalesce(sum(monto_cents), 0) end
+  from asignaciones_semana where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000002';
+select case when count(*) = 0
+            then '  ok     la renta no: los fijos van por fecha, sin plan semanal'
+            else '  FALLA  la renta tiene ' || count(*) || ' filas semanales' end
+  from asignaciones_semana where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000001';
+select case when count(*) = 0
+            then '  ok     y nada queda descuadrado: septiembre nacería cerrable'
+            else '  FALLA  descuadradas: ' || string_agg(categoria, ', ') end
+  from lineas_descuadradas(:mes1);
+
 \echo '--- la invariante: quién debe repartir y quién no ---'
-select case when count(*) = 2
-             and bool_and(categoria in ('Comida', 'Diezmo'))
-            then '  ok     lo variable y la mayordomía sin semanas salen descuadrados'
+select probar('meterle plan semanal a la renta',
+  $$insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
+    values ('b1111111-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000001', 1, 50000)$$,
+  'rechaza');
+
+delete from asignaciones_semana where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000003';
+select case when count(*) = 1 and min(categoria) = 'Diezmo'
+            then '  ok     una línea repartible sin semanas sale descuadrada'
             else '  FALLA  descuadradas: ' || coalesce(string_agg(categoria, ', '), '(nada)') end
   from lineas_descuadradas(:mes1);
-select case when count(*) = 0
-            then '  ok     la renta NO: los fijos van por fecha, no se reparten a mano'
-            else '  FALLA  un fijo volvió a exigir reparto semanal' end
-  from lineas_descuadradas(:mes1) where categoria = 'Renta';
-
 select probar_cierre('descuadrado, el mes no se cierra', :mes1, 'rechaza');
-
--- Se cuadran con el mismo reparto del servidor.
-insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
-  select :mes1, 'b5555555-0000-0000-0000-000000000002', semana, monto_cents
-    from reparto_semanal(60000, 2026, 8) where monto_cents > 0;
 insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
   select :mes1, 'b5555555-0000-0000-0000-000000000003', semana, monto_cents
     from reparto_semanal(10000, 2026, 8) where monto_cents > 0;
-
 select case when count(*) = 0
-            then '  ok     cuadradas con el reparto del servidor, nada descuadrado'
+            then '  ok     cuadrada otra vez con el reparto del servidor'
             else '  FALLA  siguen descuadradas: ' || string_agg(categoria, ', ') end
   from lineas_descuadradas(:mes1);
 
 \echo '--- el guardia: no prometas dinero antes de que entre ---'
+-- La renta (500.00, día 3) vence antes del primer cheque (día 6). Si el
+-- guardia la contara, la semana 1 quedaría sobregirada PARA SIEMPRE: un fijo
+-- no se puede mover. Que esto salga vacío es la prueba de que el guardia
+-- cuida solo lo repartible.
 select case when count(*) = 0
-            then '  ok     el reparto proporcional respeta lo que va entrando'
+            then '  ok     la renta que vence antes del primer cheque NO bloquea el mes'
             else '  FALLA  sobregiradas: ' || string_agg(semana::text, ', ') end
   from semanas_sobregiradas(:mes1);
 
--- Toda la comida a la semana 1: 500 de renta + 600 de comida + el diezmo de
--- esa semana contra los 1000 del cheque del día 6. No alcanza.
+-- Toda la comida a la semana 1: 600.00 más el diezmo de esa semana contra los
+-- 500.00 del cheque del día 6. No alcanza, y la 2 tampoco: es acumulado.
 delete from asignaciones_semana where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000002';
 insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
   values (:mes1, 'b5555555-0000-0000-0000-000000000002', 1, 60000);
-
 select case when min(semana) = 1 and count(*) = 2
             then '  ok     cargar la semana 1 la sobregira a ella y a la 2 (es acumulado)'
             else '  FALLA  devolvió ' || coalesce(string_agg(semana::text, ','), '(nada)') end
@@ -155,7 +170,6 @@ select case when sobregiro_cents = 12258
             then '  ok     y dice por cuánto: 122.58 de más'
             else '  FALLA  sobregiro de ' || sobregiro_cents end
   from semanas_sobregiradas(:mes1) where semana = 1;
-
 select probar_cierre('con una semana sobregirada, el mes no se cierra', :mes1, 'rechaza');
 
 -- La semana 3 sí puede vivir del cheque del 20: llega antes de que termine.
@@ -166,61 +180,94 @@ select case when count(*) = 0
             else '  FALLA  sobregiradas: ' || string_agg(semana::text, ', ') end
   from semanas_sobregiradas(:mes1);
 
--- El extra cuenta como entrada — el guardia protege el cuándo, no el destino.
--- Con el segundo cheque en 100.00, la semana 5 solo cuadra si el extra del 28
--- fondea. Y si el extra se paga ya en septiembre, deja de fondear agosto.
+-- El extra NO fondea lo repartible: va completo al enfoque (regla 2 de la
+-- sección 6). Con el segundo cheque en 100.00, la semana 5 solo cuadraría si
+-- el extra del 28 contara — y no cuenta.
 update periodos set ingreso_esperado_cents = 10000
  where id = 'b3333333-0000-0000-0000-000000000002';
 update asignaciones_semana set semana = 5
  where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000002';
+select case when count(*) = 1 and min(semana) = 5
+            then '  ok     el extra no fondea los sobres: va completo al enfoque'
+            else '  FALLA  devolvió ' || coalesce(string_agg(semana::text, ','), '(nada)') end
+  from semanas_sobregiradas(:mes1);
+update periodos set ingreso_esperado_cents = 150000
+ where id = 'b3333333-0000-0000-0000-000000000002';
 select case when count(*) = 0
-            then '  ok     el extra del 28 sí fondea la semana 5'
+            then '  ok     con el cheque normal restaurado, la semana 5 cuadra'
             else '  FALLA  sobregiradas: ' || string_agg(semana::text, ', ') end
   from semanas_sobregiradas(:mes1);
-update periodos set fecha_inicio = '2026-09-05', fecha_fin = '2026-09-05', fecha_pago = '2026-09-05'
- where id = 'b3333333-0000-0000-0000-000000000003';
+
+-- Un cheque pagado ya en septiembre no fondea agosto, aunque sea del mes.
+update periodos set fecha_inicio = '2026-09-05', fecha_fin = '2026-09-18', fecha_pago = '2026-09-05'
+ where id = 'b3333333-0000-0000-0000-000000000002';
 select case when count(*) = 1 and min(semana) = 5
             then '  ok     pagado el 5 de septiembre ya no: ese dinero no es de agosto'
             else '  FALLA  devolvió ' || coalesce(string_agg(semana::text, ','), '(nada)') end
   from semanas_sobregiradas(:mes1);
-update periodos set fecha_inicio = '2026-08-28', fecha_fin = '2026-08-28', fecha_pago = '2026-08-28'
- where id = 'b3333333-0000-0000-0000-000000000003';
+update periodos set fecha_inicio = '2026-08-20', fecha_fin = '2026-09-02', fecha_pago = '2026-08-20'
+ where id = 'b3333333-0000-0000-0000-000000000002';
 
 select probar_cierre('cuadrado y fondeado, el mes se cierra', :mes1, 'pasa');
 select case when estado = 'cerrado' then '  ok     y quedó marcado como cerrado'
             else '  FALLA  estado ' || estado end
   from meses where id = :mes1;
 
+\echo '--- el puente re-siembra cuando el monto cambia ---'
+update lineas_presupuesto set monto_mensual_cents = 70003
+ where id = 'b5555555-0000-0000-0000-000000000002';
+select case when count(*) = 5 and sum(monto_cents) = 70003
+            then '  ok     editar el monto re-siembra el plan semanal, exacto'
+            else '  FALLA  ' || count(*) || ' filas, suma ' || coalesce(sum(monto_cents), 0) end
+  from asignaciones_semana where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000002';
+update lineas_presupuesto set monto_mensual_cents = 60000
+ where id = 'b5555555-0000-0000-0000-000000000002';
+
 -- ---------------------------------------------------------------------------
--- Febrero 2027: cuatro semanas. La fantasma y el día que no existe.
+-- Febrero 2027: cuatro semanas. La fantasma, y el fijo sin un solo cheque.
 -- ---------------------------------------------------------------------------
 insert into meses (id, hogar_id, anio, mes) select :mes2, hogar_id, 2027, 2 from casa;
-insert into categorias (id, hogar_id, nombre, grupo)
-  select 'b4444444-0000-0000-0000-000000000004', hogar_id, 'Ropa', 'variable' from casa;
 insert into categorias (id, hogar_id, nombre, grupo, es_fija, dia_vencimiento)
   select 'b4444444-0000-0000-0000-000000000005', hogar_id, 'Seguro', 'fijo', true, 31 from casa;
 insert into lineas_presupuesto (id, mes_id, categoria_id, monto_mensual_cents) values
-  ('b5555555-0000-0000-0000-000000000004', :mes2, 'b4444444-0000-0000-0000-000000000004', 70000),
   ('b5555555-0000-0000-0000-000000000005', :mes2, 'b4444444-0000-0000-0000-000000000005', 12345);
 
-\echo '--- la semana fantasma y el día que el mes no tiene ---'
--- Todo el dinero de Ropa en la semana 5 de un mes de 4: la suma bruta
--- cuadraría, pero esa semana no existe y no cuenta.
-insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
-  values (:mes2, 'b5555555-0000-0000-0000-000000000004', 5, 70000);
-select case when count(*) = 1 and min(asignado_cents) = 0
-            then '  ok     la semana 5 de febrero no existe: la línea sale descuadrada'
-            else '  FALLA  la semana fantasma escondió el dinero' end
-  from lineas_descuadradas(:mes2) where categoria = 'Ropa';
-
--- El seguro vence "el 31" en un mes de 28: cuenta en la semana 4, no truena
--- ni desaparece. Sin ingresos en el mes, la única sobregirada es la 4.
-select case when count(*) = 1 and min(semana) = 4
-            then '  ok     el día 31 en febrero se recorta al 28: pesa en la semana 4'
-            else '  FALLA  devolvió ' || coalesce(string_agg(semana::text, ','), '(nada)') end
+\echo '--- la semana fantasma y el fijo sin cheques ---'
+-- Un seguro que "vence el 31" en un mes de 28 días y sin un solo cheque: si
+-- el guardia contara los fijos, este mes sería incerrable sin remedio.
+select case when count(*) = 0
+            then '  ok     el seguro del 31 sin ningún cheque no vuelve el mes incerrable'
+            else '  FALLA  sobregiradas: ' || string_agg(semana::text, ', ') end
   from semanas_sobregiradas(:mes2);
 
+insert into categorias (id, hogar_id, nombre, grupo)
+  select 'b4444444-0000-0000-0000-000000000004', hogar_id, 'Ropa', 'variable' from casa;
+insert into lineas_presupuesto (id, mes_id, categoria_id, monto_mensual_cents) values
+  ('b5555555-0000-0000-0000-000000000004', :mes2, 'b4444444-0000-0000-0000-000000000004', 70000);
+
+select probar('una fila en la semana 5 de un mes de 4',
+  $$insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
+    values ('b2222222-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000004', 5, 5000)$$,
+  'rechaza');
+
+-- El cinturón: si una fila fantasma se coló ANTES del disparador (0005 corrió
+-- antes que 0006), la línea sale descuadrada aunque sus semanas válidas
+-- cuadren solas. Se planta desactivando el disparador, como habría quedado
+-- plantada en ese entonces.
+alter table asignaciones_semana disable trigger semana_valida_y_repartible;
+insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
+  values (:mes2, 'b5555555-0000-0000-0000-000000000004', 5, 5000);
+alter table asignaciones_semana enable trigger semana_valida_y_repartible;
+select case when count(*) = 1 and min(asignado_cents) = 70000
+            then '  ok     la fantasma ya no esconde dinero: descuadra aunque lo válido cuadre'
+            else '  FALLA  descuadradas de Ropa: ' || count(*) end
+  from lineas_descuadradas(:mes2) where categoria = 'Ropa';
+delete from asignaciones_semana
+ where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000004' and semana = 5;
+
 \echo '--- la tabla nueva aísla el hogar, como todas ---'
+delete from asignaciones_semana
+ where linea_presupuesto_id = 'b5555555-0000-0000-0000-000000000004' and semana = 4;
 set local role authenticated;
 \o /dev/null
 select set_config('request.jwt.claims', json_build_object('sub', 'bbbbbbbb-0000-0000-0000-000000000002')::text, true);
@@ -231,14 +278,14 @@ select case when count(*) = 0
   from asignaciones_semana;
 select probar('meterse al plan semanal del hogar ajeno',
   $$insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
-    values ('b2222222-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000004', 1, 1)$$,
+    values ('b2222222-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000004', 4, 17500)$$,
   'rechaza');
 \o /dev/null
 select set_config('request.jwt.claims', json_build_object('sub', 'bbbbbbbb-0000-0000-0000-000000000001')::text, true);
 \o
 select probar('la dueña sí escribe en su plan',
   $$insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
-    values ('b2222222-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000004', 1, 1)$$,
+    values ('b2222222-0000-0000-0000-000000000001', 'b5555555-0000-0000-0000-000000000004', 4, 17500)$$,
   'pasa');
 reset role;
 

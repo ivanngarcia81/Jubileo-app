@@ -35,6 +35,10 @@ from (values
   ('semanas_sobregiradas — el guardia del fondeo (0005)',
    exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
            where n.nspname='public' and p.proname='semanas_sobregiradas')),
+  ('disparador siembra_semanas — el puente del cliente viejo (0006)',
+   exists(select 1 from pg_trigger where tgname='siembra_semanas')),
+  ('disparador semana_valida_y_repartible (0006)',
+   exists(select 1 from pg_trigger where tgname='semana_valida_y_repartible')),
   ('las 15 tablas',
    (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
      where n.nspname='public' and c.relkind='r') = 15),

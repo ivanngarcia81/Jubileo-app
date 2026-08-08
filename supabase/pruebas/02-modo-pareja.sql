@@ -96,13 +96,11 @@ insert into asignaciones (mes_id, linea_presupuesto_id, periodo_id, monto_cents)
     from periodos p
    where p.mes_id = '77777777-0000-0000-0000-000000000001' and not p.es_extra;
 
--- Y el plan semanal del eje nuevo (0005): la comida se presupuesta por semana
--- del mes; la renta no — es fija y su semana la decide su vencimiento. Las
--- filas por cheque de arriba se quedan como el legado que son: prueban que
--- las llaves compuestas aguantan el modo pareja, aunque ya no cuadren nada.
-insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
-  select '77777777-0000-0000-0000-000000000001', '99999999-0000-0000-0000-000000000002', semana, monto_cents
-    from reparto_semanal(60001, 2026, 8) where monto_cents > 0;
+-- El plan semanal del eje nuevo no se escribe aquí: lo sembró el puente de
+-- 0006 al insertar la línea. La renta no lo tiene — es fija y su semana la
+-- decide su vencimiento. Las filas por cheque de arriba se quedan como el
+-- legado que son: prueban que las llaves compuestas aguantan el modo pareja,
+-- aunque ya no cuadren nada.
 
 \echo '--- la invariante sobre el hogar entero ---'
 select case when count(*) = 4 then '  ok     la comida se repartió en los 4 cheques que sí se reparten'
