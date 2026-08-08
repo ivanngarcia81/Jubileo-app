@@ -321,17 +321,26 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     }
   })
 
+  const numeroDeCheque = new Map(periodosOrdenados.map((p, i) => [p.id, i + 1]))
+
   const movimientos: Movimiento[] = [...filas.transacciones]
     .sort((a, b) => (a.fecha > b.fecha ? -1 : a.fecha < b.fecha ? 1 : 0))
-    .map((t) => ({
-      id: t.id,
-      nombre: t.descripcion ?? t.comercio ?? 'Movimiento',
-      icono: t.tipo === 'ingreso' ? 'ingreso' : 'gasto',
-      categoria: t.categoria_id ? (categoriaPorId.get(t.categoria_id)?.nombre ?? '') : 'Sin asignar',
-      fecha: fecha(t.fecha),
-      montoCents: centavos(t.monto_cents),
-      tipo: t.tipo,
-    }))
+    .map((t) => {
+      const categoria = t.categoria_id ? categoriaPorId.get(t.categoria_id) : undefined
+      return {
+        id: t.id,
+        nombre: t.descripcion ?? t.comercio ?? 'Movimiento',
+        // El icono sale del grupo de su categoría, no del tipo: así el gasto de
+        // comida trae el icono de comida y no el genérico de gasto.
+        icono: t.tipo === 'ingreso' ? 'ingreso' : ((categoria?.grupo ?? 'gasto') as ClaveIcono),
+        categoria: categoria?.nombre ?? (t.tipo === 'ingreso' ? 'Entró' : 'Sin asignar'),
+        asignado: categoria !== undefined || t.tipo === 'ingreso',
+        fecha: fecha(t.fecha),
+        montoCents: centavos(t.monto_cents),
+        tipo: t.tipo,
+        cheque: t.periodo_id === null ? null : (numeroDeCheque.get(t.periodo_id) ?? null),
+      }
+    })
 
   // Una sola vez: lo usa el perfil y lo usa el alcance del historial.
   const nivelDeHoy = nivelVigente(

@@ -1,4 +1,4 @@
-import { IconoAnotar, IconoDinero, IconoPalomita, IconoReloj } from '../iconos'
+import { IconoAnotar, IconoDinero, IconoMovimientos, IconoPalomita, IconoReloj } from '../iconos'
 import { useState } from 'react'
 import type { Pago, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
@@ -103,12 +103,15 @@ export function MiSemana({
   alAnotar,
   alMarcarPago,
   alCerrarSemana,
+  alVerMovimientos,
 }: {
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
+  /** En el teléfono, Movimientos no está en la píldora: se llega desde aquí. */
+  alVerMovimientos?: () => void
 }) {
   const [anotando, setAnotando] = useState(false)
   const [cerrando, setCerrando] = useState(false)
@@ -211,6 +214,17 @@ export function MiSemana({
           <Sobre key={sobre.id} {...sobre} />
         ))}
       </ListaSeccion>
+      {alVerMovimientos && (
+        <button
+          type="button"
+          onClick={alVerMovimientos}
+          className="bg-blanco border-linea text-texto mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[15px] border text-[13px] font-semibold"
+        >
+          <IconoMovimientos tam={15} />
+          Ver todos los movimientos
+        </button>
+      )}
+
       {cerrando && alCerrarSemana && (
         <CerrarSemana
           presupuesto={presupuesto}

@@ -59,9 +59,17 @@ export interface Movimiento {
   nombre: string
   icono: ClaveIcono
   categoria: string
+  /** Falso cuando todavía no tiene sobre: el usuario tiene que decidirlo. */
+  asignado: boolean
   fecha: FechaCivil
   montoCents: Centavos
   tipo: 'gasto' | 'ingreso'
+  /**
+   * Con qué cheque se pagó. Es el marco del producto —cheque a cheque— y la
+   * única manera de saber si un gasto de ayer bajó el dinero de esta semana o
+   * el de la pasada.
+   */
+  cheque: number | null
 }
 
 export interface ResumenMesPasado {

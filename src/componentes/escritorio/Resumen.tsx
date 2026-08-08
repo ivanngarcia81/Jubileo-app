@@ -89,7 +89,13 @@ function Grafica() {
   )
 }
 
-export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
+export function Resumen({
+  presupuesto,
+  alVerMovimientos,
+}: {
+  presupuesto: Presupuesto
+  alVerMovimientos?: () => void
+}) {
   const [vista, setVista] = useState<string>('Cheque')
 
   const extraActual = centavos(
@@ -155,8 +161,23 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
       </div>
 
       <div className="flex flex-col gap-4">
-        <TarjetaEscritorio icono={<IconoMovimientos tam={16} />} titulo="Movimientos">
-          {presupuesto.movimientos.map((m) => (
+        <TarjetaEscritorio
+          icono={<IconoMovimientos tam={16} />}
+          titulo="Movimientos"
+          derecha={
+            alVerMovimientos && (
+              <button
+                type="button"
+                onClick={alVerMovimientos}
+                className="border-linea text-texto-2 rounded-[9px] border px-[10px] py-[6px] text-[11.5px] font-semibold"
+              >
+                Ver todos
+              </button>
+            )
+          }
+        >
+          {/* Solo los últimos: la lista completa vive en su pantalla. */}
+          {presupuesto.movimientos.slice(0, 6).map((m) => (
             <div key={m.id} className="bg-gris mb-[6px] flex items-center gap-[10px] rounded-[10px] px-[10px] py-[9px]">
               <div className="bg-blanco border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-[12px]">
                 <IconoDeClave clave={m.icono} tam={13} />

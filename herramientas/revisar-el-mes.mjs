@@ -410,6 +410,18 @@ const despues = await p.locator('body').innerText()
 ok(antes !== despues && /\$26\s*de\s*\$150/.test(despues), 'y el sobre ya enseña lo gastado')
 await p.screenshot({ path: RAIZ + 'capturas/app-semana-con-gasto.png' })
 
+// ---- Movimientos ----------------------------------------------------------
+// Lo que se acaba de anotar tiene que aparecer aquí, con su sobre y su cheque.
+await p.getByRole('button', { name: 'Ver todos los movimientos' }).first().click()
+await p.waitForTimeout(700)
+const movs = await p.locator('main').innerText()
+ok(movs.includes('Supermercado'), 'el gasto recién anotado aparece en Movimientos')
+ok(/HOY|Hoy/.test(movs), 'agrupado por día, y el de hoy dice "hoy"')
+ok(movs.includes('Cheque 1'), 'y dice con qué cheque se pagó')
+await p.screenshot({ path: RAIZ + 'capturas/app-movimientos.png' })
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.waitForTimeout(600)
+
 // ---- Marcar y desmarcar un pago -------------------------------------------
 const casilla = p.getByRole('checkbox').first()
 await casilla.click()

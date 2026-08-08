@@ -257,52 +257,28 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     },
   ],
 
+  // Los movimientos del mes, cuadrados con lo gastado de cada línea de arriba:
+  // Comida 284.00, Gasolina 159.00, Personal 128.00, Renta 900, Luz 85,
+  // Diezmo 368 y los dos pagos de deuda. Si se tocan aquí, se tocan allá.
+  //
+  // El cheque 1 va del 20 de julio al 2 de agosto y el 2 del 3 al 16.
   movimientos: [
-    {
-      id: 'm1',
-      nombre: 'Cheque de nómina',
-      icono: 'ingreso',
-      categoria: 'Ingreso',
-      fecha: fecha('2026-08-03'),
-      montoCents: centavos(124000),
-      tipo: 'ingreso',
-    },
-    {
-      id: 'm2',
-      nombre: 'Renta',
-      icono: 'casa',
-      categoria: 'Vivienda',
-      fecha: fecha('2026-08-03'),
-      montoCents: centavos(90000),
-      tipo: 'gasto',
-    },
-    {
-      id: 'm3',
-      nombre: 'Diezmo',
-      icono: 'mayordomia',
-      categoria: 'Mayordomía',
-      fecha: fecha('2026-08-03'),
-      montoCents: centavos(12400),
-      tipo: 'gasto',
-    },
-    {
-      id: 'm4',
-      nombre: 'PSE&G',
-      icono: 'servicios',
-      categoria: 'Servicios',
-      fecha: fecha('2026-08-04'),
-      montoCents: centavos(8500),
-      tipo: 'gasto',
-    },
-    {
-      id: 'm5',
-      nombre: 'Supermercado',
-      icono: 'fijo',
-      categoria: 'Comida',
-      fecha: fecha('2026-08-04'),
-      montoCents: centavos(6200),
-      tipo: 'gasto',
-    },
+    { id: 'm16', nombre: 'Farmacia del Ahorro', icono: 'gasto', categoria: 'Sin asignar', asignado: false, fecha: fecha('2026-08-08'), montoCents: centavos(1800), tipo: 'gasto', cheque: 2 },
+    { id: 'm15', nombre: 'Ropa de trabajo', icono: 'variable', categoria: 'Personal', asignado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
+    { id: 'm14', nombre: 'Cine', icono: 'variable', categoria: 'Personal', asignado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
+    { id: 'm13', nombre: 'Wawa', icono: 'transporte', categoria: 'Gasolina', asignado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4800), tipo: 'gasto', cheque: 2 },
+    { id: 'm12', nombre: 'Préstamo estudiantil', icono: 'deuda', categoria: 'Préstamo estudiantil', asignado: true, fecha: fecha('2026-08-07'), montoCents: centavos(9500), tipo: 'gasto', cheque: 2 },
+    { id: 'm11', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', asignado: true, fecha: fecha('2026-08-07'), montoCents: centavos(5500), tipo: 'gasto', cheque: 2 },
+    { id: 'm10', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', asignado: true, fecha: fecha('2026-08-06'), montoCents: centavos(6200), tipo: 'gasto', cheque: 2 },
+    { id: 'm9', nombre: 'Préstamo del carro', icono: 'deuda', categoria: 'Préstamo del carro', asignado: true, fecha: fecha('2026-08-05'), montoCents: centavos(31000), tipo: 'gasto', cheque: 2 },
+    { id: 'm8', nombre: 'PSE&G', icono: 'servicios', categoria: 'Luz y agua', asignado: true, fecha: fecha('2026-08-04'), montoCents: centavos(8500), tipo: 'gasto', cheque: 2 },
+    { id: 'm7', nombre: 'Diezmo', icono: 'mayordomia', categoria: 'Diezmo y ofrenda', asignado: true, fecha: fecha('2026-08-03'), montoCents: centavos(36800), tipo: 'gasto', cheque: 2 },
+    { id: 'm6', nombre: 'Renta de agosto', icono: 'casa', categoria: 'Renta', asignado: true, fecha: fecha('2026-08-03'), montoCents: centavos(90000), tipo: 'gasto', cheque: 2 },
+    { id: 'm5', nombre: 'Cheque de nómina', icono: 'ingreso', categoria: 'Entró', asignado: true, fecha: fecha('2026-08-03'), montoCents: centavos(124000), tipo: 'ingreso', cheque: 2 },
+    { id: 'm4', nombre: 'Costco', icono: 'comida', categoria: 'Comida', asignado: true, fecha: fecha('2026-08-01'), montoCents: centavos(10800), tipo: 'gasto', cheque: 1 },
+    { id: 'm3', nombre: 'Café y libros', icono: 'variable', categoria: 'Personal', asignado: true, fecha: fecha('2026-07-28'), montoCents: centavos(4800), tipo: 'gasto', cheque: 1 },
+    { id: 'm2', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', asignado: true, fecha: fecha('2026-07-25'), montoCents: centavos(5600), tipo: 'gasto', cheque: 1 },
+    { id: 'm1', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', asignado: true, fecha: fecha('2026-07-22'), montoCents: centavos(11400), tipo: 'gasto', cheque: 1 },
   ],
 
   mesesPasados: [

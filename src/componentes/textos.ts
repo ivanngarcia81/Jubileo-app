@@ -1,4 +1,4 @@
-import { anioDe, diaDe, type FechaCivil, mesDe } from '../lib/fecha'
+import { anioDe, diaDe, diaSemana, type FechaCivil, mesDe, sumarDias } from '../lib/fecha'
 
 /** Nombres de mes en español. Solo para presentar. */
 export const MESES = [
@@ -40,4 +40,33 @@ export function diaYMes(f: FechaCivil): string {
 /** "5 meses" / "1 mes" */
 export function meses(n: number): string {
   return n === 1 ? '1 mes' : `${n} meses`
+}
+
+const DIAS = [
+  'domingo',
+  'lunes',
+  'martes',
+  'miércoles',
+  'jueves',
+  'viernes',
+  'sábado',
+] as const
+
+/**
+ * El encabezado de un día de movimientos: "Hoy · viernes 8", "Ayer · jueves 7",
+ * "Miércoles 6".
+ *
+ * "Hoy" y "ayer" se calculan contra el hoy que le pasen, no contra el reloj:
+ * el reloj de la máquina no es el del usuario, y quien vive en otra zona vería
+ * "hoy" en el día equivocado durante unas horas todos los días.
+ */
+export function etiquetaDeDia(f: FechaCivil, hoy: FechaCivil): string {
+  // El mes va cuando no es el de hoy. Los cheques cruzan meses a propósito
+  // —el que financia agosto puede caer el 20 de julio— así que un "Martes 28"
+  // suelto en una lista de agosto no dice de cuándo es.
+  const otroMes = mesDe(f) !== mesDe(hoy) || anioDe(f) !== anioDe(hoy)
+  const dia = `${DIAS[diaSemana(f)]} ${diaDe(f)}${otroMes ? ` de ${nombreDeMes(mesDe(f))}` : ''}`
+  if (f === hoy) return `Hoy · ${dia}`
+  if (f === sumarDias(hoy, -1)) return `Ayer · ${dia}`
+  return conMayuscula(dia)
 }

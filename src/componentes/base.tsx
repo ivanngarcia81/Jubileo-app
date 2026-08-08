@@ -149,11 +149,14 @@ export function ChipCategoria({
 }) {
   const elegido = tono ?? (clave ? TONO_POR_CLAVE[clave] : 'neutro')
   return (
+    // La píldora se encoge antes que lo que va a su lado: un nombre de
+    // categoría largo se corta dentro de ella en vez de empujar al cheque
+    // fuera de la fila.
     <span
-      className={`inline-flex h-[21px] shrink-0 items-center gap-[5px] rounded-full px-2 text-[10.5px] font-bold tracking-[.06em] whitespace-nowrap uppercase ${TONOS[elegido]}`}
+      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-full px-2 text-[10.5px] font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
     >
-      {clave !== undefined && <IconoDeClave clave={clave} tam={11} />}
-      {children}
+      {clave !== undefined && <IconoDeClave clave={clave} tam={11} className="shrink-0" />}
+      <span className="truncate">{children}</span>
     </span>
   )
 }

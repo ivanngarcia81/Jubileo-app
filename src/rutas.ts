@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
  * falta en una app instalada en la pantalla de inicio.
  */
 
-export const RUTAS = ['semana', 'mes', 'deudas', 'metas', 'resumen', 'ajustes', 'aviso'] as const
+export const RUTAS = ['semana', 'mes', 'deudas', 'metas', 'movimientos', 'resumen', 'ajustes', 'aviso'] as const
 
 export type Ruta = (typeof RUTAS)[number]
 
@@ -46,7 +46,8 @@ export function useRuta(): [Ruta, (ruta: Ruta) => void] {
  * Ajustes sí existe en el teléfono, aunque no esté en la píldora de navegación
  * —que son cuatro destinos y así lo dibuja `design/movil.html`—: se llega
  * tocando el avatar. Mandarlo a Mi semana dejaba a quien usa la app en el
- * teléfono sin manera de cambiar cómo le pagan.
+ * teléfono sin manera de cambiar cómo le pagan. Movimientos es igual: no está
+ * en la píldora, se llega desde Mi semana.
  */
 export function rutaMovil(ruta: Ruta): Ruta {
   return ruta === 'resumen' ? 'semana' : ruta

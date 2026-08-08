@@ -14,6 +14,7 @@ import {
   IconoEditar,
   IconoMas,
   IconoMetas,
+  IconoMovimientos,
   IconoRegresar,
 } from "./componentes/iconos";
 import { TuAviso, TuNombre } from "./componentes/Preferencias";
@@ -29,6 +30,7 @@ import { Deudas } from "./componentes/movil/Deudas";
 import { ElMes } from "./componentes/movil/ElMes";
 import { Cabecera, Marco } from "./componentes/movil/Marco";
 import { Metas } from "./componentes/movil/Metas";
+import { Movimientos } from "./componentes/movil/Movimientos";
 import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
 import { MiSemana } from "./componentes/movil/MiSemana";
 import { mesYAnio } from "./componentes/textos";
@@ -82,6 +84,16 @@ function cabeceraDe(
           accion={<IconoMas tam={16} />}
         />
       );
+    case "movimientos":
+      return (
+        <Cabecera
+          avatar={<IconoRegresar />}
+          alTocarAvatar={() => ir("semana")}
+          titulo="Movimientos"
+          subtitulo={`${presupuesto.mes.etiqueta} · ${presupuesto.movimientos.length} en total`}
+          accion={<IconoMovimientos tam={16} />}
+        />
+      );
     case "ajustes":
       return (
         <Cabecera
@@ -131,6 +143,7 @@ interface Acciones {
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>;
   alCerrarMes?: () => Promise<void>;
   alVerMes?: (anio: number, mes: number) => void;
+  alVerMovimientos?: () => void;
   alCrearDeuda?: (
     nombre: string,
     saldoCents: Centavos,
@@ -176,6 +189,7 @@ function Contenido({
     alCerrarSemana,
     alCerrarMes,
     alVerMes,
+    alVerMovimientos,
     alCrearDeuda,
     alGuardarSaldo,
     alEnfocar,
@@ -207,6 +221,8 @@ function Contenido({
           {...(alBorrarDeuda ? { alBorrarDeuda } : {})}
         />
       );
+    case "movimientos":
+      return <Movimientos presupuesto={presupuesto} />;
     case "metas":
       return (
         <Metas
@@ -223,6 +239,7 @@ function Contenido({
           {...(alAnotar ? { alAnotar } : {})}
           {...(alMarcarPago ? { alMarcarPago } : {})}
           {...(alCerrarSemana ? { alCerrarSemana } : {})}
+          {...(alVerMovimientos ? { alVerMovimientos } : {})}
         />
       );
   }
@@ -698,6 +715,7 @@ export function App() {
     ...(alCerrarSemana ? { alCerrarSemana } : {}),
     ...(alCerrarMes ? { alCerrarMes } : {}),
     ...(usaServidor() ? { alVerMes } : {}),
+    alVerMovimientos: () => ir("movimientos"),
   };
 
   // El onboarding quedó a medias: se vuelve a donde se quedó en vez de caer a
@@ -795,7 +813,10 @@ export function App() {
         />
 
         {enEscritorio === "resumen" ? (
-          <Resumen presupuesto={presupuesto} />
+          <Resumen
+            presupuesto={presupuesto}
+            alVerMovimientos={() => ir("movimientos")}
+          />
         ) : (
           // 720px era la mitad del ancho disponible. Estas tres pantallas
           // siguen siendo las del teléfono —darles composición propia de
