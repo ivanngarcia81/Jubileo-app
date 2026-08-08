@@ -76,7 +76,11 @@ export function BarraSuperior({
           })}
         </nav>
         <div className="ml-auto flex items-center gap-[9px]">
-          <div className="bg-carbon-2 hidden min-w-[250px] items-center gap-[9px] rounded-full px-4 py-[9px] text-[13px] text-[#787E7D] panel:flex">
+          {/* Aparece hasta 1240 y no desde 880. En el mockup, 880 era justo donde
+            la búsqueda SE ESCONDÍA; ponerla a partir de ahí la metía a la fuerza
+            en el ancho más apretado: logo, cinco enlaces, 250px que no se dejan
+            encoger, dos círculos y el padding. Cabía raspando. */}
+        <div className="bg-carbon-2 hidden min-w-[250px] items-center gap-[9px] rounded-full px-4 py-[9px] text-[13px] text-[#787E7D] ancho:flex">
             <IconoBuscar tam={16} />
             <span>Buscar gasto, categoría, deuda…</span>
           </div>

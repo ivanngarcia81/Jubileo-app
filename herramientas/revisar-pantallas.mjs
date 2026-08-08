@@ -145,6 +145,9 @@ await esc.close()
 // extremo, que son los que nadie mira hasta que un cliente los reporta.
 const ANCHOS = [
   { w: 768, quien: 'iPad vertical', arbol: 'movil' },
+  // 900 mira el borde recien creado: el cambio a escritorio bajo a 880, y las
+  // demas medidas pasaban por encima de ese rango sin tocarlo.
+  { w: 900, quien: 'apenas pasado el corte', arbol: 'escritorio' },
   { w: 1024, quien: 'iPad horizontal', arbol: 'escritorio' },
   { w: 1180, quien: 'laptop de 13"', arbol: 'escritorio' },
   { w: 2560, quien: 'monitor externo', arbol: 'escritorio' },
