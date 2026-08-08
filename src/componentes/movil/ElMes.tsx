@@ -256,8 +256,6 @@ export function ElMes({
     presupuesto.semanas[presupuesto.semanaActiva]?.numero ?? 1,
   ])
   const editable = Boolean(alPonerMonto && presupuesto.mesId)
-  // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
-  const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
 
   // Lo que se reparte por semana: la mayordomía y los sobres variables. Los
   // fijos y las deudas no — caen solos en la semana de su vencimiento.
@@ -545,7 +543,7 @@ export function ElMes({
       {editando && alPonerMonto && (
         <PonerMonto
           linea={editando}
-          cheques={chequesQueSeReparten}
+          diasPorSemana={presupuesto.semanas.map((s) => s.dias)}
           alGuardar={(monto) => alPonerMonto(editando.id, monto)}
           {...(alRenombrar ? { alRenombrar: (n: string) => alRenombrar(editando.id, n) } : {})}
           {...(alQuitar ? { alQuitar: () => alQuitar(editando.id) } : {})}

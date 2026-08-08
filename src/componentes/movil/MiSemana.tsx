@@ -1,7 +1,7 @@
 import { IconoAnotar, IconoDinero, IconoMovimientos, IconoPalomita, IconoReloj } from '../iconos'
 import { useState } from 'react'
 import type { Pago, Presupuesto } from '../../datos/tipos'
-import { type Centavos, formatearRedondo } from '../../lib/dinero'
+import { type Centavos, centavos, formatearRedondo, suma } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
 import {
   CeldaCifra,
@@ -18,13 +18,14 @@ import { Anotar } from './Anotar'
 import { CerrarSemana, type RespuestaCierre } from './CerrarSemana'
 
 /**
- * Mi semana — la pantalla de inicio.
+ * Mi semana — la pantalla de inicio, anclada a la semana del mes.
  *
- * Un solo número grande: lo que queda en el periodo. El riel de cheques vive
- * dentro del héroe, y los chips de acción quedan en la zona del pulgar.
+ * Un solo número grande: lo que queda en los sobres de la semana en curso, con
+ * el arrastre de las anteriores. El riel de semanas vive dentro del héroe, y
+ * los chips de acción quedan en la zona del pulgar. El cheque ya no manda
+ * aquí: quedó de lente en El mes y de regla al cerrar la semana.
  */
 
-const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
 const MESES = [
   'enero',
   'febrero',
@@ -41,10 +42,13 @@ const MESES = [
 ]
 
 function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
-  const { periodos, periodoActivo, libreporPeriodoCents, ingresoPorChequeCents } = presupuesto
-  const activo = periodos[periodoActivo]!
-  const disponible = libreporPeriodoCents[periodoActivo]!
-  const dia = new Date(`${activo.fechaPago}T00:00:00Z`).getUTCDay()
+  const { semanas, semanaActiva, sobres } = presupuesto
+  const semana = semanas[semanaActiva]
+  // Lo que queda en los sobres de la semana: el presupuesto ya trae el
+  // arrastre de las semanas anteriores, en positivo y en negativo.
+  const disponible = centavos(
+    suma(sobres.map((s) => centavos(s.presupuestoCents - s.gastadoCents))),
+  )
 
   return (
     <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#0A847F_0%,#0ABBB4_100%)] px-[18px] pt-[17px] pb-4 text-[#022B29]">
@@ -57,25 +61,27 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
           {formatearRedondo(disponible)}
         </div>
         <div className="text-menor text-[#022B29]/75">
-          Entró <Moneda centavos={ingresoPorChequeCents} /> el {DIAS[dia]} {diaDe(activo.fechaPago)}{' '}
-          de {MESES[mesDe(activo.fechaPago) - 1]}
+          {semana
+            ? `Semana ${semana.numero} · del ${diaDe(semana.fechaInicio)} al ${diaDe(semana.fechaFin)} de ${MESES[mesDe(semana.fechaInicio) - 1]}`
+            : 'Sin semanas todavía'}
         </div>
 
         <div className="mt-[14px] flex gap-[5px]">
-          {periodos.map((periodo, i) => {
-            const esActivo = i === periodoActivo
-            const fondo = esActivo
-              ? 'bg-white/[.94]'
-              : periodo.esExtra
-                ? 'bg-carbon/[.16]'
-                : 'bg-white/[.28]'
+          {semanas.map((s, i) => {
+            const esActiva = i === semanaActiva
+            const fondo = esActiva ? 'bg-white/[.94]' : 'bg-white/[.28]'
             return (
-              <div key={periodo.numero} className={`flex-1 rounded-[8px] px-[5px] py-[6px] text-center ${fondo}`}>
+              <div
+                key={s.numero}
+                className={`flex-1 rounded-[8px] px-[5px] py-[6px] text-center ${fondo}`}
+              >
+                {/* La bandera de apretada vive en El mes, con espacio para
+                    explicarse: aquí un signo suelto solo asustaría. */}
                 <div className="text-rotulo font-bold tracking-[.07em] uppercase opacity-70">
-                  {periodo.esExtra ? 'Extra' : `Chq ${periodo.numero}`}
+                  Sem {s.numero}
                 </div>
                 <div className="mt-[1px] text-menor font-bold">
-                  <Moneda centavos={libreporPeriodoCents[i]!} />
+                  <Moneda centavos={s.totalCents} />
                 </div>
               </div>
             )
@@ -163,8 +169,8 @@ export function MiSemana({
       >
         {presupuesto.pagos.length === 0 && (
           <Vacio>
-            Ningún pago vence en este cheque. Los gastos fijos con día de
-            vencimiento aparecen aquí la semana que toca.
+            Ningún pago vence en esta semana. Los gastos fijos con día de
+            vencimiento aparecen aquí la semana que les toca.
           </Vacio>
         )}
         {presupuesto.pagos.map((pago) => {
@@ -213,13 +219,13 @@ export function MiSemana({
         titulo="Sobres de la semana"
         icono={<IconoDinero tam={15} />}
         encabezados={['Sobre', null, 'Gastado']}
-        encabezadosPanel={['Sobre', 'Gastado', null, 'Del cheque']}
+        encabezadosPanel={['Sobre', 'Gastado', null, 'De la semana']}
         className="mt-3"
         {...SOBRES}
       >
         {presupuesto.sobres.length === 0 && (
           <Vacio>
-            Todavía no tienes sobres. Ve a El mes y reparte tu cheque: ahí es
+            Todavía no tienes sobres. Ve a El mes y reparte tus semanas: ahí es
             donde el dinero recibe su trabajo.
           </Vacio>
         )}

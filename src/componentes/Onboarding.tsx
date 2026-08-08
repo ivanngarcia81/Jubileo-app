@@ -66,7 +66,6 @@ export function Onboarding({
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
   const conMonto = presupuesto.fijos.filter((f) => f.montoMensualCents > 0)
   const deudas = presupuesto.deudas
 
@@ -332,7 +331,7 @@ export function Onboarding({
       {poniendoMonto && (
         <PonerMonto
           linea={poniendoMonto}
-          cheques={chequesQueSeReparten}
+          diasPorSemana={presupuesto.semanas.map((s) => s.dias)}
           alGuardar={(monto) => alPonerMonto(poniendoMonto.id, monto)}
           alCerrar={() => setPoniendoMonto(null)}
         />

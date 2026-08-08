@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import type { LineaMes } from '../../datos/tipos'
-import { type Centavos, deDolares, formatear, repartirParejo } from '../../lib/dinero'
+import { type Centavos, deDolares, formatear, repartir } from '../../lib/dinero'
 
 /**
  * Poner cuánto va a una categoría en el mes.
  *
- * Se teclea el monto **del mes**, no el del cheque, porque el mes es el marco
- * (sección 1 del SPEC). El reparto entre cheques lo enseña esta misma hoja
- * mientras escribes, con el mismo `repartir` que usa el servidor: lo que ves
- * aquí es lo que se va a guardar, al centavo.
+ * Se teclea el monto **del mes**, porque el mes es el marco (sección 1 del
+ * SPEC). En lo repartible, el plan por semana lo enseña esta misma hoja
+ * mientras escribes — proporcional a los días de cada semana, con el mismo
+ * `repartir` que usa el servidor: lo que ves aquí es lo que se va a guardar,
+ * al centavo. El ajuste fino por semana vive en la vista de Semanas.
  *
  * En dólares con dos decimales de cara al usuario, en centavos enteros por
  * dentro. La conversión pasa una sola vez, al salir del campo.
@@ -32,15 +33,15 @@ export function aCentavos(texto: string): Centavos | null {
 
 export function PonerMonto({
   linea,
-  cheques,
+  diasPorSemana,
   alGuardar,
   alRenombrar,
   alQuitar,
   alCerrar,
 }: {
   linea: LineaMes
-  /** Cuántos cheques se reparten este mes. */
-  cheques: number
+  /** Los días de cada semana del mes: los pesos del reparto semanal. */
+  diasPorSemana: readonly number[]
   alGuardar: (montoCents: Centavos) => Promise<void>
   alRenombrar?: ((nombre: string) => Promise<void>) | undefined
   alQuitar?: (() => Promise<void>) | undefined
@@ -72,7 +73,8 @@ export function PonerMonto({
   }
 
   const monto = aCentavos(texto)
-  const porCheque = monto !== null && cheques > 0 ? repartirParejo(monto, cheques) : []
+  const porSemana =
+    monto !== null && diasPorSemana.length > 0 ? repartir(monto, [...diasPorSemana]) : []
 
   async function guardar() {
     if (monto === null) return
@@ -126,13 +128,16 @@ export function PonerMonto({
           />
         </div>
 
-        {porCheque.length > 0 && monto !== null && monto > 0 && (
+        {porSemana.length > 0 && monto !== null && monto > 0 && (
           <p className="text-texto-2 mt-3 text-menor leading-[1.5]">
             Se reparte en{' '}
             <b className="text-teal-osc font-semibold">
-              {porCheque.map((c) => formatear(c)).join(' · ')}
+              {porSemana.map((c) => formatear(c)).join(' · ')}
             </b>{' '}
-            {cheques === 1 ? 'en tu cheque' : `en tus ${cheques} cheques`}.
+            {porSemana.length === 1
+              ? 'en la semana del mes'
+              : `en las ${porSemana.length} semanas del mes, según sus días`}
+            .
           </p>
         )}
 

@@ -108,7 +108,7 @@ export function armarAviso(d: DatosDelAviso): Aviso {
 
   const cierre =
     libre < 0
-      ? `Te faltan ${formatearDolares(centavos(-libre))} para cubrir esta semana. Algo tiene que moverse.`
+      ? `Te faltan ${formatearDolares(centavos(-libre))} para cubrir este cheque. Algo tiene que moverse.`
       : libre === 0
         ? 'Todo tu cheque ya tiene trabajo. No queda suelto.'
         : `Te quedan ${formatearDolares(libre)} libres.`

@@ -443,8 +443,11 @@ await p.screenshot({ path: RAIZ + 'capturas/app-poner-monto-vacio.png' })
 
 await p.getByLabel('Monto mensual de Comida').first().fill('600')
 await p.waitForTimeout(300)
+// $600 sobre las semanas de agosto ([7,7,7,7,3] días): la primera se lleva
+// $135.49 — el mismo reparto que va a sembrar el servidor.
 const previa = await p.getByRole('dialog').first().innerText()
-ok(previa.includes('$150.00'), `el reparto se ve mientras escribes: ${previa.match(/Se reparte en[^.]*/)?.[0] ?? '—'}`)
+ok(previa.includes('$135.49') && previa.includes('5 semanas'),
+   `el plan semanal se ve mientras escribes: ${previa.match(/Se reparte en[^.]*/)?.[0] ?? '—'}`)
 await p.screenshot({ path: RAIZ + 'capturas/app-poner-monto.png' })
 
 await p.getByRole('button', { name: 'Guardar' }).first().click()
@@ -532,6 +535,14 @@ await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(700)
 
 const antes = await p.locator('body').innerText()
+// Mi semana quedó anclada a la semana del mes: el rótulo lo dice, y el riel
+// son las semanas, no los cheques.
+ok(antes.includes('Semana 1 · del 1 al 7 de agosto'),
+   'el héroe dice en qué semana estás parado, con su rango')
+// `innerText` respeta el `text-transform`: los rótulos del riel llegan en
+// mayúsculas.
+ok(/sem 5/i.test(antes) && !/chq 1/i.test(antes),
+   'y el riel del héroe enseña las semanas del mes, no los cheques')
 await p.getByRole('button', { name: 'Anotar' }).first().click()
 await p.getByRole('dialog').first().waitFor({ state: 'visible' })
 // `innerText` devuelve lo que se ve, y ese rótulo va en versalitas por CSS.
@@ -1119,6 +1130,9 @@ const sept = meses.find((x) => x.anio === 2026 && x.mes === 9)
 const chequesSept = periodos.filter((x) => x.mes_id === sept?.id)
 ok(chequesSept.length > 0, `con sus cheques, del motor de periodos: ${chequesSept.length}`)
 
+// Crear el mes es lo primero que hace `abrirElMes`: las líneas y el plan
+// semanal llegan después, y asertar sin esperar es una carrera.
+await esperarA(() => asignaciones_semana.some((a) => a.mes_id === sept?.id))
 const lineasSept = lineas.filter((l) => l.mes_id === sept?.id)
 ok(lineasSept.length > 0 && lineasSept.every((l) => l.monto_mensual_cents === entra),
    `y los montos de agosto arrastrados tal cual: ${JSON.stringify(lineasSept.map((l) => l.monto_mensual_cents))}`)
