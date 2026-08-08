@@ -10,6 +10,7 @@ import type {
   FilaFondo,
   FilaLinea,
   FilaMes,
+  FilaPreferenciaAviso,
   FilaPeriodo,
   FilaTransaccion,
   FilaUsuario,
@@ -126,7 +127,19 @@ export async function cargarPresupuestoDelMes(
   }
 
   // El día de hoy entra desde afuera: `mapeo` es puro y no pregunta la hora.
-  return aPresupuesto(filas, { hoy: hoy(), mesesPasados: await resumenDeLosMeses() })
+  const [mesesPasados, aviso] = await Promise.all([resumenDeLosMeses(), miAviso(usuarioActual)])
+  return aPresupuesto(filas, { hoy: hoy(), mesesPasados, ...(aviso ? { aviso } : {}) })
+}
+
+/** Cuándo quiere su aviso. Nulo si nunca lo contestó. */
+async function miAviso(usuarioId: string) {
+  const { data } = await cliente()
+    .from('preferencias_aviso')
+    .select('usuario_id, canal, hora_local, activo')
+    .eq('usuario_id', usuarioId)
+    .eq('canal', 'correo')
+    .maybeSingle<FilaPreferenciaAviso>()
+  return data ? { horaLocal: data.hora_local.slice(0, 5), activo: data.activo } : null
 }
 
 const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']

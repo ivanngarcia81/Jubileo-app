@@ -79,6 +79,12 @@ export interface Presupuesto {
     frecuencia: string
     /** Falso mientras falten pasos del onboarding de la sección 7. */
     onboardingTerminado: boolean
+    /**
+     * Cuándo quiere el aviso, en su reloj. Ausente mientras no lo haya
+     * contestado: el cron manda a las 8:00 por omisión, y la pantalla tiene
+     * que poder decir la diferencia entre "elegí las 8" y "no he elegido".
+     */
+    aviso?: { horaLocal: string; activo: boolean }
   }
   /**
    * La llave del mes en el servidor. Nula con los datos de ejemplo, y es

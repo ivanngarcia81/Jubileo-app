@@ -38,6 +38,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     nivel: 'premium',
     nivelVenceEn: null,
     onboardingTerminado: true,
+    aviso: { horaLocal: '08:00', activo: true },
     frecuencia: 'Cada dos semanas',
   },
 

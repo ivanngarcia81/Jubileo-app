@@ -40,6 +40,13 @@ export interface FilaUsuario {
   onboarding_terminado_en: string | null
 }
 
+export interface FilaPreferenciaAviso {
+  usuario_id: string
+  canal: string
+  hora_local: string
+  activo: boolean
+}
+
 export interface FilaMes {
   id: string
   hogar_id: string

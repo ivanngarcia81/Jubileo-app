@@ -7,9 +7,10 @@ import { ComoMePagan, type DatosDePago } from './componentes/ComoMePagan'
 import { Entrar } from './componentes/Entrar'
 import { Membresia } from './componentes/Membresia'
 import { Onboarding } from './componentes/Onboarding'
+import { TuAviso, TuNombre } from './componentes/Preferencias'
 import { type LoQueTrae, MesNuevo } from './componentes/MesNuevo'
 import { PrimerMes } from './componentes/PrimerMes'
-import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
+import { BandaIndicadores, BarraSuperior } from './componentes/escritorio/Panel'
 import { Resumen } from './componentes/escritorio/Resumen'
 import { Aviso } from './componentes/movil/Aviso'
 import { Deudas } from './componentes/movil/Deudas'
@@ -205,17 +206,23 @@ function Ajustes({
   mes,
   recargar,
   alCambiarComoMePagan,
+  alGuardarNombre,
+  alGuardarAviso,
 }: {
   presupuesto: Presupuesto
   mes: MesObjetivo
   recargar: () => void
   alCambiarComoMePagan?: ComoMePaganCallback
+  alGuardarNombre?: (nombre: string) => Promise<void>
+  alGuardarAviso?: (horaLocal: string, activo: boolean) => Promise<void>
 }) {
   return (
     <div className="flex flex-col gap-3">
       {alCambiarComoMePagan && (
         <ComoMePagan presupuesto={presupuesto} mes={mes} alGuardar={alCambiarComoMePagan} />
       )}
+      {alGuardarNombre && <TuNombre presupuesto={presupuesto} alGuardar={alGuardarNombre} />}
+      {alGuardarAviso && <TuAviso presupuesto={presupuesto} alGuardar={alGuardarAviso} />}
       <Membresia
         nivel={presupuesto.usuario.nivel}
         venceEn={presupuesto.usuario.nivelVenceEn}
@@ -233,11 +240,6 @@ function Ajustes({
           recargar()
         }}
       />
-      <TarjetaEscritorio icono="⚙" titulo="Lo demás">
-        <p className="text-texto-2 text-[13px] leading-[1.6]">
-          Cambiar la hora de tu aviso todavía no está construido.
-        </p>
-      </TarjetaEscritorio>
     </div>
   )
 }
@@ -413,6 +415,28 @@ export function App() {
     ? async () => {
         const { cerrarMes } = await import('./servidor/repositorios/mes')
         await cerrarMes(mesId)
+        fuente.recargar()
+      }
+    : undefined
+
+  const alGuardarNombre = usuarioId
+    ? async (nombre: string) => {
+        const { guardarNombre } = await import('./servidor/repositorios/onboarding')
+        await guardarNombre(usuarioId, nombre)
+        fuente.recargar()
+      }
+    : undefined
+
+  const alGuardarAvisoDesdeAjustes = usuarioId
+    ? async (horaLocal: string, activo: boolean) => {
+        const { guardarAviso, guardarZonaHoraria } = await import(
+          './servidor/repositorios/onboarding'
+        )
+        // La zona se vuelve a guardar aquí porque es la única que sabe el
+        // navegador, y alguien que se mudó cambia su hora justamente aquí.
+        const zona = Intl.DateTimeFormat().resolvedOptions().timeZone
+        if (zona) await guardarZonaHoraria(usuarioId, zona)
+        await guardarAviso(usuarioId, horaLocal, activo)
         fuente.recargar()
       }
     : undefined
@@ -652,6 +676,8 @@ export function App() {
               mes={mes}
               recargar={fuente.recargar}
               {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
+              {...(alGuardarNombre ? { alGuardarNombre } : {})}
+              {...(alGuardarAvisoDesdeAjustes ? { alGuardarAviso: alGuardarAvisoDesdeAjustes } : {})}
             />
           ) : (
             <Contenido ruta={enMovil} presupuesto={presupuesto} acciones={acciones} />
@@ -673,6 +699,8 @@ export function App() {
                 mes={mes}
                 recargar={fuente.recargar}
                 {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
+                {...(alGuardarNombre ? { alGuardarNombre } : {})}
+                {...(alGuardarAvisoDesdeAjustes ? { alGuardarAviso: alGuardarAvisoDesdeAjustes } : {})}
               />
             ) : (
               <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />

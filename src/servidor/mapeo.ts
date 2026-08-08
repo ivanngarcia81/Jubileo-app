@@ -110,6 +110,7 @@ export function mesesEntre(desde: FechaCivil, hasta: FechaCivil | null): number 
 export interface OpcionesMapeo {
   /** Historial para las barras del selector de mes. Vacío si no se pidió. */
   mesesPasados?: Presupuesto['mesesPasados']
+  aviso?: { horaLocal: string; activo: boolean }
   /**
    * El día de hoy, para saber en qué cheque está parado el usuario. Entra por
    * aquí y no se pregunta adentro porque este módulo es puro: sin reloj se
@@ -331,6 +332,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       nivel: nivelDeHoy,
       nivelVenceEn: yo.nivel_vence_en ? enPalabrasCortas(yo.nivel_vence_en) : null,
       onboardingTerminado: yo.onboarding_terminado_en !== null,
+      ...(opciones.aviso ? { aviso: opciones.aviso } : {}),
       frecuencia: yo.frecuencia_pago ? (ETIQUETAS_FRECUENCIA[yo.frecuencia_pago] ?? '') : '',
     },
 

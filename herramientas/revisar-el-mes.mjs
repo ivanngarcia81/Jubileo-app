@@ -67,6 +67,7 @@ let canjeado = null
 let nivelUsuario = 'gratis'
 let venceEn = null
 let onboardingListo = '2026-08-06T00:00:00Z'
+let preferenciaAviso = null
 let deudas = []
 let fondos = []
 const escrituras = []
@@ -171,7 +172,11 @@ await p.route('**/*', async (r) => {
         perfil = { ...perfil, ...f }
         return json([])
       }
-      if (t === 'preferencias_aviso') return json([])
+      if (t === 'preferencias_aviso') {
+        const f = [cuerpo].flat()[0]
+        preferenciaAviso = { ...f, hora_local: f.hora_local }
+        return json([])
+      }
       if (t === 'asignaciones') {
         for (const a of [cuerpo].flat()) {
           const i = asignaciones.findIndex((x) => x.linea_presupuesto_id === a.linea_presupuesto_id && x.periodo_id === a.periodo_id)
@@ -282,6 +287,8 @@ await p.route('**/*', async (r) => {
       const tope = Number(url.searchParams.get('limit') ?? 0)
       return json(tope ? filas.slice(0, tope) : filas)
     }
+    if (t === 'preferencias_aviso')
+      return json(preferenciaAviso ? (pideUno ? preferenciaAviso : [preferenciaAviso]) : (pideUno ? null : []))
     if (t === 'miembros_hogar') return json([{ hogar_id: H, usuario_id: U }])
     if (t === 'usuarios') return json((pideUno ? (x) => x[0] : (x) => x)([{ ...perfil, nivel: nivelUsuario, nivel_vence_en: venceEn, onboarding_terminado_en: onboardingListo }]))
     if (t === 'periodos') {
@@ -915,6 +922,46 @@ ok(await esperarA(async () => (await p.locator('body').innerText()).includes('Ag
 
 const enAgosto = await p.locator('body').innerText()
 ok(enAgosto.includes('Mes cerrado'), 'y se ve como lo dejaste, cerrado')
+
+// ---- El nombre y la hora del aviso ---------------------------------------
+// Las dos se preguntaban en el onboarding una sola vez y no había dónde
+// cambiarlas después. Quedaban en la base, y solo con SQL se movían.
+// El avatar vive en la cabecera de Mi semana; en El mes ese lugar lo ocupa
+// la flecha de regreso.
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+await p.getByRole('button', { name: 'IV' }).first().click()
+await p.waitForTimeout(700)
+
+const ajustesHoy = (await p.locator('body').innerText()).toLowerCase()
+ok(!ajustesHoy.includes('todavía no está construido'),
+   'Ajustes ya no dice que falte nada por construir')
+
+await p.getByLabel('Tu nombre').first().fill('Iván García')
+await p.getByRole('button', { name: 'Guardar mi nombre' }).first().click()
+ok(await esperarA(() => perfil.nombre === 'Iván García'),
+   `el nombre se puede cambiar despues del onboarding: ${perfil.nombre}`)
+// El saludo vive en la cabecera de Mi semana, y el valor de un campo de texto
+// no sale en `innerText`: hay que ir a verlo donde se usa.
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+ok(await esperarA(async () => (await p.locator('body').innerText()).includes('Buenos días, Iván')),
+   'y la app deja de llamarte por tu correo')
+ok(await p.getByRole('button', { name: 'IG' }).first().isVisible(),
+   'con las iniciales de su nombre, no las del correo')
+await p.getByRole('button', { name: 'IG' }).first().click()
+await p.waitForTimeout(700)
+
+await p.getByLabel('A qué hora quieres el aviso').or(p.locator('#hora-aviso')).first().fill('06:30')
+await p.getByRole('button', { name: 'Guardar mi aviso' }).first().click()
+ok(await esperarA(() => preferenciaAviso?.hora_local === '06:30'),
+   `la hora del aviso se puede cambiar: ${preferenciaAviso?.hora_local}`)
+ok(preferenciaAviso?.canal === 'correo' && preferenciaAviso?.activo === true,
+   'con su canal y encendido, como lo espera el cron')
+const zonaGuardada = escrituras.filter((e) => e.tabla === 'usuarios').some((e) => e.cuerpo?.zona_horaria)
+ok(zonaGuardada, 'y de paso se vuelve a guardar la zona horaria: quien se muda cambia su hora aquí')
+await p.screenshot({ path: RAIZ + 'capturas/app-preferencias.png' })
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })
