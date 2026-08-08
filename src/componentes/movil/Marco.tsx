@@ -1,4 +1,11 @@
 import type { ReactNode } from 'react'
+import {
+  IconoDeudas,
+  IconoMes,
+  IconoMetas,
+  IconoSemana,
+  type PropsIcono,
+} from '../iconos'
 import type { Ruta } from '../../rutas'
 
 /**
@@ -49,11 +56,11 @@ export function Cabecera({
   )
 }
 
-const DESTINOS: readonly { ruta: Ruta; icono: string; nombre: string }[] = [
-  { ruta: 'semana', icono: '◆', nombre: 'Semana' },
-  { ruta: 'mes', icono: '▣', nombre: 'Mes' },
-  { ruta: 'deudas', icono: '↓', nombre: 'Deudas' },
-  { ruta: 'metas', icono: '◍', nombre: 'Metas' },
+const DESTINOS: readonly { ruta: Ruta; Icono: (p: PropsIcono) => ReactNode; nombre: string }[] = [
+  { ruta: 'semana', Icono: IconoSemana, nombre: 'Semana' },
+  { ruta: 'mes', Icono: IconoMes, nombre: 'Mes' },
+  { ruta: 'deudas', Icono: IconoDeudas, nombre: 'Deudas' },
+  { ruta: 'metas', Icono: IconoMetas, nombre: 'Metas' },
 ]
 
 export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => void }) {
@@ -65,7 +72,7 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
       // sistema y los botones dejan de responder.
       className="bg-carbon fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-full p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
     >
-      {DESTINOS.map(({ ruta, icono, nombre }) => {
+      {DESTINOS.map(({ ruta, Icono, nombre }) => {
         const activo = ruta === activa
         return (
           <button
@@ -74,11 +81,11 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
             onClick={() => ir(ruta)}
             aria-current={activo ? 'page' : undefined}
             aria-label={nombre}
-            className={`grid size-[48px] place-items-center rounded-full text-[16px] ${
+            className={`grid size-[48px] place-items-center rounded-full ${
               activo ? 'bg-teal text-[#043432]' : 'text-[#787E7D]'
             }`}
           >
-            {icono}
+            <Icono tam={19} />
           </button>
         )
       })}

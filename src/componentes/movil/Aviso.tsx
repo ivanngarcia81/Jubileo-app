@@ -1,3 +1,4 @@
+import { IconoBateria, IconoSenal } from '../iconos'
 import type { Presupuesto } from '../../datos/tipos'
 import { type Centavos, centavos, suma } from '../../lib/dinero'
 import { diaDe } from '../../lib/fecha'
@@ -55,7 +56,11 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[linear-gradient(170deg,#1C1E1F_0%,#31302B_58%,#4A4238_100%)] px-[15px] pt-4 pb-[22px] text-white">
-      <div className="flex justify-end px-2 text-[11.5px] font-semibold">▮▮▮ ⌁ 91%</div>
+      <div className="flex items-center justify-end gap-1 px-2 text-[11.5px] font-semibold">
+        <IconoSenal tam={13} />
+        <IconoBateria tam={15} />
+        91%
+      </div>
 
       <div className="mt-[26px] mb-6 text-center">
         <div className="text-[13px] text-[#C9CCCA]">domingo, 2 de agosto</div>

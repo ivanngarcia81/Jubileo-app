@@ -1,3 +1,4 @@
+import { IconoAnotar, IconoPalomita, IconoReloj } from '../iconos'
 import { useState } from 'react'
 import type { Pago, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
@@ -86,9 +87,9 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
 }
 
 const CHIPS = [
-  { icono: '+', texto: 'Anotar' },
-  { icono: '✓', texto: 'Pagué' },
-  { icono: '◷', texto: 'Semana' },
+  { Icono: IconoAnotar, texto: 'Anotar' },
+  { Icono: IconoPalomita, texto: 'Pagué' },
+  { Icono: IconoReloj, texto: 'Semana' },
 ] as const
 
 export function MiSemana({
@@ -116,7 +117,7 @@ export function MiSemana({
       <Hero presupuesto={presupuesto} />
 
       <div className="mt-[13px] mb-1 flex gap-[7px]">
-        {CHIPS.map(({ icono, texto }) => (
+        {CHIPS.map(({ Icono, texto }) => (
           <button
             key={texto}
             type="button"
@@ -133,7 +134,7 @@ export function MiSemana({
             className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold disabled:opacity-50"
           >
             <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#043432]">
-              {icono}
+              <Icono tam={15} />
             </span>
             {texto}
           </button>

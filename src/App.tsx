@@ -7,6 +7,15 @@ import { ComoMePagan, type DatosDePago } from './componentes/ComoMePagan'
 import { Entrar } from './componentes/Entrar'
 import { Membresia } from './componentes/Membresia'
 import { Onboarding } from './componentes/Onboarding'
+import {
+  IconoAjustes,
+  IconoAviso,
+  IconoDeudas,
+  IconoEditar,
+  IconoMas,
+  IconoMetas,
+  IconoRegresar,
+} from './componentes/iconos'
 import { TuAviso, TuNombre } from './componentes/Preferencias'
 import { type LoQueTrae, MesNuevo } from './componentes/MesNuevo'
 import { PrimerMes } from './componentes/PrimerMes'
@@ -41,39 +50,39 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
     case 'mes':
       return (
         <Cabecera
-          avatar="◀"
+          avatar={<IconoRegresar />}
           alTocarAvatar={() => ir('semana')}
           titulo={presupuesto.mes.etiqueta}
           subtitulo={`${presupuesto.usuario.frecuencia} · ${presupuesto.periodos.length} cheques`}
-          accion="✎"
+          accion={<IconoEditar tam={16} />}
         />
       )
     case 'deudas':
       return (
         <Cabecera
-          avatar="↓"
+          avatar={<IconoDeudas />}
           titulo="Salir de deudas"
           subtitulo={`${pendientes} deudas pendientes`}
-          accion="⋯"
+          accion={<IconoMas tam={16} />}
         />
       )
     case 'metas':
       return (
         <Cabecera
-          avatar="◍"
+          avatar={<IconoMetas />}
           titulo="Tus metas"
           subtitulo={`${presupuesto.fondos.length} fondos de reserva`}
-          accion="⋯"
+          accion={<IconoMas tam={16} />}
         />
       )
     case 'ajustes':
       return (
         <Cabecera
-          avatar="◀"
+          avatar={<IconoRegresar />}
           alTocarAvatar={() => ir('semana')}
           titulo="Ajustes"
           subtitulo={`${presupuesto.usuario.frecuencia} · ${presupuesto.periodos.length} cheques`}
-          accion="⚙"
+          accion={<IconoAjustes tam={16} />}
         />
       )
     default:
@@ -85,7 +94,7 @@ function cabeceraDe(ruta: Ruta, presupuesto: Presupuesto, ir: (r: Ruta) => void)
           alTocarAvatar={() => ir('ajustes')}
           titulo={`Buenos días, ${presupuesto.usuario.nombre}`}
           subtitulo={presupuesto.usuario.nivel === 'premium' ? 'Cuenta Premium' : 'Cuenta gratis'}
-          accion="◔"
+          accion={<IconoAviso tam={16} />}
           conAviso
         />
       )

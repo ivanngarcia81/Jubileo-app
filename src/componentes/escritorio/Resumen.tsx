@@ -4,6 +4,13 @@ import { simular } from '../../lib/deudas'
 import { centavos, formatearRedondo, suma } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
 import { FilaFondo, Moneda, Segmentado } from '../base'
+import {
+  IconoCoach,
+  IconoDeudas,
+  IconoEnfoque,
+  IconoMetas,
+  IconoMovimientos,
+} from '../iconos'
 import { mesYAnio, mesYAnioEnFrase, nombreDeMes } from '../textos'
 import { TarjetaEscritorio } from './Panel'
 
@@ -99,7 +106,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
     <div className="bg-gris grid items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]">
       <div className="flex flex-col gap-4">
         <TarjetaEscritorio
-          icono="$"
+          icono={<span className="text-[13px]">$</span>}
           titulo="Cómo va el reparto"
           derecha={<Segmentado opciones={VISTAS} activa={vista} alElegir={setVista} />}
         >
@@ -107,7 +114,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
         </TarjetaEscritorio>
 
         <TarjetaEscritorio
-          icono="↓"
+          icono={<IconoDeudas tam={16} />}
           titulo="Salir de deudas"
           derecha={
             <div className="font-serif text-[19px]">
@@ -143,7 +150,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
       </div>
 
       <div className="flex flex-col gap-4">
-        <TarjetaEscritorio icono="⇅" titulo="Movimientos">
+        <TarjetaEscritorio icono={<IconoMovimientos tam={16} />} titulo="Movimientos">
           {presupuesto.movimientos.map((m) => (
             <div key={m.id} className="bg-gris mb-[6px] flex items-center gap-[10px] rounded-[10px] px-[10px] py-[9px]">
               <div className="bg-blanco border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-[12px]">
@@ -175,7 +182,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
 
         <div className="bg-carbon rounded-[15px] p-[18px] text-white">
           <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-[13px] text-[#043432]">
-            ★
+            <IconoEnfoque tam={12} />
           </div>
           <h4 className="font-serif mb-2 text-[21px] leading-[1.15] font-normal">
             Conecta tu banco
@@ -198,7 +205,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
           dos adentro, como en el mockup. Sin eso se caía a la fila de abajo y
           se estiraba a ~700px: barras de progreso larguísimas con texto de 13px. */}
       <div className="flex flex-col gap-4 panel:col-span-2 panel:grid panel:grid-cols-2 panel:items-start ancho:col-span-1 ancho:flex">
-        <TarjetaEscritorio icono="◍" titulo="Fondos de reserva">
+        <TarjetaEscritorio icono={<IconoMetas tam={16} />} titulo="Fondos de reserva">
           {presupuesto.fondos.map((fondo) => (
             <FilaFondo
               key={fondo.id}
@@ -232,7 +239,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
         </TarjetaEscritorio>
 
         {presupuesto.coach && (
-          <TarjetaEscritorio icono="◌" titulo="Tu coach">
+          <TarjetaEscritorio icono={<IconoCoach tam={16} />} titulo="Tu coach">
             <div className="flex items-center gap-[11px]">
               <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-[16px]">
                 {presupuesto.coach.iniciales}

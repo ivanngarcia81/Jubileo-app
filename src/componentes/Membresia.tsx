@@ -1,3 +1,4 @@
+import { IconoPalomita } from './iconos'
 import { useState } from 'react'
 import { PRECIOS, ahorroAnual, type Plan } from '../lib/membresia'
 import { formatear } from '../lib/dinero'
@@ -109,7 +110,7 @@ export function Membresia({
         <ul className="mt-3 flex flex-col gap-2">
           {LO_QUE_YA_TIENES.map((t) => (
             <li key={t} className="text-texto flex gap-2 text-[13.5px] leading-[1.5]">
-              <span className="text-teal-osc">✓</span>
+              <span className="text-teal-osc"><IconoPalomita tam={14} /></span>
               {t}
             </li>
           ))}
