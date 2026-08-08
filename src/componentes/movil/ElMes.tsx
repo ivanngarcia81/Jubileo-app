@@ -3,6 +3,7 @@ import { ALTURAS_MESES } from '../../datos/ejemplo'
 import type { LineaMes, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
+import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
 
@@ -92,6 +93,7 @@ export function ElMes({
   alRenombrar,
   alQuitar,
   alCrearCategoria,
+  alCerrarMes,
 }: {
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
@@ -103,6 +105,7 @@ export function ElMes({
     nombre: string,
     diaVencimiento: number | undefined,
   ) => Promise<void>
+  alCerrarMes?: () => Promise<void>
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
@@ -195,6 +198,8 @@ export function ElMes({
           />
         ))}
       </Tarjeta>
+
+      {alCerrarMes && <CerrarMes presupuesto={presupuesto} alCerrar={alCerrarMes} />}
     </>
   )
 }

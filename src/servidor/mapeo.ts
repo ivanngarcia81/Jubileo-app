@@ -337,6 +337,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       mes: filas.mes.mes,
       etiqueta: `${MESES[filas.mes.mes - 1] ?? ''} ${filas.mes.anio}`,
     },
+    mesCerrado: filas.mes.estado === 'cerrado',
 
     periodos,
     periodoActivo,

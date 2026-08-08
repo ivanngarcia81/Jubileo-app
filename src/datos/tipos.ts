@@ -84,6 +84,8 @@ export interface Presupuesto {
   /** El hogar de quien tiene la sesión. Nulo con los datos de ejemplo. */
   hogarId: string | null
   mes: { anio: number; mes: number; etiqueta: string }
+  /** El mes ya se cerró: no se vuelve a cerrar, y el siguiente hereda sus montos. */
+  mesCerrado: boolean
   periodos: Periodo[]
   /** Índice del periodo en curso dentro de `periodos`. */
   periodoActivo: number

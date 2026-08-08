@@ -45,6 +45,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   mesId: null,
   hogarId: null,
   mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
+  mesCerrado: false,
   periodos: PERIODOS,
   periodoActivo: 1,
   periodoActivoId: null,

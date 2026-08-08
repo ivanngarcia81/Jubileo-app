@@ -53,6 +53,9 @@ let categorias = [
   { id: 'c-serv',   hogar_id: H, nombre: 'Servicios',grupo: 'fijo',     orden: 2, activa: true, es_fija: true,  dia_vencimiento: 5, deuda_id: null },
   { id: 'c-comida', hogar_id: H, nombre: 'Comida',   grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
 ]
+// Los meses viven en una lista, no en un renglón fijo: el arrastre al mes
+// siguiente no se puede probar contra un mock que solo sabe de agosto.
+let meses = [{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }]
 let perfil = {
   id: U, correo: USUARIO.email, nombre: null, zona_horaria: 'America/New_York',
   frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000,
@@ -86,9 +89,18 @@ await p.route('**/*', async (r) => {
       headers: { 'cache-control': 'no-store' },
       body: JSON.stringify(b),
     })
+  // PostgREST contesta un objeto, no un arreglo, cuando quien pregunta usa
+  // `.single()` — lo pide con este encabezado. Un mock que siempre devuelve
+  // arreglo hace que `usuario.frecuencia_pago` sea `undefined` y el fallo sale
+  // por otro lado, lejos de aquí.
+  const pideUno = (r.request().headers()['accept'] ?? '').includes('vnd.pgrst.object')
   if (url.origin === SRV) {
     if (url.pathname === '/auth/v1/otp') return json({})
     if (url.pathname === '/auth/v1/verify') return json({ access_token:'x', token_type:'bearer', expires_in:3600, refresh_token:'y', user: USUARIO })
+    // Supabase renueva el token cuando vence. Sin esto, cualquier prueba que
+    // adelante el reloj se encuentra con la pantalla de entrar en vez de la app.
+    if (url.pathname === '/auth/v1/token')
+      return json({ access_token:'x', token_type:'bearer', expires_in:3600, refresh_token:'y', user: USUARIO })
     if (url.pathname === '/auth/v1/user') return json(USUARIO)
     const t = url.pathname.replace('/rest/v1/', '')
     if (m === 'DELETE') {
@@ -131,6 +143,27 @@ await p.route('**/*', async (r) => {
         nivelUsuario = 'premium'
         venceEn = '2026-11-07T00:00:00Z'
         return json('2026-11-07T00:00:00Z')
+      }
+      if (t === 'rpc/cerrar_mes') {
+        const objetivo = [cuerpo].flat()[0]?.objetivo
+        // La función de Postgres se niega si alguna línea no cuadra con sus
+        // asignaciones. Aquí se imita, porque es la mitad de lo que se prueba.
+        const descuadre = lineas.filter((l) => l.mes_id === objetivo).find((l) =>
+          asignaciones.filter((a) => a.linea_presupuesto_id === l.id)
+            .reduce((s, a) => s + a.monto_cents, 0) !== l.monto_mensual_cents)
+        if (descuadre) return json({ code: '23514', message: 'El mes no se cierra: te falta repartir.' }, 400)
+        const mm = meses.find((x) => x.id === objetivo)
+        if (mm) { mm.estado = 'cerrado'; mm.cerrado_en = '2026-08-31T00:00:00Z' }
+        return json(mm ?? null)
+      }
+      if (t === 'meses' && m === 'POST') {
+        const f = [cuerpo].flat()[0]
+        let mm = meses.find((x) => x.anio === f.anio && x.mes === f.mes)
+        if (!mm) {
+          mm = { id: `m-${meses.length + 1}`, hogar_id: f.hogar_id, anio: f.anio, mes: f.mes, estado: 'activo', cerrado_en: null }
+          meses.push(mm)
+        }
+        return json({ id: mm.id })
       }
       if (t === 'usuarios') {
         const f = [cuerpo].flat()[0]
@@ -183,8 +216,8 @@ await p.route('**/*', async (r) => {
       }
       if (t === 'periodos' && m === 'POST') {
         for (const f of [cuerpo].flat()) {
-          const i = periodos.findIndex((x) => x.numero === f.numero)
-          if (i === -1) periodos.push({ id: `p${f.numero}`, ingreso_real_cents: null, estado: 'futuro', ...f })
+          const i = periodos.findIndex((x) => x.mes_id === f.mes_id && x.numero === f.numero)
+          if (i === -1) periodos.push({ id: `p-${f.mes_id}-${f.numero}`, ingreso_real_cents: null, estado: 'futuro', ...f })
           else periodos[i] = { ...periodos[i], ...f }
         }
         periodos.sort((a, b) => a.numero - b.numero)
@@ -214,18 +247,41 @@ await p.route('**/*', async (r) => {
       }
       if (t === 'lineas_presupuesto') {
         for (const f of [cuerpo].flat()) {
-          const i = lineas.findIndex((l) => l.categoria_id === f.categoria_id)
-          const fila = { id: `l-${f.categoria_id}`, mes_id: MES, categoria_id: f.categoria_id, monto_mensual_cents: f.monto_mensual_cents }
+          const mesDe = f.mes_id ?? MES
+          const i = lineas.findIndex((l) => l.mes_id === mesDe && l.categoria_id === f.categoria_id)
+          const fila = { id: `l-${mesDe}-${f.categoria_id}`, mes_id: mesDe, categoria_id: f.categoria_id, monto_mensual_cents: f.monto_mensual_cents }
           i === -1 ? lineas.push(fila) : (lineas[i] = fila)
         }
       }
       return json([])
     }
-    if (t === 'meses')  return json([{ id: MES, hogar_id: H, anio: 2026, mes: 8, estado: 'activo', cerrado_en: null }])
-    if (t === 'usuarios') return json([{ ...perfil, nivel: nivelUsuario, nivel_vence_en: venceEn, onboarding_terminado_en: onboardingListo }])
-    if (t === 'periodos') return json(periodos)
+    if (t === 'meses') {
+      const anio = url.searchParams.get('anio'), mesQ = url.searchParams.get('mes')
+      const o = url.searchParams.get('or')
+      let filas = meses
+      if (anio && mesQ) {
+        filas = filas.filter((x) => x.anio === Number(anio.replace('eq.','')) && x.mes === Number(mesQ.replace('eq.','')))
+      } else if (o) {
+        // `anio.lt.2026,and(anio.eq.2026,mes.lt.9)` — todo lo anterior al objetivo.
+        const a = Number(/anio\.lt\.(\d+)/.exec(o)?.[1] ?? 0)
+        const mm = Number(/mes\.lt\.(\d+)/.exec(o)?.[1] ?? 0)
+        filas = filas.filter((x) => x.anio < a || (x.anio === a && x.mes < mm))
+                     .sort((x, y) => y.anio - x.anio || y.mes - x.mes)
+      }
+      const tope = Number(url.searchParams.get('limit') ?? 0)
+      return json(tope ? filas.slice(0, tope) : filas)
+    }
+    if (t === 'miembros_hogar') return json([{ hogar_id: H, usuario_id: U }])
+    if (t === 'usuarios') return json((pideUno ? (x) => x[0] : (x) => x)([{ ...perfil, nivel: nivelUsuario, nivel_vence_en: venceEn, onboarding_terminado_en: onboardingListo }]))
+    if (t === 'periodos') {
+      const mid = (url.searchParams.get('mes_id') ?? '').replace('eq.', '')
+      return json(mid ? periodos.filter((x) => x.mes_id === mid) : periodos)
+    }
     if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
-    if (t === 'lineas_presupuesto') return json(lineas)
+    if (t === 'lineas_presupuesto') {
+      const mid = (url.searchParams.get('mes_id') ?? '').replace('eq.', '')
+      return json(mid ? lineas.filter((x) => x.mes_id === mid) : lineas)
+    }
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
     if (t === 'transacciones') return json(transacciones)
     if (t === 'deudas') return json(deudas)
@@ -683,6 +739,43 @@ await p.waitForTimeout(900)
 ok((await p.locator('body').innerText()).includes('2 cheques'),
    'y la app ya enseña la frecuencia nueva')
 
+// ---- Cerrar el mes, y que septiembre herede ------------------------------
+// Lo que le faltaba a la app para servir más de un mes. Sin esto, el 1 de
+// septiembre un usuario con historia caía en "arma tu primer mes" y todos sus
+// sobres nacían en cero.
+await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+
+const sinCuadrar = await p.locator('body').innerText()
+ok(sinCuadrar.includes('Cerrar el mes'), 'El mes ofrece cerrar el mes')
+const botonCerrar = p.getByRole('button', { name: 'Cerrar el mes', exact: true }).first()
+ok(await botonCerrar.isDisabled(), 'con dinero sin repartir no deja cerrar: base cero manda')
+ok(/por repartir|Te pasaste/.test(sinCuadrar), 'y dice cuánto falta, no solo que no se puede')
+
+// Se cuadra el mes: todo el ingreso a un solo sobre. Lo que entra se cuenta
+// como lo cuenta `mapeo` —lo real manda sobre lo esperado—, y el reparto lleva
+// el sobrante al primer cheque para que sume al centavo, no "casi".
+const chequesAgosto = periodos.filter((x) => x.mes_id === MES)
+const entra = chequesAgosto.reduce((s, x) => s + (x.ingreso_real_cents ?? x.ingreso_esperado_cents), 0)
+const parejo = Math.floor(entra / chequesAgosto.length)
+lineas = [{ id: `l-${MES}-c-renta`, mes_id: MES, categoria_id: 'c-renta', monto_mensual_cents: entra }]
+asignaciones = chequesAgosto.map((x, i) => ({
+  mes_id: MES, linea_presupuesto_id: `l-${MES}-c-renta`, periodo_id: x.id,
+  monto_cents: i === 0 ? entra - parejo * (chequesAgosto.length - 1) : parejo,
+}))
+
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+await p.getByRole('button', { name: 'Cerrar el mes', exact: true }).first().click()
+ok(await esperarA(() => meses.find((x) => x.id === MES)?.estado === 'cerrado'),
+   'cuadrado, cerrar el mes llama a la función de Postgres y el mes queda cerrado')
+
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+ok((await p.locator('body').innerText()).includes('Mes cerrado'),
+   'y ya no vuelve a ofrecer cerrarlo')
+
 // ---- La copia local -------------------------------------------------------
 // El público de Jubileo abre esto en el estacionamiento del trabajo, con datos
 // contados. Sin copia, mala señal es una pantalla en blanco.
@@ -726,6 +819,59 @@ const caido = await p.locator('body').innerText()
 ok(caido.includes('Sin conexión'), 'y lo dice, en vez de dejar creer que los números son de hoy')
 await p.screenshot({ path: RAIZ + 'capturas/app-sin-conexion.png' })
 servidorCaido = false
+
+// ---- Septiembre ----------------------------------------------------------
+// El reloj avanza: el mes en curso ya no existe en la base.
+const hoyDeSeptiembre = '2026-09-08'
+await p.addInitScript((d) => {
+  const Real = Date
+  class Falsa extends Real {
+    constructor(...a) { super(...(a.length ? a : [d + 'T12:00:00Z'])) }
+    static now() { return new Real(d + 'T12:00:00Z').getTime() }
+  }
+  globalThis.Date = Falsa
+}, hoyDeSeptiembre)
+
+await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+ok(await esperarA(async () => (await p.locator('body').innerText()).includes('Vamos a armar')),
+   'con el reloj en septiembre, la app pide armar el mes')
+const armar = await p.locator('body').innerText()
+ok(armar.includes('Vamos a armar septiembre'), 'en septiembre ofrece armar el mes nuevo')
+ok(!armar.includes('¿Cada cuánto te pagan?'),
+   'y NO le vuelve a preguntar cómo le pagan: eso ya lo sabe')
+ok(armar.includes('montos de agosto'), 'dice de dónde salen los montos')
+await p.screenshot({ path: RAIZ + 'capturas/app-mes-nuevo.png' })
+
+await p.getByRole('button', { name: /Armar septiembre/ }).first().click()
+ok(await esperarA(() => meses.some((x) => x.anio === 2026 && x.mes === 9)),
+   'armar septiembre crea el mes')
+
+const sept = meses.find((x) => x.anio === 2026 && x.mes === 9)
+const chequesSept = periodos.filter((x) => x.mes_id === sept?.id)
+ok(chequesSept.length > 0, `con sus cheques, del motor de periodos: ${chequesSept.length}`)
+
+const lineasSept = lineas.filter((l) => l.mes_id === sept?.id)
+ok(lineasSept.length > 0 && lineasSept.every((l) => l.monto_mensual_cents === entra),
+   `y los montos de agosto arrastrados tal cual: ${JSON.stringify(lineasSept.map((l) => l.monto_mensual_cents))}`)
+ok(lineas.some((l) => l.mes_id === MES),
+   'sin tocar las de agosto: el mes cerrado se queda como quedó')
+
+const asigSept = asignaciones.filter((a) => a.periodo_id?.startsWith(`p-${sept?.id}`))
+const sumaSept = asigSept.reduce((s, a) => s + a.monto_cents, 0)
+ok(sumaSept === entra,
+   `el mes nuevo nace repartido y cuadrado al centavo: ${sumaSept} de ${entra}`)
+
+// Septiembre cae con tres cheques en una quincena, y el tercero es el extra.
+// No recibe reparto — el mes se presupuesta con los cheques normales y el
+// extra queda libre. Es la regla de la sección 6, vista desde el otro lado.
+const extras = chequesSept.filter((x) => x.es_extra)
+const conReparto = chequesSept.filter((x) => !x.es_extra)
+ok(asigSept.length === conReparto.length,
+   `el reparto va a los ${conReparto.length} cheques normales, no a los ${chequesSept.length}`)
+ok(extras.length === 0 || !asigSept.some((a) => extras.some((e) => e.id === a.periodo_id)),
+   `y el cheque extra de septiembre no recibe nada: ${extras.length} extra(s)`)
+
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

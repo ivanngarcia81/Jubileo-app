@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { MES_DEL_EJEMPLO, hoy, mesActual, usaServidor } from './datos/fuente'
 import type { Pago, Presupuesto } from './datos/tipos'
 import { usarPresupuesto } from './datos/usarPresupuesto'
@@ -7,6 +7,7 @@ import { ComoMePagan, type DatosDePago } from './componentes/ComoMePagan'
 import { Entrar } from './componentes/Entrar'
 import { Membresia } from './componentes/Membresia'
 import { Onboarding } from './componentes/Onboarding'
+import { type LoQueTrae, MesNuevo } from './componentes/MesNuevo'
 import { PrimerMes } from './componentes/PrimerMes'
 import { BandaIndicadores, BarraSuperior, TarjetaEscritorio } from './componentes/escritorio/Panel'
 import { Resumen } from './componentes/escritorio/Resumen'
@@ -103,6 +104,7 @@ interface Acciones {
   alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
   alMarcarPago?: (pago: Pago) => Promise<void>
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
+  alCerrarMes?: () => Promise<void>
   alCrearDeuda?: (
     nombre: string,
     saldoCents: Centavos,
@@ -143,6 +145,7 @@ function Contenido({
     alAnotar,
     alMarcarPago,
     alCerrarSemana,
+    alCerrarMes,
     alCrearDeuda,
     alGuardarSaldo,
     alEnfocar,
@@ -160,6 +163,7 @@ function Contenido({
           {...(alRenombrar ? { alRenombrar } : {})}
           {...(alQuitar ? { alQuitar } : {})}
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
+          {...(alCerrarMes ? { alCerrarMes } : {})}
         />
       )
     case 'deudas':
@@ -236,6 +240,55 @@ function Ajustes({
 }
 
 /**
+ * Sin mes: ¿cuenta nueva, o el mes que sigue?
+ *
+ * Se distinguen por una sola cosa —si hay un mes anterior en la base— y esa
+ * pregunta se le hace al servidor, no se adivina. A una cuenta nueva le toca el
+ * onboarding entero; a quien ya lleva meses aquí, un botón.
+ */
+function ArmarElMes({
+  mes,
+  usuarioId,
+  recargar,
+  primerMes,
+}: {
+  mes: MesObjetivo
+  usuarioId: string
+  recargar: () => void
+  primerMes: ReactNode
+}) {
+  const [trae, setTrae] = useState<LoQueTrae | null | undefined>(undefined)
+
+  useEffect(() => {
+    let vigente = true
+    void import('./servidor/repositorios/mesNuevo')
+      .then((m) => m.loQueTraeElMesNuevo(mes))
+      .then((r) => vigente && setTrae(r))
+      // Si no se puede preguntar, se cae al onboarding: preguntar de más es
+      // molesto, pero dejar a alguien sin manera de armar su mes es peor.
+      .catch(() => vigente && setTrae(null))
+    return () => {
+      vigente = false
+    }
+  }, [mes])
+
+  if (trae === undefined) return <Mensaje titulo="Un momento…" />
+  if (trae === null) return <>{primerMes}</>
+
+  return (
+    <MesNuevo
+      mes={mes}
+      trae={trae}
+      alAbrir={async () => {
+        const { abrirElMes } = await import('./servidor/repositorios/mesNuevo')
+        await abrirElMes(usuarioId, mes)
+        recargar()
+      }}
+    />
+  )
+}
+
+/**
  * La franja de "esto es una copia".
  *
  * No es un error: la app funciona y los números son los últimos que se supieron.
@@ -285,26 +338,36 @@ export function App() {
   if (fuente.estado === 'error')
     return <Mensaje titulo="No pudimos traer tu mes" cuerpo={fuente.mensaje} />
 
-  // Cuenta nueva: todavía no hay mes. No es un error, es el principio.
+  // No hay mes. Puede ser el principio de una cuenta nueva, o el primero de
+  // septiembre para alguien que lleva meses aquí — y no son lo mismo.
   if (fuente.estado === 'sin_mes') {
     return (
-      <PrimerMes
+      <ArmarElMes
         mes={mes}
-        alArmar={async (datos) => {
-          const { armarPrimerMes } = await import('./servidor/repositorios/arranque')
-          await armarPrimerMes(usuarioId!, mes, {
-            frecuencia: datos.frecuencia,
-            fechaAncla: fecha(datos.fechaAncla),
-            diasPago: datos.diasPago,
-            ingresoEsperadoCents:
-              datos.ingresoEsperadoCents === null ? null : centavos(datos.ingresoEsperadoCents),
-          })
-          if (datos.nombre.trim()) {
-            const { guardarNombre } = await import('./servidor/repositorios/onboarding')
-            await guardarNombre(usuarioId!, datos.nombre)
-          }
-          fuente.recargar()
-        }}
+        usuarioId={usuarioId!}
+        recargar={fuente.recargar}
+        primerMes={
+          <PrimerMes
+            mes={mes}
+            alArmar={async (datos) => {
+              const { armarPrimerMes } = await import('./servidor/repositorios/arranque')
+              await armarPrimerMes(usuarioId!, mes, {
+                frecuencia: datos.frecuencia,
+                fechaAncla: fecha(datos.fechaAncla),
+                diasPago: datos.diasPago,
+                ingresoEsperadoCents:
+                  datos.ingresoEsperadoCents === null
+                    ? null
+                    : centavos(datos.ingresoEsperadoCents),
+              })
+              if (datos.nombre.trim()) {
+                const { guardarNombre } = await import('./servidor/repositorios/onboarding')
+                await guardarNombre(usuarioId!, datos.nombre)
+              }
+              fuente.recargar()
+            }}
+          />
+        }
       />
     )
   }
@@ -337,6 +400,14 @@ export function App() {
     ? async (categoriaId: string, nombre: string) => {
         const { renombrarCategoria } = await import('./servidor/repositorios/categorias')
         await renombrarCategoria(categoriaId, nombre)
+        fuente.recargar()
+      }
+    : undefined
+
+  const alCerrarMes = mesId
+    ? async () => {
+        const { cerrarMes } = await import('./servidor/repositorios/mes')
+        await cerrarMes(mesId)
         fuente.recargar()
       }
     : undefined
@@ -516,6 +587,7 @@ export function App() {
     ...(alAnotar ? { alAnotar } : {}),
     ...(alMarcarPago ? { alMarcarPago } : {}),
     ...(alCerrarSemana ? { alCerrarSemana } : {}),
+    ...(alCerrarMes ? { alCerrarMes } : {}),
   }
 
   // El onboarding quedó a medias: se vuelve a donde se quedó en vez de caer a
