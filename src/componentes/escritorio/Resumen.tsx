@@ -96,7 +96,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
   const pendientes = [...presupuesto.deudas].sort((a, b) => a.saldoCents - b.saldoCents)
 
   return (
-    <div className="bg-gris grid items-start gap-4 p-[22px] lg:grid-cols-[1fr_262px] xl:grid-cols-[1fr_262px_262px]">
+    <div className="bg-gris grid items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]">
       <div className="flex flex-col gap-4">
         <TarjetaEscritorio
           icono="$"
@@ -194,7 +194,10 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      {/* Entre 880 y 1240 esta columna cruza las dos de arriba y se parte en
+          dos adentro, como en el mockup. Sin eso se caía a la fila de abajo y
+          se estiraba a ~700px: barras de progreso larguísimas con texto de 13px. */}
+      <div className="flex flex-col gap-4 panel:col-span-2 panel:grid panel:grid-cols-2 panel:items-start ancho:col-span-1 ancho:flex">
         <TarjetaEscritorio icono="◍" titulo="Fondos de reserva">
           {presupuesto.fondos.map((fondo) => (
             <FilaFondo

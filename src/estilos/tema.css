@@ -11,6 +11,20 @@
    siendo design/design-tokens.css. No agregues valores aquí.
    ============================================================ */
 
+/* Los cortes de pantalla son los del mockup, no los de Tailwind.
+
+   `design/escritorio.html` corta en 1240px (de tres columnas a dos) y en
+   880px (de dos a una, y se esconden los enlaces y la búsqueda). Tailwind
+   corta en 1024 y 1280. Usar los suyos dejaba un rango de 256px donde la
+   tercera columna se caía y se estiraba al doble de su ancho.
+
+   Van en `@theme` y no en `@theme inline` a propósito: una media query no
+   puede leer `var()`, así que el valor tiene que quedar escrito. */
+@theme {
+  --breakpoint-panel: 880px;
+  --breakpoint-ancho: 1240px;
+}
+
 @theme inline {
   /* ---------- Color ---------- */
   --color-carbon: var(--carbon);

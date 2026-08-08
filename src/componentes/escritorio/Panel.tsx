@@ -59,7 +59,7 @@ export function BarraSuperior({
         })}
       </nav>
       <div className="ml-auto flex items-center gap-[9px]">
-        <div className="bg-carbon-2 hidden min-w-[250px] items-center gap-[9px] rounded-full px-4 py-[9px] text-[13px] text-[#787E7D] lg:flex">
+        <div className="bg-carbon-2 hidden min-w-[250px] items-center gap-[9px] rounded-full px-4 py-[9px] text-[13px] text-[#787E7D] panel:flex">
           <span>⌕</span>
           <span>Buscar gasto, categoría, deuda…</span>
         </div>
@@ -111,7 +111,7 @@ export function BandaIndicadores({
 
   return (
     <div
-      className="bg-carbon grid items-center gap-[34px] px-[26px] pt-[26px] pb-[30px] text-white xl:grid-cols-[1fr_500px]"
+      className="bg-carbon grid items-center gap-[34px] px-[26px] pt-[26px] pb-[30px] text-white ancho:grid-cols-[1fr_500px]"
       style={{
         background:
           'radial-gradient(900px 320px at 88% 120%, rgba(18,194,160,.14), transparent 70%), var(--carbon)',
