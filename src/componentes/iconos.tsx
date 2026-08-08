@@ -21,7 +21,6 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
-  Search,
   Settings,
   Signal,
   Star,
@@ -73,7 +72,6 @@ export const IconoAviso = (p: PropsIcono) => <Bell {...base(p)} />
 export const IconoAjustes = (p: PropsIcono) => <Settings {...base(p)} />
 export const IconoEditar = (p: PropsIcono) => <Pencil {...base(p)} />
 export const IconoMas = (p: PropsIcono) => <MoreHorizontal {...base(p)} />
-export const IconoBuscar = (p: PropsIcono) => <Search {...base(p)} />
 
 // ---------- Dentro de las tarjetas ----------
 export const IconoDinero = (p: PropsIcono) => <CircleDollarSign {...base(p)} />

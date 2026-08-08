@@ -177,12 +177,6 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
               </div>
             </div>
           ))}
-          <button
-            type="button"
-            className="border-linea text-texto-2 mt-2 min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
-          >
-            Ver todos
-          </button>
         </TarjetaEscritorio>
 
         <div className="bg-carbon rounded-[15px] p-[18px] text-white">
@@ -235,12 +229,6 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
               }
             />
           ))}
-          <button
-            type="button"
-            className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
-          >
-            Agregar un fondo
-          </button>
         </TarjetaEscritorio>
 
         {presupuesto.coach && (
@@ -254,12 +242,6 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
                 <div className="text-texto-2 mt-[2px] text-[11.5px]">{presupuesto.coach.detalle}</div>
               </div>
             </div>
-            <button
-              type="button"
-              className="border-linea text-texto-2 mt-[13px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold"
-            >
-              Leer las notas
-            </button>
           </TarjetaEscritorio>
         )}
       </div>
