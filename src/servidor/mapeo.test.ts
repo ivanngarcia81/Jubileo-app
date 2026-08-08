@@ -264,6 +264,27 @@ describe('el mes armado desde la base', () => {
     expect(p.variables.map((v) => v.nombre)).toEqual(['Comida'])
   })
 
+  it('las deudas también son líneas del mes, y suman lo que va a la deuda', () => {
+    // Sin esto El mes enseñaba cuatro grupos cuyos montos no llegaban a lo que
+    // decía "Sale este mes": el renglón de la deuda existía en la base y no en
+    // la pantalla.
+    expect(p.lineasDeuda.map((l) => [l.nombre, l.montoMensualCents])).toEqual([
+      ['Capital One', 15000],
+    ])
+    expect(p.lineasDeuda.map((l) => l.detalle)).toEqual(['Vence el 9 · Cheque 1'])
+    const suma = p.lineasDeuda.reduce((t, l) => t + l.montoMensualCents, 0)
+    expect(suma).toBe(p.aLaDeudaCents)
+  })
+
+  it('los cuatro grupos de El mes suman exactamente lo que sale del mes', () => {
+    const enPantalla =
+      p.mayordomia.montoMensualCents +
+      p.fijos.reduce((t, l) => t + l.montoMensualCents, 0) +
+      p.variables.reduce((t, l) => t + l.montoMensualCents, 0) +
+      p.lineasDeuda.reduce((t, l) => t + l.montoMensualCents, 0)
+    expect(enPantalla).toBe(p.saleCents)
+  })
+
   it('cada fijo dice con qué cheque se paga, no solo cuándo vence', () => {
     // Los cheques del riel van 3–16 ago, 17–30 ago y el extra 31 ago–13 sep.
     // Renta vence el 3 y Luz y agua el 4: los dos caen en el primero.

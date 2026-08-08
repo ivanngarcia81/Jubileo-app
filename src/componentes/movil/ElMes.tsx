@@ -1,7 +1,15 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { LineaMes, Presupuesto } from '../../datos/tipos'
-import { type Centavos, formatearRedondo } from '../../lib/dinero'
+import { type Centavos, centavos, formatearRedondo, suma } from '../../lib/dinero'
 import { alturas } from '../../lib/mes/barras'
+import {
+  ABIERTOS_POR_OMISION,
+  alternar,
+  escribirAbiertos,
+  leerAbiertos,
+  type ClaveGrupo,
+} from '../../lib/mes/grupos'
+import { nombreDeMes } from '../textos'
 import {
   CeldaCifra,
   CeldaNombre,
@@ -12,7 +20,7 @@ import {
   Moneda,
   Segmentado,
 } from '../base'
-import { IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
+import { IconoAbrir, IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
@@ -128,6 +136,45 @@ const FONDOS = {
   columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
 }
 
+/**
+ * La sangría de una fila hija, con el hilo que la cuelga de su grupo: una línea
+ * vertical desde arriba hasta la mitad de la fila y una horizontal que entra al
+ * icono. Sin el hilo, una fila sangrada se lee como una fila mal alineada.
+ */
+const HILO =
+  'relative pl-[18px] panel:pl-[27px]' +
+  " before:absolute before:left-[7px] before:top-[-50%] before:bottom-1/2 before:w-px before:bg-linea before:content-['']" +
+  " after:absolute after:left-[7px] after:top-1/2 after:h-px after:w-[8px] after:bg-linea after:content-['']" +
+  ' panel:before:left-[11px] panel:after:left-[11px] panel:after:w-[9px]'
+
+/** Qué grupos están abiertos, recordado entre visitas. */
+const LLAVE = 'jubileo:grupos-de-el-mes'
+
+function useAbiertos(): [ClaveGrupo[], (nuevos: ClaveGrupo[]) => void] {
+  // Con `useState(fn)` la lectura pasa una sola vez, en el primer render, y no
+  // en cada uno. En un navegador sin `localStorage` —Safari privado de hace
+  // unos años— leer truena, y una preferencia de cómo se mira no puede tumbar
+  // la pantalla del presupuesto.
+  const [abiertos, setAbiertos] = useState<ClaveGrupo[]>(() => {
+    try {
+      return leerAbiertos(localStorage.getItem(LLAVE))
+    } catch {
+      return [...ABIERTOS_POR_OMISION]
+    }
+  })
+  return [
+    abiertos,
+    (nuevos) => {
+      setAbiertos(nuevos)
+      try {
+        localStorage.setItem(LLAVE, escribirAbiertos(nuevos))
+      } catch {
+        // Se queda abierto en esta visita y ya. No hay nada que avisarle.
+      }
+    },
+  ]
+}
+
 export function ElMes({
   presupuesto,
   alPonerMonto,
@@ -152,6 +199,7 @@ export function ElMes({
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
+  const [abiertos, setAbiertos] = useAbiertos()
   const editable = Boolean(alPonerMonto && presupuesto.mesId)
   // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
   const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
@@ -159,12 +207,15 @@ export function ElMes({
   // La fila entera es el botón, como en el mockup: no hay controles sueltos
   // dentro del renglón. Antes el monto era un botón con borde de 44px de alto
   // que se comía la mitad de la fila.
-  const filaEditable = (linea: LineaMes) => (
+  const filaHija = (linea: LineaMes, editableAqui: boolean) => (
     <Fila
       key={linea.id}
-      {...(editable ? { alTocar: () => setEditando(linea), etiqueta: `Poner el monto de ${linea.nombre}` } : {})}
+      {...(editableAqui
+        ? { alTocar: () => setEditando(linea), etiqueta: `Poner el monto de ${linea.nombre}` }
+        : {})}
     >
       <CeldaNombre
+        className={HILO}
         icono={<IconoDeClave clave={linea.icono} tam={13} />}
         {...(linea.detalle ? { detalle: linea.detalle } : {})}
       >
@@ -176,39 +227,78 @@ export function ElMes({
     </Fila>
   )
 
+  // Los cuatro grupos que suman lo que sale del mes. Los fondos de reserva no
+  // están aquí: hoy no tienen categoría, así que su dinero no entra en el
+  // reparto — van en su propia lista, abajo, para no decir que sí.
+  const grupos = [
+    { clave: 'mayordomia' as const, titulo: 'Mayordomía', lineas: [presupuesto.mayordomia] },
+    {
+      clave: 'fijo' as const,
+      titulo: 'Gastos fijos',
+      lineas: presupuesto.fijos,
+      agregar: 'Agregar un gasto fijo',
+    },
+    {
+      clave: 'variable' as const,
+      titulo: 'Sobres variables',
+      lineas: presupuesto.variables,
+      agregar: 'Agregar un sobre',
+    },
+    // Las deudas se ven y no se tocan desde aquí: su monto mensual cuelga de la
+    // deuda, y cambiarlo por un lado sin el otro las deja diciendo cosas
+    // distintas. Se editan en su pantalla.
+    { clave: 'deuda' as const, titulo: 'Deudas', lineas: presupuesto.lineasDeuda },
+  ]
+  const cuantasCategorias = grupos.reduce((n, g) => n + g.lineas.length, 0)
+
   return (
     <div className="flex flex-col gap-3">
       <SelectorDeMes presupuesto={presupuesto} {...(alVerMes ? { alVerMes } : {})} />
 
       <ListaSeccion
-        titulo="Primero"
+        titulo={`Categorías de ${nombreDeMes(presupuesto.mes.mes).toLowerCase()}`}
         icono={<IconoDinero tam={15} />}
+        dato={`${cuantasCategorias} categorías`}
+        encabezados={['Categoría', 'Del mes']}
         {...CATEGORIAS}
       >
-        {filaEditable(presupuesto.mayordomia)}
+        {grupos.map((grupo) => {
+          const abierto = abiertos.includes(grupo.clave)
+          const total = centavos(suma(grupo.lineas.map((l) => l.montoMensualCents)))
+          const puedeEditar = editable && grupo.clave !== 'deuda'
+          return (
+            <Fragment key={grupo.clave}>
+              <Fila
+                abierta={abierto}
+                alTocar={() => setAbiertos(alternar(abiertos, grupo.clave))}
+                etiqueta={`${abierto ? 'Cerrar' : 'Abrir'} ${grupo.titulo}`}
+                className="bg-[#FBFCFB]"
+              >
+                <div className="flex min-w-0 items-center gap-[9px]">
+                  <IconoAbrir
+                    tam={14}
+                    className={`text-texto-2 shrink-0 ${abierto ? 'rotate-90' : ''}`}
+                  />
+                  <span className="bg-gris border-linea text-texto-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-[5px] border px-[5px] text-[10.5px] font-bold">
+                    {grupo.lineas.length}
+                  </span>
+                  <span className="truncate text-[14px] font-semibold">{grupo.titulo}</span>
+                </div>
+                <CeldaCifra>
+                  <Moneda centavos={total} />
+                </CeldaCifra>
+              </Fila>
+              {abierto && grupo.lineas.map((l) => filaHija(l, puedeEditar))}
+              {abierto && grupo.agregar && alCrearCategoria && (
+                <FilaAgregar
+                  texto={grupo.agregar}
+                  alTocar={() => setCreando(grupo.clave === 'fijo' ? 'fijo' : 'variable')}
+                />
+              )}
+            </Fragment>
+          )
+        })}
       </ListaSeccion>
-
-      <ListaSeccion
-        titulo="Gastos fijos"
-        icono={<IconoDinero tam={15} />}
-        dato={`${presupuesto.fijos.length} categorías`}
-        {...CATEGORIAS}
-      >
-        {presupuesto.fijos.map(filaEditable)}
-        {alCrearCategoria && <FilaAgregar texto="Agregar un gasto fijo" alTocar={() => setCreando('fijo')} />}
-      </ListaSeccion>
-
-      {(presupuesto.variables.length > 0 || alCrearCategoria) && (
-        <ListaSeccion
-          titulo="Gastos variables"
-          icono={<IconoDinero tam={15} />}
-          dato={`${presupuesto.variables.length} sobres`}
-          {...CATEGORIAS}
-        >
-          {presupuesto.variables.map(filaEditable)}
-          {alCrearCategoria && <FilaAgregar texto="Agregar un sobre" alTocar={() => setCreando('variable')} />}
-        </ListaSeccion>
-      )}
 
       {editando && alPonerMonto && (
         <PonerMonto

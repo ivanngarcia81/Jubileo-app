@@ -267,11 +267,14 @@ export function Fila({
   children,
   alTocar,
   etiqueta,
+  abierta,
   className = '',
 }: {
   children: ReactNode
   alTocar?: (() => void) | undefined
   etiqueta?: string
+  /** Solo en las filas que abren y cierran un grupo. */
+  abierta?: boolean
   className?: string
 }) {
   const comun = `${FILA} border-linea w-full border-b text-left last:border-b-0 grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)] ${className}`
@@ -282,6 +285,7 @@ export function Fila({
       onClick={alTocar}
       disabled={!alTocar}
       aria-label={etiqueta}
+      aria-expanded={abierta}
       className={`${comun} enabled:hover:bg-[#FAFBFA] disabled:opacity-60`}
     >
       {children}
@@ -312,13 +316,15 @@ export function CeldaNombre({
   icono,
   children,
   detalle,
+  className = '',
 }: {
   icono?: ReactNode
   children: ReactNode
   detalle?: ReactNode
+  className?: string
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-[9px] py-[7px]">
+    <div className={`flex min-w-0 items-center gap-[9px] py-[7px] ${className}`}>
       {icono !== undefined && (
         <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-[7px] border">
           {icono}

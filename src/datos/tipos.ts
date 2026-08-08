@@ -126,6 +126,13 @@ export interface Presupuesto {
    * del cheque en curso: aquí va el monto mensual, que es lo que se reparte.
    */
   variables: LineaMes[]
+  /**
+   * Las deudas vistas como líneas del mes: lo que se les paga en agosto, no lo
+   * que se debe. `deudas` es el saldo y la simulación; esto es el renglón del
+   * presupuesto, y sin él El mes enseñaba cuatro grupos cuyos montos no sumaban
+   * lo que decía "Sale este mes".
+   */
+  lineasDeuda: LineaMes[]
   fondos: Fondo[]
   deudas: (DeudaSimulada & {
     pagoActualCents: Centavos

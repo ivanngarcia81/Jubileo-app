@@ -320,7 +320,34 @@ await p.waitForTimeout(1500)
 
 await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
 await p.waitForTimeout(800)
-ok(await p.getByText('Gastos variables').first().isVisible(), 'El mes enseña los sobres variables, que es donde se reparte el resto')
+ok(await p.getByText('Sobres variables').first().isVisible(), 'El mes enseña los sobres variables, que es donde se reparte el resto')
+// Los cuatro grupos, con la deuda incluida: sin ella los montos de la pantalla
+// no llegaban a lo que dice "Sale este mes".
+for (const grupo of ['Mayordomía', 'Gastos fijos', 'Sobres variables', 'Deudas']) {
+  ok(await p.getByRole('button', { name: new RegExp(`^(Abrir|Cerrar) ${grupo}$`) }).first().isVisible(),
+     `el grupo "${grupo}" está en el árbol y se puede abrir`)
+}
+// Las deudas nacen cerradas: se ve el total y el contador sin desplegar nada.
+ok(await p.getByRole('button', { name: 'Abrir Deudas' }).first().getAttribute('aria-expanded') === 'false',
+   'y las deudas nacen cerradas, con su total a la vista')
+
+// Cerrar un grupo tiene que aguantar una recarga: si no, el que acomoda su
+// pantalla la encuentra igual cada vez y deja de acomodarla.
+// Se comprueba primero que sí estaba: `isVisible()` de algo que no existe da
+// falso, y sin esto la línea de abajo pasaría aunque el grupo nunca abriera.
+ok(await p.getByRole('button', { name: 'Poner el monto de Renta' }).first().isVisible(),
+   'con el grupo abierto se ve la categoría')
+await p.getByRole('button', { name: 'Cerrar Gastos fijos' }).first().click()
+await p.waitForTimeout(200)
+ok(!(await p.getByRole('button', { name: 'Poner el monto de Renta' }).first().isVisible()),
+   'cerrar un grupo esconde sus categorías')
+// `goto` a la misma dirección con solo el ancla no recarga nada.
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+ok(await p.getByRole('button', { name: 'Abrir Gastos fijos' }).first().isVisible(),
+   'y sigue cerrado después de recargar')
+await p.getByRole('button', { name: 'Abrir Gastos fijos' }).first().click()
+await p.waitForTimeout(200)
 
 const boton = p.getByRole('button', { name: 'Poner el monto de Comida' }).first()
 ok(await boton.isVisible(), 'cada categoría se puede tocar para ponerle monto')

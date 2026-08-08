@@ -56,7 +56,9 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   entraCents: centavos(368000),
   saleCents: centavos(368000),
   sinRepartirCents: centavos(0),
-  aLaDeudaCents: centavos(165000),
+  // Lo que suman las tres líneas de deuda de abajo. Estaba en $1,650, que no
+  // salía de ningún lado: los pagos de la demostración son 150 + 310 + 95.
+  aLaDeudaCents: centavos(55500),
   variacionEntra: '+$1,200',
   variacionSale: '+4%',
 
@@ -154,6 +156,30 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'seguro',
       detalle: 'Vence el 18 · Cheque 2',
       montoMensualCents: centavos(14200),
+    },
+  ],
+
+  lineasDeuda: [
+    {
+      id: 'c-capital-one',
+      nombre: 'Capital One',
+      icono: 'deuda',
+      detalle: 'Vence el 9 · Cheque 2',
+      montoMensualCents: centavos(15000),
+    },
+    {
+      id: 'c-estudiantil',
+      nombre: 'Préstamo estudiantil',
+      icono: 'deuda',
+      detalle: 'Vence el 21 · Cheque 2',
+      montoMensualCents: centavos(9500),
+    },
+    {
+      id: 'c-carro',
+      nombre: 'Préstamo del carro',
+      icono: 'deuda',
+      detalle: 'Vence el 15 · Cheque 2',
+      montoMensualCents: centavos(31000),
     },
   ],
 

@@ -16,6 +16,7 @@ import {
   CalendarDays,
   Check,
   ChevronLeft,
+  ChevronRight,
   Clock,
   LayoutGrid,
   MoreHorizontal,
@@ -68,6 +69,8 @@ export const IconoMetas = (p: PropsIcono) => <Target {...base(p)} />
 
 // ---------- Acciones de cabecera ----------
 export const IconoRegresar = (p: PropsIcono) => <ChevronLeft {...base(p)} />
+/** La flecha de un grupo que se abre. Apunta a la derecha; abierta, gira 90°. */
+export const IconoAbrir = (p: PropsIcono) => <ChevronRight {...base(p)} />
 export const IconoAviso = (p: PropsIcono) => <Bell {...base(p)} />
 export const IconoAjustes = (p: PropsIcono) => <Settings {...base(p)} />
 export const IconoEditar = (p: PropsIcono) => <Pencil {...base(p)} />

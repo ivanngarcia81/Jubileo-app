@@ -7,10 +7,18 @@ import type { Ruta } from "../../rutas";
 import { Moneda } from "../base";
 import { nombreDeMes } from "../textos";
 
-/** Todo lo que tiene una línea en el presupuesto del mes. */
+/**
+ * Todo lo que tiene una línea en el presupuesto del mes: los cuatro grupos que
+ * El mes enseña, y nada más.
+ *
+ * Contaba `sobres` —que son los mismos variables pero del cheque en curso— y
+ * `fondos`, que hoy ni siquiera tienen categoría. Con el árbol de El mes al
+ * lado se veía el problema de frente: la banda decía 13 categorías y la lista
+ * de abajo, 10.
+ */
 function contarCategorias(p: Presupuesto): number {
   return (
-    1 + p.fijos.length + p.sobres.length + p.fondos.length + p.deudas.length
+    1 + p.fijos.length + p.variables.length + p.lineasDeuda.length
   );
 }
 

@@ -367,6 +367,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       : { id: 'mayordomia', nombre: 'Mayordomía', icono: 'mayordomia', detalle: '', montoMensualCents: centavos(0) },
     fijos: enCategoria('fijo').map((c) => aLineaMes(c, 'fijo')),
     variables: enCategoria('variable').map((c) => aLineaMes(c, 'variable')),
+    lineasDeuda: enCategoria('deuda').map((c) => aLineaMes(c, 'deuda')),
     fondos,
 
     deudas: [...filas.deudas]
