@@ -7,6 +7,7 @@ import { FilaFondo, Moneda, Segmentado } from '../base'
 import {
   IconoCoach,
   IconoDeClave,
+  IconoDinero,
   IconoDeudas,
   IconoEnfoque,
   IconoMetas,
@@ -110,7 +111,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
     >
       <div className="flex flex-col gap-4">
         <TarjetaEscritorio
-          icono={<span className="text-[13px]">$</span>}
+          icono={<IconoDinero tam={16} />}
           titulo="Cómo va el reparto"
           derecha={<Segmentado opciones={VISTAS} activa={vista} alElegir={setVista} />}
         >

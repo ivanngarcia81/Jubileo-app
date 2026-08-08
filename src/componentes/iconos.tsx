@@ -76,6 +76,7 @@ export const IconoMas = (p: PropsIcono) => <MoreHorizontal {...base(p)} />
 export const IconoBuscar = (p: PropsIcono) => <Search {...base(p)} />
 
 // ---------- Dentro de las tarjetas ----------
+export const IconoDinero = (p: PropsIcono) => <CircleDollarSign {...base(p)} />
 export const IconoMovimientos = (p: PropsIcono) => <ArrowUpDown {...base(p)} />
 export const IconoCoach = (p: PropsIcono) => <UserRound {...base(p)} />
 export const IconoEnfoque = (p: PropsIcono) => <Star {...base(p)} />

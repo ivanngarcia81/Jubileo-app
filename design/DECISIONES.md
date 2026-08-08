@@ -23,3 +23,22 @@ iconos dejaron de ser glifos Unicode copiados del mockup: en un mockup pasan por
 computadora, pero cada sistema los dibuja con una fuente de respaldo distinta y en Windows y varios
 Android algunos caen a un cuadro vacío. Todos pasan ahora por `src/componentes/iconos.tsx`, el único
 archivo que importa de `lucide-react`, con trazo de 1.5 para que no se vean más gruesos que Inter.
+
+**Por qué el fondo va de borde a borde y el contenido no.** El primer intento de arreglar esto puso
+el tope de ancho en el contenedor que *envuelve* la barra superior y la banda de indicadores. El
+resultado fue peor que el problema: en un monitor de 2560 px quedaban dos bloques carbón de 1420
+centrados sobre franjas de gris claro de 570 px a cada lado, con un corte vertical duro. Eso no es
+el mockup —donde la página entera es carbón y la ventana tiene esquinas redondeadas— ni es el patrón
+normal de una app web; es el intermedio, y se lee como un error de maquetación. El patrón correcto
+es el que usa cualquier sitio con barra fija: **el fondo cubre la pantalla y el contenido se
+detiene**. Por eso el `max-w-app` vive ahora *dentro* de `BarraSuperior`, `BandaIndicadores` y
+`Resumen`, y no en quien las envuelve. La regla práctica es sencilla: el elemento que lleva el color
+de fondo nunca lleva el tope de ancho, y el que lleva el tope nunca lleva el color.
+
+Eso obligó a cambiar también la prueba. `revisar-pantallas.mjs` medía el primer elemento visible con
+`bg-carbon` y exigía que no pasara de 1440 px; con el arreglo bueno ese elemento mide lo que mide la
+pantalla, **a propósito**, así que la prueba habría fallado justo cuando el código quedó bien. Ahora
+apunta a `[data-ancho="contenido"]`, un gancho puesto para eso, y se le agregó la comprobación
+inversa —que el fondo oscuro sí llegue al borde—, que es exactamente lo que se había roto. En un
+monitor de 2560 px las dos respuestas juntas son la prueba de que el patrón está bien: fondo 2560,
+contenido 1420.

@@ -110,7 +110,11 @@ export function Membresia({
         <ul className="mt-3 flex flex-col gap-2">
           {LO_QUE_YA_TIENES.map((t) => (
             <li key={t} className="text-texto flex gap-2 text-[13.5px] leading-[1.5]">
-              <span className="text-teal-osc"><IconoPalomita tam={14} /></span>
+              {/* Un SVG no se alinea como un carácter: sin `shrink-0` se aplasta
+                  cuando el texto es largo, y sin el empujón flota sobre la línea. */}
+              <span className="text-teal-osc mt-[3px] shrink-0">
+                <IconoPalomita tam={14} />
+              </span>
               {t}
             </li>
           ))}

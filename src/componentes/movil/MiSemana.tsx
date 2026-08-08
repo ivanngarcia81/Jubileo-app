@@ -133,8 +133,10 @@ export function MiSemana({
             }
             className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold disabled:opacity-50"
           >
-            <span className="bg-teal grid size-[17px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#043432]">
-              <Icono tam={15} />
+            {/* El círculo sube a 20 y el icono baja a 12: a 15 dentro de 17
+                quedaba pegado al borde por los cuatro lados. */}
+            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-full text-[#043432]">
+              <Icono tam={12} />
             </span>
             {texto}
           </button>
