@@ -4,7 +4,7 @@ import { centavos } from '../../lib/dinero'
 import type { MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type {
-  FilaAsignacion,
+  FilaAsignacionSemana,
   FilaCategoria,
   FilaDeuda,
   FilaFondo,
@@ -47,7 +47,7 @@ export async function cargarPresupuestoDelMes(
   reventar('el mes', errorMes)
   if (!filaMes) return null
 
-  const [usuarios, periodos, categorias, lineas, asignaciones, deudas, fondos] =
+  const [usuarios, periodos, categorias, lineas, semanales, deudas, fondos] =
     await Promise.all([
       db
         .from('usuarios')
@@ -72,10 +72,10 @@ export async function cargarPresupuestoDelMes(
         .eq('mes_id', filaMes.id)
         .returns<FilaLinea[]>(),
       db
-        .from('asignaciones')
-        .select('id, mes_id, linea_presupuesto_id, periodo_id, monto_cents')
+        .from('asignaciones_semana')
+        .select('id, mes_id, linea_presupuesto_id, semana, monto_cents')
         .eq('mes_id', filaMes.id)
-        .returns<FilaAsignacion[]>(),
+        .returns<FilaAsignacionSemana[]>(),
       db
         .from('deudas')
         .select(
@@ -92,7 +92,7 @@ export async function cargarPresupuestoDelMes(
   reventar('los periodos', periodos.error)
   reventar('las categorías', categorias.error)
   reventar('las líneas del presupuesto', lineas.error)
-  reventar('las asignaciones', asignaciones.error)
+  reventar('el plan semanal', semanales.error)
   reventar('las deudas', deudas.error)
   reventar('los fondos de reserva', fondos.error)
 
@@ -119,7 +119,7 @@ export async function cargarPresupuestoDelMes(
     periodos: periodos.data ?? [],
     categorias: categorias.data ?? [],
     lineas: lineas.data ?? [],
-    asignaciones: asignaciones.data ?? [],
+    asignaciones_semana: semanales.data ?? [],
     transacciones: movimientos,
     deudas: deudas.data ?? [],
     fondos: fondos.data ?? [],

@@ -1,7 +1,8 @@
-import { centavos } from '../lib/dinero'
+import { centavos, repartir } from '../lib/dinero'
 import { fecha } from '../lib/fecha'
 import { type Anulaciones, type ConfigPago, generarPeriodos } from '../lib/periodos'
-import type { Presupuesto } from './tipos'
+import { numerosDeSemanas, semanaDeFecha, semanasDelMes } from '../lib/semanas'
+import type { AsignacionDeSemana, Movimiento, Presupuesto } from './tipos'
 
 /**
  * Datos de ejemplo — TEMPORAL.
@@ -31,6 +32,82 @@ const CONFIG: ConfigPago = {
 
 const PERIODOS = generarPeriodos(CONFIG, { anio: 2026, mes: 8 }, { anulaciones: ANULACIONES })
 
+// ---------------------------------------------------------------------------
+// El eje semanal de la demostración no está escrito a mano: el plan sale de
+// `repartir` proporcional a los días —igual que lo sembraría el servidor— y
+// los números de cada semana, de `numerosDeSemanas`. Así la demostración no
+// puede descuadrarse de las reglas de verdad.
+// ---------------------------------------------------------------------------
+
+const SEMANAS_CALENDARIO = semanasDelMes(2026, 8)
+
+function planDe(lineaId: string, totalCents: number): AsignacionDeSemana[] {
+  return repartir(centavos(totalCents), SEMANAS_CALENDARIO.map((s) => s.dias)).map(
+    (montoCents, i) => ({ lineaId, semana: i + 1, montoCents }),
+  )
+}
+
+const PLAN_SEMANAL: AsignacionDeSemana[] = [
+  ...planDe('comida', 45000),
+  ...planDe('gasolina', 18000),
+  ...planDe('personal', 12000),
+  ...planDe('diezmo', 36800),
+]
+
+// Lo fijo y las deudas con su día, como pesan en las semanas.
+const FIJOS_DEMO = [
+  { nombre: 'Renta', diaVencimiento: 3, montoCents: centavos(90000) },
+  { nombre: 'Luz y agua', diaVencimiento: 4, montoCents: centavos(13000) },
+  { nombre: 'Seguro del carro', diaVencimiento: 18, montoCents: centavos(14200) },
+  { nombre: 'Capital One', diaVencimiento: 9, montoCents: centavos(15000) },
+  { nombre: 'Préstamo del carro', diaVencimiento: 15, montoCents: centavos(31000) },
+  { nombre: 'Préstamo estudiantil', diaVencimiento: 21, montoCents: centavos(9500) },
+]
+
+const MOVIMIENTOS: Movimiento[] = [
+  { id: 'm16', nombre: 'Farmacia del Ahorro', icono: 'gasto', categoria: 'Sin asignar', categoriaId: null, asignado: false, revisado: false, fecha: fecha('2026-08-08'), montoCents: centavos(1800), tipo: 'gasto', cheque: 2 },
+  { id: 'm15', nombre: 'Ropa de trabajo', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
+  { id: 'm14', nombre: 'Cine', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
+  { id: 'm13', nombre: 'Wawa', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4800), tipo: 'gasto', cheque: 2 },
+  { id: 'm12', nombre: 'Préstamo estudiantil', icono: 'deuda', categoria: 'Préstamo estudiantil', categoriaId: 'c-estudiantil', asignado: true, revisado: true, fecha: fecha('2026-08-07'), montoCents: centavos(9500), tipo: 'gasto', cheque: 2 },
+  { id: 'm11', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-08-07'), montoCents: centavos(5500), tipo: 'gasto', cheque: 2 },
+  { id: 'm10', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-08-06'), montoCents: centavos(6200), tipo: 'gasto', cheque: 2 },
+  { id: 'm9', nombre: 'Préstamo del carro', icono: 'deuda', categoria: 'Préstamo del carro', categoriaId: 'c-carro', asignado: true, revisado: true, fecha: fecha('2026-08-05'), montoCents: centavos(31000), tipo: 'gasto', cheque: 2 },
+  { id: 'm8', nombre: 'PSE&G', icono: 'servicios', categoria: 'Luz y agua', categoriaId: 'servicios', asignado: true, revisado: true, fecha: fecha('2026-08-04'), montoCents: centavos(8500), tipo: 'gasto', cheque: 2 },
+  { id: 'm7', nombre: 'Diezmo', icono: 'mayordomia', categoria: 'Diezmo y ofrenda', categoriaId: 'diezmo', asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(36800), tipo: 'gasto', cheque: 2 },
+  { id: 'm6', nombre: 'Renta de agosto', icono: 'casa', categoria: 'Renta', categoriaId: 'renta', asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(90000), tipo: 'gasto', cheque: 2 },
+  { id: 'm5', nombre: 'Cheque de nómina', icono: 'ingreso', categoria: 'Entró', categoriaId: null, asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(124000), tipo: 'ingreso', cheque: 2 },
+  { id: 'm4', nombre: 'Costco', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-08-01'), montoCents: centavos(10800), tipo: 'gasto', cheque: 1 },
+  { id: 'm3', nombre: 'Café y libros', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-07-28'), montoCents: centavos(4800), tipo: 'gasto', cheque: 1 },
+  { id: 'm2', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-07-25'), montoCents: centavos(5600), tipo: 'gasto', cheque: 1 },
+  { id: 'm1', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-07-22'), montoCents: centavos(11400), tipo: 'gasto', cheque: 1 },
+]
+
+const NUMEROS = numerosDeSemanas(
+  SEMANAS_CALENDARIO,
+  FIJOS_DEMO,
+  PLAN_SEMANAL,
+  PERIODOS.map((p) => ({
+    fechaPago: p.fechaPago,
+    ingresoCents: p.ingresoEsperadoCents ?? centavos(0),
+    esExtra: p.esExtra,
+  })),
+)
+
+// Lo gastado de cada semana sale de los movimientos de arriba: los de julio
+// cuentan en la semana 1, que es donde los deja el recorte del mes.
+const GASTADO_POR_SEMANA = SEMANAS_CALENDARIO.map(() => 0)
+for (const m of MOVIMIENTOS) {
+  if (m.tipo !== 'gasto') continue
+  const semana =
+    m.fecha < SEMANAS_CALENDARIO[0]!.fechaInicio
+      ? 1
+      : m.fecha > SEMANAS_CALENDARIO.at(-1)!.fechaFin
+        ? SEMANAS_CALENDARIO.length
+        : semanaDeFecha(m.fecha)
+  GASTADO_POR_SEMANA[semana - 1]! += m.montoCents
+}
+
 export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   usuario: {
     nombre: 'Iván',
@@ -48,6 +125,20 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
   mesCerrado: false,
   periodos: PERIODOS,
+  semanas: SEMANAS_CALENDARIO.map((s, i) => ({
+    numero: s.numero,
+    fechaInicio: s.fechaInicio,
+    fechaFin: s.fechaFin,
+    dias: s.dias,
+    fijosCents: NUMEROS[i]!.fijosCents,
+    variableCents: NUMEROS[i]!.variableCents,
+    totalCents: NUMEROS[i]!.totalCents,
+    gastadoCents: centavos(GASTADO_POR_SEMANA[i] ?? 0),
+    apretada: NUMEROS[i]!.apretada,
+  })),
+  // La demostración vive un 8 de agosto: semana 2.
+  semanaActiva: 1,
+  planSemanal: PLAN_SEMANAL,
   periodoActivo: 1,
   periodoActivoId: null,
   ingresoPorChequeCents: centavos(124000),
@@ -126,9 +217,9 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   // Los tres traen a propósito un avance distinto —63%, 88% y pasado— para que
   // la demostración enseñe los tres colores de la regla 4 de los tokens.
   variables: [
-    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
-    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
-    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
+    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
+    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
+    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
   ],
 
   mayordomia: {
@@ -136,6 +227,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     nombre: 'Diezmo y ofrenda',
     icono: 'mayordomia',
     detalle: '10% · en los 2 cheques',
+    diaVencimiento: null,
     montoMensualCents: centavos(36800),
     gastadoCents: centavos(36800),
   },
@@ -146,6 +238,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Renta',
       icono: 'casa',
       detalle: 'Vence el 3 · Cheque 1',
+      diaVencimiento: 3,
       montoMensualCents: centavos(90000),
       gastadoCents: centavos(90000),
     },
@@ -154,6 +247,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Luz y agua',
       icono: 'servicios',
       detalle: 'Vence el 4 · Cheque 1',
+      diaVencimiento: 4,
       montoMensualCents: centavos(13000),
       gastadoCents: centavos(8500),
     },
@@ -162,6 +256,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Seguro del carro',
       icono: 'seguro',
       detalle: 'Vence el 18 · Cheque 2',
+      diaVencimiento: 18,
       montoMensualCents: centavos(14200),
       gastadoCents: centavos(0),
     },
@@ -173,6 +268,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Capital One',
       icono: 'deuda',
       detalle: 'Vence el 9 · Cheque 2',
+      diaVencimiento: 9,
       montoMensualCents: centavos(15000),
       gastadoCents: centavos(0),
     },
@@ -181,6 +277,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Préstamo estudiantil',
       icono: 'deuda',
       detalle: 'Vence el 21 · Cheque 2',
+      diaVencimiento: 21,
       montoMensualCents: centavos(9500),
       gastadoCents: centavos(9500),
     },
@@ -189,6 +286,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       nombre: 'Préstamo del carro',
       icono: 'deuda',
       detalle: 'Vence el 15 · Cheque 2',
+      diaVencimiento: 15,
       montoMensualCents: centavos(31000),
       gastadoCents: centavos(31000),
     },
@@ -262,24 +360,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   // Diezmo 368 y los dos pagos de deuda. Si se tocan aquí, se tocan allá.
   //
   // El cheque 1 va del 20 de julio al 2 de agosto y el 2 del 3 al 16.
-  movimientos: [
-    { id: 'm16', nombre: 'Farmacia del Ahorro', icono: 'gasto', categoria: 'Sin asignar', categoriaId: null, asignado: false, revisado: false, fecha: fecha('2026-08-08'), montoCents: centavos(1800), tipo: 'gasto', cheque: 2 },
-    { id: 'm15', nombre: 'Ropa de trabajo', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
-    { id: 'm14', nombre: 'Cine', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4000), tipo: 'gasto', cheque: 2 },
-    { id: 'm13', nombre: 'Wawa', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-08-08'), montoCents: centavos(4800), tipo: 'gasto', cheque: 2 },
-    { id: 'm12', nombre: 'Préstamo estudiantil', icono: 'deuda', categoria: 'Préstamo estudiantil', categoriaId: 'c-estudiantil', asignado: true, revisado: true, fecha: fecha('2026-08-07'), montoCents: centavos(9500), tipo: 'gasto', cheque: 2 },
-    { id: 'm11', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-08-07'), montoCents: centavos(5500), tipo: 'gasto', cheque: 2 },
-    { id: 'm10', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-08-06'), montoCents: centavos(6200), tipo: 'gasto', cheque: 2 },
-    { id: 'm9', nombre: 'Préstamo del carro', icono: 'deuda', categoria: 'Préstamo del carro', categoriaId: 'c-carro', asignado: true, revisado: true, fecha: fecha('2026-08-05'), montoCents: centavos(31000), tipo: 'gasto', cheque: 2 },
-    { id: 'm8', nombre: 'PSE&G', icono: 'servicios', categoria: 'Luz y agua', categoriaId: 'servicios', asignado: true, revisado: true, fecha: fecha('2026-08-04'), montoCents: centavos(8500), tipo: 'gasto', cheque: 2 },
-    { id: 'm7', nombre: 'Diezmo', icono: 'mayordomia', categoria: 'Diezmo y ofrenda', categoriaId: 'diezmo', asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(36800), tipo: 'gasto', cheque: 2 },
-    { id: 'm6', nombre: 'Renta de agosto', icono: 'casa', categoria: 'Renta', categoriaId: 'renta', asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(90000), tipo: 'gasto', cheque: 2 },
-    { id: 'm5', nombre: 'Cheque de nómina', icono: 'ingreso', categoria: 'Entró', categoriaId: null, asignado: true, revisado: true, fecha: fecha('2026-08-03'), montoCents: centavos(124000), tipo: 'ingreso', cheque: 2 },
-    { id: 'm4', nombre: 'Costco', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-08-01'), montoCents: centavos(10800), tipo: 'gasto', cheque: 1 },
-    { id: 'm3', nombre: 'Café y libros', icono: 'variable', categoria: 'Personal', categoriaId: 'personal', asignado: true, revisado: true, fecha: fecha('2026-07-28'), montoCents: centavos(4800), tipo: 'gasto', cheque: 1 },
-    { id: 'm2', nombre: 'Shell', icono: 'transporte', categoria: 'Gasolina', categoriaId: 'gasolina', asignado: true, revisado: true, fecha: fecha('2026-07-25'), montoCents: centavos(5600), tipo: 'gasto', cheque: 1 },
-    { id: 'm1', nombre: 'Supermercado González', icono: 'comida', categoria: 'Comida', categoriaId: 'comida', asignado: true, revisado: true, fecha: fecha('2026-07-22'), montoCents: centavos(11400), tipo: 'gasto', cheque: 1 },
-  ],
+  movimientos: MOVIMIENTOS,
 
   mesesPasados: [
     { anio: 2026, mes: 3, etiqueta: 'Mar', entraCents: centavos(612000), saleCents: centavos(598000), sobroCents: centavos(14000), alcanzable: true },

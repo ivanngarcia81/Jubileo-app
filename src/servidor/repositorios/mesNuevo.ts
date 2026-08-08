@@ -4,7 +4,8 @@ import type { MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type { FilaCategoria, FilaLinea, FilaMes, FilaUsuario } from '../esquema'
 import { miHogar } from './arranque'
-import { repartirElMes, sembrarMes } from './mes'
+import { sembrarMes } from './mes'
+import { sembrarPlanSemanal } from './semanas'
 
 /**
  * Abrir el mes que sigue.
@@ -136,7 +137,8 @@ export async function abrirElMes(usuarioId: string, objetivo: MesObjetivo): Prom
     }
   }
 
-  // Y se reparte, para que el mes nazca cuadrado en vez de con la invariante
-  // rota esperando a que alguien la note.
-  await repartirElMes(mesId)
+  // Y se siembra el plan semanal de lo repartible, para que el mes nazca
+  // cuadrado en el eje nuevo en vez de con la invariante rota esperando a que
+  // alguien la note.
+  await sembrarPlanSemanal(mesId, objetivo)
 }

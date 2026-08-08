@@ -3,14 +3,14 @@ import type { FechaCivil } from '../../lib/fecha'
 import { type ConfigPago, type MesObjetivo, generarPeriodos } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type { FilaPeriodo, FilaTransaccion } from '../esquema'
-import { repartirElMes } from './mes'
 
 /**
  * Cambiar cómo te pagan.
  *
  * La regla 3 de la sección 6 del SPEC: **cambiar de frecuencia no rehace el
- * presupuesto**. Se regeneran los cheques y se re-reparte, pero los montos
- * mensuales no se tocan — el trabajo de armar el mes no se pierde.
+ * presupuesto**. Se regeneran los cheques y ya — los montos mensuales no se
+ * tocan, y el plan semanal tampoco: las semanas del mes no dependen de cuándo
+ * te pagan. El trabajo de armar el mes no se pierde.
  *
  * La parte delicada no es generar el calendario nuevo: eso lo hace el motor, que
  * está probado. Es que los gastos ya anotados cuelgan de los cheques viejos, y
@@ -129,7 +129,4 @@ export async function cambiarComoMePagan(
     reventar('No se pudieron quitar los cheques que sobraban', error)
   }
 
-  // Y se re-reparte. Los montos mensuales no se tocan: solo cambia en cuántos
-  // pedazos se parten.
-  await repartirElMes(mesId)
 }

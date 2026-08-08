@@ -3,7 +3,8 @@ import { type FechaCivil } from '../../lib/fecha'
 import type { FrecuenciaPago, MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type { FilaUsuario } from '../esquema'
-import { repartirElMes, sembrarMes } from './mes'
+import { sembrarMes } from './mes'
+import { sembrarPlanSemanal } from './semanas'
 
 /**
  * El arranque: de una cuenta recién creada a un mes con cheques.
@@ -114,7 +115,7 @@ export async function armarPrimerMes(
     reventar('No se pudieron crear las líneas del mes', errorLineas)
   }
 
-  // Deja el mes cuadrado desde el primer momento: con las líneas en cero, la
-  // invariante se cumple y el mes ya se podría cerrar.
-  await repartirElMes(mesId)
+  // Deja el mes cuadrado en el eje semanal desde el primer momento: con las
+  // líneas en cero la invariante se cumple y el mes ya se podría cerrar.
+  await sembrarPlanSemanal(mesId, objetivo)
 }

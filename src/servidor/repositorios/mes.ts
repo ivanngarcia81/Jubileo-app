@@ -1,14 +1,8 @@
 import { type Centavos, centavos } from '../../lib/dinero'
 import { type FechaCivil, fecha } from '../../lib/fecha'
-import {
-  type ConfigPago,
-  type LineaPresupuesto,
-  type MesObjetivo,
-  generarPeriodos,
-  repartirMes,
-} from '../../lib/periodos'
+import { type ConfigPago, type MesObjetivo, generarPeriodos } from '../../lib/periodos'
 import { cliente } from '../cliente'
-import type { FilaDescuadre, FilaLinea, FilaPeriodo, FilaUsuario } from '../esquema'
+import type { FilaDescuadre, FilaUsuario } from '../esquema'
 
 /**
  * Sembrar y cerrar el mes.
@@ -84,63 +78,6 @@ export async function sembrarMes(
   reventar('No se pudieron guardar los cheques del mes', error)
 
   return mes.id
-}
-
-/**
- * Reparte las líneas del mes entre los cheques que sí se reparten. El reparto
- * sale de `repartirMes`, que usa el reparto exacto de `lib/dinero`: la suma da
- * el monto mensual al centavo y la invariante nace cumplida.
- */
-export async function repartirElMes(mesId: string): Promise<void> {
-  const db = cliente()
-
-  const [lineas, periodos] = await Promise.all([
-    db
-      .from('lineas_presupuesto')
-      .select('id, mes_id, categoria_id, monto_mensual_cents')
-      .eq('mes_id', mesId)
-      .returns<FilaLinea[]>(),
-    db
-      .from('periodos')
-      .select(
-        'id, mes_id, usuario_id, numero, fecha_inicio, fecha_fin, fecha_pago, ingreso_esperado_cents, ingreso_real_cents, es_extra, estado',
-      )
-      .eq('mes_id', mesId)
-      .order('fecha_pago')
-      .returns<FilaPeriodo[]>(),
-  ])
-  reventar('No se pudieron leer las líneas', lineas.error)
-  reventar('No se pudieron leer los cheques', periodos.error)
-
-  const ordenados = periodos.data ?? []
-  // El módulo puro trabaja con el número dentro del mes; aquí se traduce a la
-  // llave real. En modo pareja el riel junta los cheques de los dos.
-  const paraElModulo = ordenados.map((p, i) => ({
-    numero: i + 1,
-    fechaInicio: fecha(p.fecha_inicio),
-    fechaFin: fecha(p.fecha_fin),
-    fechaPago: fecha(p.fecha_pago),
-    esExtra: p.es_extra,
-    ingresoEsperadoCents: p.ingreso_esperado_cents === null ? null : centavos(p.ingreso_esperado_cents),
-  }))
-  const idPorNumero = new Map(paraElModulo.map((p, i) => [p.numero, ordenados[i]!.id]))
-
-  const comoLineas: LineaPresupuesto[] = (lineas.data ?? []).map((l) => ({
-    id: l.id,
-    montoMensualCents: centavos(l.monto_mensual_cents),
-  }))
-
-  const asignaciones = repartirMes(comoLineas, paraElModulo).map((a) => ({
-    mes_id: mesId,
-    linea_presupuesto_id: a.lineaPresupuestoId,
-    periodo_id: idPorNumero.get(a.periodoNumero)!,
-    monto_cents: a.montoCents,
-  }))
-
-  const { error } = await db
-    .from('asignaciones')
-    .upsert(asignaciones, { onConflict: 'linea_presupuesto_id,periodo_id' })
-  reventar('No se pudo repartir el mes', error)
 }
 
 export interface Descuadre {

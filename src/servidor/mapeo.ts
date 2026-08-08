@@ -1,10 +1,27 @@
 import type { ClaveIcono } from '../componentes/iconos'
-import type { Fondo, LineaMes, Movimiento, Pago, Presupuesto, Sobre } from '../datos/tipos'
+import type {
+  AsignacionDeSemana,
+  Fondo,
+  LineaMes,
+  Movimiento,
+  Pago,
+  Presupuesto,
+  SemanaDelPresupuesto,
+  Sobre,
+} from '../datos/tipos'
 import { type Centavos, centavos, suma } from '../lib/dinero'
 import { type FechaCivil, anioDe, diaDelMesRecortado, fecha, mesDe } from '../lib/fecha'
 import { alcanzables } from '../lib/mes/barras'
 import { nivelVigente } from '../lib/membresia'
 import type { Periodo } from '../lib/periodos'
+import {
+  numerosDeSemanas,
+  presupuestoConArrastre,
+  semanaDeDia,
+  semanaDeFijo,
+  semanaEnCurso,
+  semanasDelMes,
+} from '../lib/semanas'
 import type { FilasDelMes, FilaPeriodo } from './esquema'
 
 /**
@@ -71,20 +88,6 @@ export function ingresoDe(p: Pick<FilaPeriodo, 'ingreso_real_cents' | 'ingreso_e
  */
 export function libreDelPeriodo(periodo: FilaPeriodo, asignadoCents: number): Centavos {
   return centavos(ingresoDe(periodo) - asignadoCents)
-}
-
-/** ¿La fecha de vencimiento de una categoría fija cae dentro de este periodo? */
-export function venceEnElPeriodo(
-  diaVencimiento: number,
-  inicio: FechaCivil,
-  fin: FechaCivil,
-): boolean {
-  // El periodo puede cruzar de mes, así que se prueban los dos meses que toca.
-  const candidatos = [
-    diaDelMesRecortado(anioDe(inicio), mesDe(inicio), diaVencimiento),
-    diaDelMesRecortado(anioDe(fin), mesDe(fin), diaVencimiento),
-  ]
-  return candidatos.some((f) => f >= inicio && f <= fin)
 }
 
 /**
@@ -158,11 +161,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     a.fecha_pago === b.fecha_pago ? a.usuario_id.localeCompare(b.usuario_id) : a.fecha_pago < b.fecha_pago ? -1 : 1,
   )
 
-  const asignadoPorPeriodo = new Map<string, number>()
-  for (const a of filas.asignaciones) {
-    asignadoPorPeriodo.set(a.periodo_id, (asignadoPorPeriodo.get(a.periodo_id) ?? 0) + a.monto_cents)
-  }
-
   const periodos: Periodo[] = periodosOrdenados.map((p, i) => ({
     numero: i + 1,
     fechaInicio: fecha(p.fecha_inicio),
@@ -172,10 +170,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     ingresoEsperadoCents: p.ingreso_esperado_cents === null ? null : centavos(p.ingreso_esperado_cents),
   }))
 
-  const libreporPeriodoCents = periodosOrdenados.map((p) =>
-    libreDelPeriodo(p, asignadoPorPeriodo.get(p.id) ?? 0),
-  )
-
   const periodoActivo = chequeEnCurso(periodosOrdenados, opciones.hoy)
   const enCurso = periodosOrdenados[periodoActivo]
 
@@ -183,15 +177,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
   const categoriaPorId = new Map(filas.categorias.map((c) => [c.id, c]))
   const lineaPorCategoria = new Map(filas.lineas.map((l) => [l.categoria_id, l]))
   const deudaPorId = new Map(filas.deudas.map((d) => [d.id, d]))
-
-  const asignadoAlPeriodo = (categoriaId: string, periodoId: string): Centavos => {
-    const linea = lineaPorCategoria.get(categoriaId)
-    if (!linea) return centavos(0)
-    const a = filas.asignaciones.find(
-      (x) => x.linea_presupuesto_id === linea.id && x.periodo_id === periodoId,
-    )
-    return centavos(a?.monto_cents ?? 0)
-  }
 
   const enCategoria = (grupo: string) =>
     filas.categorias
@@ -237,57 +222,181 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       detalle: c.dia_vencimiento
         ? `Vence el ${c.dia_vencimiento}${cheque ? ` · Cheque ${cheque}` : ''}`
         : '',
+      diaVencimiento: c.dia_vencimiento,
       montoMensualCents: centavos(lineaPorCategoria.get(c.id)?.monto_mensual_cents ?? 0),
       gastadoCents: centavos(gastadoPorCategoria.get(c.id) ?? 0),
     }
   }
 
-  // ---- Pagos del periodo en curso ----------------------------------------
-  // Las categorías fijas y las de deuda que vencen dentro del cheque activo.
-  const pagos: Pago[] = enCurso
-    ? filas.categorias
-        .filter(
-          (c) =>
-            c.activa &&
-            c.dia_vencimiento !== null &&
-            (c.grupo === 'fijo' || c.grupo === 'deuda') &&
-            venceEnElPeriodo(c.dia_vencimiento, fecha(enCurso.fecha_inicio), fecha(enCurso.fecha_fin)),
-        )
-        .map((c) => {
-          const deuda = c.deuda_id ? deudaPorId.get(c.deuda_id) : undefined
-          const movimiento = filas.transacciones.find(
-            (t) => t.categoria_id === c.id && t.periodo_id === enCurso.id && t.estado === 'asignada',
-          )
-          return {
-            id: c.id,
-            nombre: c.nombre,
-            diaVencimiento: c.dia_vencimiento!,
-            montoCents: asignadoAlPeriodo(c.id, enCurso.id),
-            pagado: Boolean(movimiento),
-            transaccionId: movimiento?.id ?? null,
-            ...(deuda?.es_enfoque ? { esEnfoque: true } : {}),
-          }
-        })
-        .sort((a, b) => a.diaVencimiento - b.diaVencimiento)
-    : []
+  // ---- Las semanas del mes ------------------------------------------------
+  // El eje donde se presupuesta: lo variable vive en las semanas del mes y lo
+  // fijo pesa en la semana de su vencimiento. El cheque dejó de ser el eje —
+  // abajo queda como lente.
+  const semanasCalendario = semanasDelMes(filas.mes.anio, filas.mes.mes)
+  const totalSemanas = semanasCalendario.length
+  const primerDiaDelMes = fecha(
+    `${filas.mes.anio}-${String(filas.mes.mes).padStart(2, '0')}-01`,
+  )
+  const ultimoDiaDelMes = semanasCalendario.at(-1)!.fechaFin
 
-  // ---- Sobres del periodo en curso ---------------------------------------
-  const sobres: Sobre[] = enCurso
-    ? enCategoria('variable').map((c) => ({
+  // Un gasto fuera del mes no se pierde: los días del último cheque cruzan al
+  // mes siguiente, y ese gasto cuenta en la última semana. Antes del mes, en
+  // la primera.
+  const semanaDeGasto = (f: string): number => {
+    if (f < primerDiaDelMes) return 1
+    if (f > ultimoDiaDelMes) return totalSemanas
+    return semanaDeDia(Number(f.slice(8, 10)))
+  }
+
+  const planSemanal: AsignacionDeSemana[] = filas.asignaciones_semana
+    .filter((a) => a.semana >= 1 && a.semana <= totalSemanas)
+    .map((a) => ({
+      lineaId: a.linea_presupuesto_id,
+      semana: a.semana,
+      montoCents: centavos(a.monto_cents),
+    }))
+
+  const planPorLinea = new Map<string, Centavos[]>()
+  for (const a of planSemanal) {
+    const arr = planPorLinea.get(a.lineaId) ?? semanasCalendario.map(() => centavos(0))
+    arr[a.semana - 1] = centavos((arr[a.semana - 1] ?? 0) + a.montoCents)
+    planPorLinea.set(a.lineaId, arr)
+  }
+
+  // Lo fijo y las deudas del mes, con su día: pesan en la semana en que vencen.
+  const lineasFijas = filas.lineas.flatMap((l) => {
+    const c = categoriaPorId.get(l.categoria_id)
+    if (!c || (c.grupo !== 'fijo' && c.grupo !== 'deuda')) return []
+    return [
+      {
+        nombre: c.nombre,
+        diaVencimiento: c.dia_vencimiento,
+        montoCents: centavos(l.monto_mensual_cents),
+      },
+    ]
+  })
+
+  const numeros = numerosDeSemanas(
+    semanasCalendario,
+    lineasFijas,
+    planSemanal,
+    periodosOrdenados.map((p) => ({
+      fechaPago: fecha(p.fecha_pago),
+      ingresoCents: ingresoDe(p),
+      esExtra: p.es_extra,
+    })),
+  )
+
+  const gastadoPorSemana = semanasCalendario.map(() => 0)
+  for (const t of filas.transacciones) {
+    if (t.tipo !== 'gasto') continue
+    gastadoPorSemana[semanaDeGasto(t.fecha) - 1]! += t.monto_cents
+  }
+
+  const semanas: SemanaDelPresupuesto[] = semanasCalendario.map((s, i) => ({
+    numero: s.numero,
+    fechaInicio: s.fechaInicio,
+    fechaFin: s.fechaFin,
+    dias: s.dias,
+    fijosCents: numeros[i]!.fijosCents,
+    variableCents: numeros[i]!.variableCents,
+    totalCents: numeros[i]!.totalCents,
+    gastadoCents: centavos(gastadoPorSemana[i] ?? 0),
+    apretada: numeros[i]!.apretada,
+  }))
+
+  const semanaActiva = opciones.hoy ? semanaEnCurso(semanasCalendario, opciones.hoy) : 0
+  const numeroSemanaActiva = semanasCalendario[semanaActiva]?.numero ?? 1
+
+  // ---- El cheque como lente ----------------------------------------------
+  // Cada necesidad del mes —un fijo en su vencimiento, una semana del plan en
+  // su arranque— la cubre el último cheque normal que ya llegó para entonces;
+  // lo que vence antes del primer cheque lo cubre el primero, porque alguien
+  // tiene que. El extra no cubre nada: llega entero (regla 2 de la sección 6).
+  const normales = periodosOrdenados
+    .map((p, i) => ({ fechaPago: p.fecha_pago, indice: i }))
+    .filter((_, i) => !periodosOrdenados[i]!.es_extra)
+  const chequeQueCubre = (necesidad: string): number | null => {
+    let elegido: number | null = null
+    for (const { fechaPago, indice } of normales) {
+      if (fechaPago <= necesidad) elegido = indice
+    }
+    return elegido ?? normales[0]?.indice ?? null
+  }
+
+  const cubreCents = periodosOrdenados.map(() => 0)
+  for (const l of filas.lineas) {
+    const c = categoriaPorId.get(l.categoria_id)
+    if (!c || (c.grupo !== 'fijo' && c.grupo !== 'deuda')) continue
+    const vence =
+      c.dia_vencimiento === null
+        ? ultimoDiaDelMes
+        : diaDelMesRecortado(filas.mes.anio, filas.mes.mes, c.dia_vencimiento)
+    const quien = chequeQueCubre(vence)
+    if (quien !== null) cubreCents[quien]! += l.monto_mensual_cents
+  }
+  for (const arr of planPorLinea.values()) {
+    arr.forEach((monto, i) => {
+      const quien = chequeQueCubre(semanasCalendario[i]!.fechaInicio)
+      if (quien !== null) cubreCents[quien]! += monto
+    })
+  }
+  const libreporPeriodoCents = periodosOrdenados.map((p, i) =>
+    libreDelPeriodo(p, cubreCents[i] ?? 0),
+  )
+
+  // ---- Pagos de la semana en curso ---------------------------------------
+  // Lo fijo y las deudas que vencen en sus días, con su monto mensual entero:
+  // un fijo no se parte. Pagado = ya tiene su movimiento asignado en el mes.
+  const pagos: Pago[] = filas.categorias
+    .filter(
+      (c) =>
+        c.activa &&
+        c.dia_vencimiento !== null &&
+        (c.grupo === 'fijo' || c.grupo === 'deuda') &&
+        semanaDeFijo(c.dia_vencimiento, semanasCalendario) === numeroSemanaActiva,
+    )
+    .map((c) => {
+      const deuda = c.deuda_id ? deudaPorId.get(c.deuda_id) : undefined
+      const movimiento = filas.transacciones.find(
+        (t) => t.categoria_id === c.id && t.estado === 'asignada',
+      )
+      return {
         id: c.id,
         nombre: c.nombre,
-        presupuestoCents: asignadoAlPeriodo(c.id, enCurso.id),
-        gastadoCents: centavos(
-          suma(
-            filas.transacciones
-              .filter(
-                (t) => t.categoria_id === c.id && t.periodo_id === enCurso.id && t.tipo === 'gasto',
-              )
-              .map((t) => centavos(t.monto_cents)),
-          ),
-        ),
-      }))
-    : []
+        diaVencimiento: c.dia_vencimiento!,
+        montoCents: centavos(lineaPorCategoria.get(c.id)?.monto_mensual_cents ?? 0),
+        pagado: Boolean(movimiento),
+        transaccionId: movimiento?.id ?? null,
+        ...(deuda?.es_enfoque ? { esEnfoque: true } : {}),
+      }
+    })
+    .sort((a, b) => a.diaVencimiento - b.diaVencimiento)
+
+  // ---- Sobres de la semana en curso --------------------------------------
+  // Lo asignado a la semana más el arrastre de las anteriores, contra lo
+  // gastado dentro de la semana. El arrastre viaja también en negativo.
+  const gastoSemanalDe = (categoriaId: string): Centavos[] => {
+    const porSemana = semanasCalendario.map(() => 0)
+    for (const t of filas.transacciones) {
+      if (t.tipo !== 'gasto' || t.categoria_id !== categoriaId) continue
+      porSemana[semanaDeGasto(t.fecha) - 1]! += t.monto_cents
+    }
+    return porSemana.map(centavos)
+  }
+
+  const sobres: Sobre[] = enCategoria('variable').map((c) => {
+    const linea = lineaPorCategoria.get(c.id)
+    const asignado =
+      (linea && planPorLinea.get(linea.id)) ?? semanasCalendario.map(() => centavos(0))
+    const gastado = gastoSemanalDe(c.id)
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      presupuestoCents: presupuestoConArrastre(asignado, gastado, semanaActiva),
+      gastadoCents: gastado[semanaActiva] ?? centavos(0),
+    }
+  })
 
   // ---- El mes -------------------------------------------------------------
   const entraCents = centavos(suma(periodosOrdenados.map(ingresoDe)))
@@ -302,9 +411,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
 
   const mayordomia = enCategoria('mayordomia')[0]
   const chequesRepartibles = periodosOrdenados.filter((p) => !p.es_extra).length
-  const primerDiaDelMes = fecha(
-    `${filas.mes.anio}-${String(filas.mes.mes).padStart(2, '0')}-01`,
-  )
 
   const fondos: Fondo[] = filas.fondos.map((f) => {
     const faltante = centavos(Math.max(0, f.meta_cents - f.acumulado_cents))
@@ -374,6 +480,9 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     mesCerrado: filas.mes.estado === 'cerrado',
 
     periodos,
+    semanas,
+    semanaActiva,
+    planSemanal,
     periodoActivo,
     periodoActivoId: enCurso?.id ?? null,
     ingresoPorChequeCents: enCurso ? ingresoDe(enCurso) : centavos(0),
@@ -396,6 +505,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
           nombre: 'Mayordomía',
           icono: 'mayordomia',
           detalle: '',
+          diaVencimiento: null,
           montoMensualCents: centavos(0),
           gastadoCents: centavos(0),
         },

@@ -1,5 +1,4 @@
 import { cliente } from '../cliente'
-import { repartirElMes } from './mes'
 
 /**
  * Crear, renombrar y quitar categorías.
@@ -68,8 +67,9 @@ export async function renombrarCategoria(id: string, nombre: string): Promise<vo
  *
  * Pero **sí se borra su línea del mes**, y eso no es un detalle: la línea es lo
  * que suma en "sale", y una categoría invisible cuyo dinero se sigue contando
- * descuadra el mes sin que se vea por qué. Las asignaciones se van solas, en
- * cascada tras la línea.
+ * descuadra el mes sin que se vea por qué. Su plan semanal se va solo, en
+ * cascada tras la línea, y las demás líneas no se tocan: cada una cuadra por
+ * su cuenta contra sus semanas.
  */
 export async function quitarDelMes(categoriaId: string, mesId: string): Promise<void> {
   const db = cliente()
@@ -83,6 +83,4 @@ export async function quitarDelMes(categoriaId: string, mesId: string): Promise<
 
   const { error } = await db.from('categorias').update({ activa: false }).eq('id', categoriaId)
   reventar('No se pudo quitar la categoría', error)
-
-  await repartirElMes(mesId)
 }

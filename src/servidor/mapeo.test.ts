@@ -10,7 +10,6 @@ import {
   libreDelPeriodo,
   mesesEntre,
   porChequeParaLaMeta,
-  venceEnElPeriodo,
 } from './mapeo'
 
 /**
@@ -78,17 +77,19 @@ function filas(): FilasDelMes {
       { id: 'l-comida', mes_id: MES, categoria_id: 'c-comida', monto_mensual_cents: 60000 },
       { id: 'l-capital', mes_id: MES, categoria_id: 'c-capital', monto_mensual_cents: 15000 },
     ],
-    asignaciones: [
-      // La renta sale de los cheques de los dos: modo pareja de verdad.
-      { id: 'a1', mes_id: MES, linea_presupuesto_id: 'l-renta', periodo_id: 'r1', monto_cents: 40000 },
-      { id: 'a2', mes_id: MES, linea_presupuesto_id: 'l-renta', periodo_id: 'p1', monto_cents: 50000 },
-      { id: 'a3', mes_id: MES, linea_presupuesto_id: 'l-luz', periodo_id: 'r1', monto_cents: 13000 },
-      { id: 'a4', mes_id: MES, linea_presupuesto_id: 'l-comida', periodo_id: 'r1', monto_cents: 15000 },
-      { id: 'a5', mes_id: MES, linea_presupuesto_id: 'l-comida', periodo_id: 'p1', monto_cents: 15000 },
-      { id: 'a6', mes_id: MES, linea_presupuesto_id: 'l-comida', periodo_id: 'p2', monto_cents: 15000 },
-      { id: 'a7', mes_id: MES, linea_presupuesto_id: 'l-comida', periodo_id: 'r2', monto_cents: 15000 },
-      { id: 'a8', mes_id: MES, linea_presupuesto_id: 'l-capital', periodo_id: 'r1', monto_cents: 15000 },
-      { id: 'a9', mes_id: MES, linea_presupuesto_id: 'l-diezmo', periodo_id: 'p1', monto_cents: 36800 },
+    // El plan semanal de lo repartible, proporcional a los días de agosto
+    // ([7,7,7,7,3]): es justo lo que sembraría `reparto_semanal` en la base.
+    asignaciones_semana: [
+      { id: 's1', mes_id: MES, linea_presupuesto_id: 'l-comida', semana: 1, monto_cents: 13549 },
+      { id: 's2', mes_id: MES, linea_presupuesto_id: 'l-comida', semana: 2, monto_cents: 13548 },
+      { id: 's3', mes_id: MES, linea_presupuesto_id: 'l-comida', semana: 3, monto_cents: 13548 },
+      { id: 's4', mes_id: MES, linea_presupuesto_id: 'l-comida', semana: 4, monto_cents: 13548 },
+      { id: 's5', mes_id: MES, linea_presupuesto_id: 'l-comida', semana: 5, monto_cents: 5807 },
+      { id: 's6', mes_id: MES, linea_presupuesto_id: 'l-diezmo', semana: 1, monto_cents: 8310 },
+      { id: 's7', mes_id: MES, linea_presupuesto_id: 'l-diezmo', semana: 2, monto_cents: 8310 },
+      { id: 's8', mes_id: MES, linea_presupuesto_id: 'l-diezmo', semana: 3, monto_cents: 8310 },
+      { id: 's9', mes_id: MES, linea_presupuesto_id: 'l-diezmo', semana: 4, monto_cents: 8309 },
+      { id: 's10', mes_id: MES, linea_presupuesto_id: 'l-diezmo', semana: 5, monto_cents: 3561 },
     ],
     transacciones: [
       { id: 't1', usuario_id: ROSA, periodo_id: 'r1', categoria_id: 'c-luz', fecha: '2026-08-04', monto_cents: 8500, tipo: 'gasto', descripcion: 'PSE&G', comercio: null, estado: 'asignada', revisada: true },
@@ -124,15 +125,6 @@ describe('piezas del mapeo', () => {
     const p = { ingreso_real_cents: null, ingreso_esperado_cents: 124000 } as never
     expect(libreDelPeriodo(p, 124000)).toBe(0)
     expect(libreDelPeriodo(p, 118000)).toBe(6000)
-  })
-
-  it('reconoce el vencimiento aunque el periodo cruce de mes', () => {
-    // Cheque del 31 de agosto al 13 de septiembre: el día 3 cae dentro.
-    expect(venceEnElPeriodo(3, fecha('2026-08-31'), fecha('2026-09-13'))).toBe(true)
-    expect(venceEnElPeriodo(20, fecha('2026-08-31'), fecha('2026-09-13'))).toBe(false)
-    expect(venceEnElPeriodo(3, fecha('2026-08-03'), fecha('2026-08-16'))).toBe(true)
-    // El 31 en un febrero se recorta al 28 y sigue cayendo dentro.
-    expect(venceEnElPeriodo(31, fecha('2026-02-15'), fecha('2026-02-28'))).toBe(true)
   })
 
   it('reparte lo que falta de un fondo entre los cheques que quedan', () => {
@@ -208,16 +200,59 @@ describe('el mes armado desde la base', () => {
     expect(p.ingresoPorChequeCents).toBe(90000)
   })
 
-  it('el cheque extra aparece completo porque no se reparte', () => {
+  it('arma las semanas del mes con lo fijo que vence y lo variable asignado', () => {
+    expect(p.semanas).toHaveLength(5)
+    // Renta (3) y Luz (4) pesan en la semana 1; Capital One (9) en la 2. Lo
+    // variable es el plan semanal de comida más el del diezmo.
+    expect(p.semanas.map((s) => [s.fijosCents, s.variableCents])).toEqual([
+      [90000 + 13000, 13549 + 8310],
+      [15000, 13548 + 8310],
+      [0, 13548 + 8310],
+      [0, 13548 + 8309],
+      [0, 5807 + 3561],
+    ])
+    // Con dos cheques normales el día 1 y el 3, ninguna semana se aprieta.
+    expect(p.semanas.map((s) => s.apretada)).toEqual([false, false, false, false, false])
+  })
+
+  it('cada semana sabe cuánto se gastó dentro de sus días', () => {
+    // PSE&G (4), Supermercado (6) y el gasto sin asignar (7): todo semana 1.
+    expect(p.semanas.map((s) => s.gastadoCents)).toEqual([8500 + 6200 + 1200, 0, 0, 0, 0])
+  })
+
+  it('la semana activa la manda la fecha, igual que el cheque', () => {
+    expect(aPresupuesto(filas(), { hoy: fecha('2026-08-10') }).semanaActiva).toBe(1)
+    expect(aPresupuesto(filas(), { hoy: fecha('2026-08-31') }).semanaActiva).toBe(4)
+    // Sin fecha se empieza por la primera.
+    expect(p.semanaActiva).toBe(0)
+  })
+
+  it('trae el plan semanal para la vista que lo edita', () => {
+    expect(p.planSemanal).toHaveLength(10)
+    const comida = p.planSemanal.filter((a) => a.lineaId === 'l-comida')
+    expect(comida.map((a) => a.montoCents)).toEqual([13549, 13548, 13548, 13548, 5807])
+    expect(comida.reduce((t, a) => t + a.montoCents, 0)).toBe(60000)
+  })
+
+  it('el cheque extra aparece completo porque no cubre nada', () => {
     const extra = p.periodos.findIndex((x) => x.esExtra)
     expect(p.libreporPeriodoCents[extra]).toBe(120000)
   })
 
-  it('descuenta de cada cheque lo que ya tiene trabajo', () => {
-    // Rosa, cheque 1: entran $900, repartidos 400+130+150+150 = $830.
-    expect(p.libreporPeriodoCents[0]).toBe(7000)
-    // Iván, cheque 1: entran $1,240, repartidos 500+150+368 = $1,018.
-    expect(p.libreporPeriodoCents[1]).toBe(22200)
+  it('el lente del cheque: cada uno cubre lo que vence hasta el siguiente', () => {
+    // Rosa cobra el 1 y cubre la semana 1 del plan variable (135.49 + 83.10).
+    expect(p.libreporPeriodoCents[0]).toBe(90000 - (13549 + 8310))
+    // Iván cobra el 3 y le caen renta, luz, Capital One y la semana 2: más de
+    // lo que trae. El lente no lo esconde — enseña el negativo.
+    expect(p.libreporPeriodoCents[1]).toBe(124000 - (90000 + 13000 + 15000 + 13548 + 8310))
+    // Rosa el 15 cubre la semana 3; Iván el 17, las semanas 4 y 5.
+    expect(p.libreporPeriodoCents[2]).toBe(90000 - (13548 + 8310))
+    expect(p.libreporPeriodoCents[3]).toBe(124000 - (13548 + 8309 + 5807 + 3561))
+    // Entre todos los cheques normales, lo libre cuadra con el mes entero.
+    const libresNormales = p.periodos
+      .map((x, i) => (x.esExtra ? 0 : p.libreporPeriodoCents[i]!))
+      .reduce((a: number, b) => a + b, 0)
+    expect(libresNormales).toBe(90000 + 124000 + 90000 + 124000 - p.saleCents)
   })
 
   it('suma lo que entra y lo que sale del mes', () => {
@@ -227,11 +262,16 @@ describe('el mes armado desde la base', () => {
     expect(p.aLaDeudaCents).toBe(15000)
   })
 
-  it('los pagos del cheque activo salen de su día de vencimiento', () => {
-    // Rosa cobra el 1 y su cheque llega al 14: caen renta (3), luz (4) y
-    // Capital One (9). La categoría apagada no.
-    expect(p.pagos.map((x) => x.nombre)).toEqual(['Renta', 'Luz y agua', 'Capital One'])
-    expect(p.pagos.map((x) => x.montoCents)).toEqual([40000, 13000, 15000])
+  it('los pagos de la semana activa salen de su día de vencimiento, enteros', () => {
+    // Semana 1 (del 1 al 7): caen renta (3) y luz (4), con su monto mensual
+    // completo — un fijo no se parte. Capital One (9) es de la semana 2, y la
+    // categoría apagada no sale.
+    expect(p.pagos.map((x) => x.nombre)).toEqual(['Renta', 'Luz y agua'])
+    expect(p.pagos.map((x) => x.montoCents)).toEqual([90000, 13000])
+
+    const semana2 = aPresupuesto(filas(), { hoy: fecha('2026-08-10') })
+    expect(semana2.pagos.map((x) => x.nombre)).toEqual(['Capital One'])
+    expect(semana2.pagos.map((x) => x.montoCents)).toEqual([15000])
   })
 
   it('marca como pagado lo que ya tiene su movimiento, y dice cuál es', () => {
@@ -247,14 +287,24 @@ describe('el mes armado desde la base', () => {
   })
 
   it('señala la deuda de enfoque, amarrada por llave y no por nombre', () => {
-    expect(p.pagos.find((x) => x.nombre === 'Capital One')!.esEnfoque).toBe(true)
+    const semana2 = aPresupuesto(filas(), { hoy: fecha('2026-08-10') })
+    expect(semana2.pagos.find((x) => x.nombre === 'Capital One')!.esEnfoque).toBe(true)
     expect(p.pagos.find((x) => x.nombre === 'Renta')!.esEnfoque).toBeUndefined()
   })
 
-  it('los sobres traen lo apartado y lo gastado del cheque activo', () => {
+  it('los sobres traen lo asignado a la semana activa y lo gastado en ella', () => {
     expect(p.sobres).toEqual([
-      { id: 'c-comida', nombre: 'Comida', presupuestoCents: 15000, gastadoCents: 6200 },
+      { id: 'c-comida', nombre: 'Comida', presupuestoCents: 13549, gastadoCents: 6200 },
     ])
+  })
+
+  it('lo que sobra de un sobre arrastra a la semana siguiente', () => {
+    // Semana 1: 135.49 asignados, 62 gastados. La semana 2 promete sus 135.48
+    // más los 73.49 que sobraron.
+    const semana2 = aPresupuesto(filas(), { hoy: fecha('2026-08-10') })
+    const comida = semana2.sobres.find((s) => s.id === 'c-comida')!
+    expect(comida.presupuestoCents).toBe(13549 + 13548 - 6200)
+    expect(comida.gastadoCents).toBe(0)
   })
 
   it('separa mayordomía de los fijos, y los variables van aparte', () => {

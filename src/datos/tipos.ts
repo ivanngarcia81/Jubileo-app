@@ -21,12 +21,40 @@ export interface Pago {
   esEnfoque?: boolean
 }
 
-/** Categoría variable: el usuario gasta contra un monto apartado. */
+/**
+ * Categoría variable vista desde la semana en curso: lo gastado en la semana
+ * contra su presupuesto semanal — lo asignado a la semana más el arrastre de
+ * las anteriores.
+ */
 export interface Sobre {
   id: string
   nombre: string
   gastadoCents: Centavos
   presupuestoCents: Centavos
+}
+
+/** Una semana del mes con sus números. El eje donde se presupuesta. */
+export interface SemanaDelPresupuesto {
+  numero: number
+  fechaInicio: FechaCivil
+  fechaFin: FechaCivil
+  dias: number
+  /** Lo fijo (y deudas) que vence en sus días. */
+  fijosCents: Centavos
+  /** Lo variable asignado a la semana. */
+  variableCents: Centavos
+  totalCents: Centavos
+  /** Todo lo gastado dentro de la semana. */
+  gastadoCents: Centavos
+  /** Hasta aquí se vence más de lo que ha llegado. Informa, no bloquea. */
+  apretada: boolean
+}
+
+/** Una fila del plan semanal de una línea repartible. */
+export interface AsignacionDeSemana {
+  lineaId: string
+  semana: number
+  montoCents: Centavos
 }
 
 export interface Fondo {
@@ -45,6 +73,8 @@ export interface LineaMes {
   nombre: string
   icono: ClaveIcono
   detalle: string
+  /** Día del mes en que vence. Nulo en lo variable y la mayordomía. */
+  diaVencimiento: number | null
   montoMensualCents: Centavos
   /**
    * Lo gastado contra esta línea en el mes entero. `Sobre.gastadoCents` es lo
@@ -117,7 +147,13 @@ export interface Presupuesto {
   /** El mes ya se cerró: no se vuelve a cerrar, y el siguiente hereda sus montos. */
   mesCerrado: boolean
   periodos: Periodo[]
-  /** Índice del periodo en curso dentro de `periodos`. */
+  /** Las semanas del mes con sus números: el eje del presupuesto. */
+  semanas: SemanaDelPresupuesto[]
+  /** Índice de la semana en curso dentro de `semanas`. */
+  semanaActiva: number
+  /** El plan semanal de lo repartible, para la vista que lo edita. */
+  planSemanal: AsignacionDeSemana[]
+  /** Índice del periodo en curso dentro de `periodos`. El cheque es el lente. */
   periodoActivo: number
   /**
    * La llave del cheque en curso. Todo lo que se anota cuelga de él: es lo que

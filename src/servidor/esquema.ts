@@ -90,6 +90,12 @@ export interface FilaLinea {
   monto_mensual_cents: number
 }
 
+/**
+ * El reparto por cheque de 0001. El cliente ya no lo lee ni lo escribe — el
+ * eje es semanal desde 0005 y el puente de 0006 mantiene la tabla para los
+ * clientes viejos. El tipo se queda mientras la tabla exista; la contracción
+ * (0007+) se lleva a los dos.
+ */
 export interface FilaAsignacion {
   id: string
   mes_id: string
@@ -111,6 +117,15 @@ export interface FilaTransaccion {
   estado: EstadoTransaccion
   /** El usuario ya lo vio. Distinto de `estado`, que dice si tiene sobre. */
   revisada: boolean
+}
+
+export interface FilaAsignacionSemana {
+  id: string
+  mes_id: string
+  linea_presupuesto_id: string
+  /** 1 a 5, del calendario del mes. */
+  semana: number
+  monto_cents: number
 }
 
 export interface FilaDeuda {
@@ -149,8 +164,9 @@ export interface FilasDelMes {
   periodos: FilaPeriodo[]
   categorias: FilaCategoria[]
   lineas: FilaLinea[]
-  asignaciones: FilaAsignacion[]
   transacciones: FilaTransaccion[]
+  /** El plan semanal de lo repartible (0005): el eje del presupuesto. */
+  asignaciones_semana: FilaAsignacionSemana[]
   deudas: FilaDeuda[]
   fondos: FilaFondo[]
   /** Quién abrió la sesión: de ahí sale el saludo. */

@@ -5,9 +5,9 @@
  *
  * Es el camino que toca dinero, así que se recorre entero contra un Supabase
  * de mentiras que sí guarda lo que le mandan: entrar, abrir El mes, ponerle
- * $600 a un sobre, y comprobar que se guardó en centavos enteros, que el
- * reparto salió solo y que las asignaciones suman el monto al centavo — la
- * invariante de la sección 6 del SPEC, vista desde el navegador.
+ * $600 a un sobre, y comprobar que se guardó en centavos enteros, que el plan
+ * semanal se sembró solo y que sus semanas suman el monto al centavo — la
+ * invariante del eje semanal, vista desde el navegador.
  *
  * Se compila aparte porque las variables de Vite se hornean al compilar, y se
  * sirve desde el disco para no levantar nada.
@@ -61,7 +61,8 @@ let perfil = {
   frecuencia_pago: 'semanal', fecha_ancla: '2026-08-04', dias_pago: null, ingreso_esperado_cents: 171000,
 }
 let lineas = []            // el estado del "servidor"
-let asignaciones = []
+let asignaciones = []      // el reparto legado por cheque: el cliente ya no lo toca
+let asignaciones_semana = []
 let transacciones = []
 let canjeado = null
 let nivelUsuario = 'gratis'
@@ -75,6 +76,17 @@ const escrituras = []
 const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const ctx = await nav.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
 const p = await ctx.newPage()
+// El reloj del navegador se clava en un día conocido de agosto: la semana
+// activa sale de la fecha, y sin esto la revisión diría cosas distintas según
+// el día en que corra.
+await p.addInitScript(() => {
+  const Real = Date
+  class Fija extends Real {
+    constructor(...a) { super(...(a.length ? a : ['2026-08-05T12:00:00-04:00'])) }
+    static now() { return new Real('2026-08-05T12:00:00-04:00').getTime() }
+  }
+  globalThis.Date = Fija
+})
 const errores = []
 p.on('pageerror', (e) => errores.push(String(e)))
 p.on('console', (m) => m.type() === 'error' && !m.text().includes('status of 4') && !/Failed to (load resource|fetch)/i.test(m.text()) && errores.push(m.text()))
@@ -116,9 +128,22 @@ await p.route('**/*', async (r) => {
         const cat = (url.searchParams.get('categoria_id') ?? '').replace('eq.', '')
         const fuera = lineas.filter((l) => l.categoria_id === cat).map((l) => l.id)
         lineas = lineas.filter((l) => l.categoria_id !== cat)
-        // Las asignaciones se van en cascada tras su línea, como en el esquema.
+        // El plan semanal (y el reparto legado) se van en cascada tras su
+        // línea, como en el esquema.
         asignaciones = asignaciones.filter((a) => !fuera.includes(a.linea_presupuesto_id))
+        asignaciones_semana = asignaciones_semana.filter((a) => !fuera.includes(a.linea_presupuesto_id))
         escrituras.push({ tabla: t, borrado: cat })
+        return json([])
+      }
+      if (t === 'asignaciones_semana') {
+        // `eq.` para una línea (guardar el plan) o `in.(…)` para varias
+        // (sembrar el mes): las dos formas se usan.
+        const lq = url.searchParams.get('linea_presupuesto_id') ?? ''
+        const cuales = lq.startsWith('in.')
+          ? lq.replace(/^in\.|[()"]/g, '').split(',').filter(Boolean)
+          : [lq.replace('eq.', '')].filter(Boolean)
+        asignaciones_semana = asignaciones_semana.filter((a) => !cuales.includes(a.linea_presupuesto_id))
+        escrituras.push({ tabla: t, borrado: cuales })
         return json([])
       }
       if (t === 'periodos') {
@@ -147,11 +172,16 @@ await p.route('**/*', async (r) => {
       }
       if (t === 'rpc/cerrar_mes') {
         const objetivo = [cuerpo].flat()[0]?.objetivo
-        // La función de Postgres se niega si alguna línea no cuadra con sus
-        // asignaciones. Aquí se imita, porque es la mitad de lo que se prueba.
-        const descuadre = lineas.filter((l) => l.mes_id === objetivo).find((l) =>
-          asignaciones.filter((a) => a.linea_presupuesto_id === l.id)
-            .reduce((s, a) => s + a.monto_cents, 0) !== l.monto_mensual_cents)
+        // La función de Postgres se niega si alguna línea repartible no cuadra
+        // con sus semanas (0006). Aquí se imita, porque es lo que se prueba.
+        // Lo fijo y las deudas no llevan plan semanal y no se revisan.
+        const repartibles = ['mayordomia', 'variable', 'fondo']
+        const descuadre = lineas
+          .filter((l) => l.mes_id === objetivo &&
+            repartibles.includes(categorias.find((c) => c.id === l.categoria_id)?.grupo))
+          .find((l) =>
+            asignaciones_semana.filter((a) => a.linea_presupuesto_id === l.id)
+              .reduce((s, a) => s + a.monto_cents, 0) !== l.monto_mensual_cents)
         if (descuadre) return json({ code: '23514', message: 'El mes no se cierra: te falta repartir.' }, 400)
         const mm = meses.find((x) => x.id === objetivo)
         if (mm) { mm.estado = 'cerrado'; mm.cerrado_en = '2026-08-31T00:00:00Z' }
@@ -182,6 +212,10 @@ await p.route('**/*', async (r) => {
           const i = asignaciones.findIndex((x) => x.linea_presupuesto_id === a.linea_presupuesto_id && x.periodo_id === a.periodo_id)
           i === -1 ? asignaciones.push(a) : (asignaciones[i] = a)
         }
+      }
+      if (t === 'asignaciones_semana' && m === 'POST') {
+        for (const a of [cuerpo].flat()) asignaciones_semana.push(a)
+        return json([])
       }
       if (t === 'transacciones' && m === 'PATCH') {
         const f = [cuerpo].flat()[0]
@@ -257,13 +291,25 @@ await p.route('**/*', async (r) => {
         if (i !== -1) categorias[i] = { ...categorias[i], ...f }
         return json([])
       }
+      if (t === 'lineas_presupuesto' && m === 'PATCH') {
+        // `guardarPlanSemanal` actualiza el monto por la llave de la línea.
+        const f = [cuerpo].flat()[0]
+        const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
+        const i = lineas.findIndex((l) => l.id === id)
+        if (i !== -1) lineas[i] = { ...lineas[i], ...f }
+        return json([])
+      }
       if (t === 'lineas_presupuesto') {
+        let ultima = null
         for (const f of [cuerpo].flat()) {
           const mesDe = f.mes_id ?? MES
           const i = lineas.findIndex((l) => l.mes_id === mesDe && l.categoria_id === f.categoria_id)
           const fila = { id: `l-${mesDe}-${f.categoria_id}`, mes_id: mesDe, categoria_id: f.categoria_id, monto_mensual_cents: f.monto_mensual_cents }
           i === -1 ? lineas.push(fila) : (lineas[i] = fila)
+          ultima = fila
         }
+        // Con `.select().single()` PostgREST devuelve la fila, no un arreglo.
+        return pideUno ? json(ultima) : json([])
       }
       return json([])
     }
@@ -275,6 +321,12 @@ await p.route('**/*', async (r) => {
       return [q.replace('eq.', '')]
     }
     if (t === 'meses') {
+      // `ponerMontoMensual` pide anio y mes por la llave del mes.
+      const idMes = url.searchParams.get('id')
+      if (idMes) {
+        const mm2 = meses.find((x) => x.id === idMes.replace('eq.', ''))
+        return json(pideUno ? (mm2 ?? null) : (mm2 ? [mm2] : []))
+      }
       const anio = url.searchParams.get('anio'), mesQ = url.searchParams.get('mes')
       const o = url.searchParams.get('or')
       let filas = meses
@@ -302,12 +354,26 @@ await p.route('**/*', async (r) => {
       const cuales = deQueMeses()
       return json(cuales ? periodos.filter((x) => cuales.includes(x.mes_id)) : periodos)
     }
-    if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
+    if (t === 'categorias') {
+      const idCat = url.searchParams.get('id')
+      if (idCat) {
+        const c = categorias.find((x) => x.id === idCat.replace('eq.', ''))
+        return json(pideUno ? (c ?? null) : (c ? [c] : []))
+      }
+      return json(categorias.filter((c) => c.activa !== false))
+    }
     if (t === 'lineas_presupuesto') {
       const cuales = deQueMeses()
       return json(cuales ? lineas.filter((x) => cuales.includes(x.mes_id)) : lineas)
     }
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
+    if (t === 'asignaciones_semana') {
+      const cuales = deQueMeses()
+      const filasSemana = cuales
+        ? asignaciones_semana.filter((x) => cuales.includes(x.mes_id))
+        : asignaciones_semana
+      return json(filasSemana.map((a, i) => ({ id: `as${i}`, ...a })))
+    }
     if (t === 'transacciones') return json(transacciones)
     if (t === 'deudas') return json(deudas)
     if (t === 'fondos_reserva') return json(fondos)
@@ -374,11 +440,19 @@ await p.waitForTimeout(1500)
 const guardado = escrituras.find((e) => e.tabla === 'lineas_presupuesto')
 ok(guardado?.cuerpo?.monto_mensual_cents === 60000 || guardado?.cuerpo?.[0]?.monto_mensual_cents === 60000,
    `se guarda en centavos enteros: ${JSON.stringify(guardado?.cuerpo)}`)
-ok(escrituras.some((e) => e.tabla === 'asignaciones'), 'y se reparte solo entre los cheques, sin pedirlo')
+ok(escrituras.some((e) => e.tabla === 'asignaciones_semana' && e.cuerpo),
+   'y el plan semanal se siembra solo, sin pedirlo')
 
-const asign = escrituras.find((e) => e.tabla === 'asignaciones')
-const suma = [asign?.cuerpo].flat().filter(Boolean).reduce((s, a) => s + a.monto_cents, 0)
-ok(suma === 60000, `las asignaciones suman el monto mensual al centavo: ${suma}`)
+const planComida = asignaciones_semana.filter((a) => a.linea_presupuesto_id === `l-${MES}-c-comida`)
+ok(planComida.reduce((s, a) => s + a.monto_cents, 0) === 60000,
+   `las semanas suman el monto mensual al centavo: ${JSON.stringify(planComida.map((a) => a.monto_cents))}`)
+// Agosto trae 5 semanas de [7,7,7,7,3] días: el reparto proporcional es este,
+// el mismo que daría `reparto_semanal` en la base.
+ok(JSON.stringify(planComida.map((a) => [a.semana, a.monto_cents])) ===
+   JSON.stringify([[1, 13549], [2, 13548], [3, 13548], [4, 13548], [5, 5807]]),
+   'proporcional a los días de cada semana, como en SQL')
+ok(!escrituras.some((e) => e.tabla === 'asignaciones'),
+   'y el reparto por cheque ya no se escribe: el cheque quedó de lente')
 
 await p.waitForTimeout(500)
 const pantalla = await p.locator('body').innerText()
@@ -412,9 +486,11 @@ ok(gasto?.tipo === 'gasto' && gasto?.estado === 'asignada' && gasto?.categoria_i
    'con su categoría, ya asignado y sin signo negativo')
 ok(gasto?.periodo_id === 'p1', 'colgado del cheque en curso, no del mes')
 
-// Los sobres enseñan cifras redondeadas: $25.50 gastados se ven como $26.
+// Los sobres enseñan cifras redondeadas: $25.50 gastados se ven como $26. El
+// presupuesto es el de la semana 1 —el 5 de agosto, con el reloj clavado—:
+// $135.49 asignados a la semana, redondeados a $135.
 const despues = await p.locator('body').innerText()
-ok(antes !== despues && /\$26\s*de\s*\$150/.test(despues), 'y el sobre ya enseña lo gastado')
+ok(antes !== despues && /\$26\s*de\s*\$135/.test(despues), 'y el sobre ya enseña lo gastado contra la semana')
 await p.screenshot({ path: RAIZ + 'capturas/app-semana-con-gasto.png' })
 
 // ---- Movimientos ----------------------------------------------------------
@@ -481,11 +557,13 @@ await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(600)
 
 // ---- Marcar y desmarcar un pago -------------------------------------------
+// La semana 1 (del 1 al 7) trae renta (día 1) y servicios (día 5), ordenados
+// por su día: la primera casilla es la renta.
 const casilla = p.getByRole('checkbox').first()
 await casilla.click()
 await p.waitForTimeout(1200)
 const pago = transacciones.at(-1)
-ok(pago?.categoria_id === 'c-serv' && pago?.estado === 'asignada',
+ok(pago?.categoria_id === 'c-renta' && pago?.estado === 'asignada',
    'marcar un pago anota el gasto del fijo')
 ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'true',
    'y la casilla queda marcada al volver del servidor')
@@ -543,7 +621,8 @@ ok(aviso.includes('$600') && aviso.includes('sin repartir'), `avisa qué pasa co
 await p.getByRole('button', { name: 'Quitar del mes' }).last().click()
 await p.waitForTimeout(1400)
 ok(!lineas.some((l) => l.categoria_id === 'c-comida'), 'quitar borra su línea del mes')
-ok(!asignaciones.some((a) => a.linea_presupuesto_id === 'l-c-comida'), 'y sus asignaciones se van en cascada')
+ok(!asignaciones_semana.some((a) => a.linea_presupuesto_id === `l-${MES}-c-comida`),
+   'y su plan semanal se va en cascada')
 ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000,
    'el dinero deja de contar en lo que sale, en vez de quedarse invisible')
 ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
@@ -799,13 +878,16 @@ transacciones.push({
   id: 't-planta', hogar_id: H, usuario_id: U, periodo_id: 'p2', categoria_id: 'c-comida',
   fecha: '2026-08-12', monto_cents: 4000, tipo: 'gasto', descripcion: 'Gasolina', estado: 'confirmada',
 })
-// Un sobre con monto y ya repartido entre los cuatro cheques. El monto no es
-// divisible entre cuatro ni entre dos a propósito: si el reparto nuevo pierde
-// un centavo, se ve.
-lineas.push({ id: 'l-c-renta', mes_id: MES, categoria_id: 'c-renta', monto_mensual_cents: 100003 })
-asignaciones.push(
-  ...[['p1', 25001], ['p2', 25001], ['p3', 25001], ['p4', 25000]].map(([periodo_id, monto_cents]) => ({
-    mes_id: MES, linea_presupuesto_id: 'l-c-renta', periodo_id, monto_cents,
+// Un fijo con monto —que no lleva plan semanal— y una línea repartible con su
+// plan sembrado. El monto del diezmo se parte en cinco a propósito: si el
+// cambio de cheques tocara el plan, se vería al centavo.
+lineas.push(
+  { id: 'l-c-renta', mes_id: MES, categoria_id: 'c-renta', monto_mensual_cents: 100003 },
+  { id: `l-${MES}-c-diezmo`, mes_id: MES, categoria_id: 'c-diezmo', monto_mensual_cents: 36800 },
+)
+asignaciones_semana.push(
+  ...[8310, 8310, 8310, 8309, 3561].map((monto_cents, i) => ({
+    mes_id: MES, linea_presupuesto_id: `l-${MES}-c-diezmo`, semana: i + 1, monto_cents,
   })),
 )
 
@@ -847,21 +929,11 @@ ok(mudado?.categoria_id === 'c-comida', 'sin perder su sobre')
 ok(transacciones.every((t) => t.periodo_id !== null),
    'y ningún gasto queda huérfano al borrarse los cheques viejos')
 
-// La invariante de la sección 6, ahora contra el calendario nuevo: cada línea
-// repartida entre los dos cheques que quedan, y sumando su monto al centavo.
-const descuadres = lineas
-  .map((l) => {
-    const suyas = asignaciones.filter((a) => a.linea_presupuesto_id === l.id)
-    const total = suyas.reduce((s, a) => s + a.monto_cents, 0)
-    return suyas.length === 2 && total === l.monto_mensual_cents
-      ? null
-      : `${l.categoria_id}: ${suyas.length} pedazos, ${total} de ${l.monto_mensual_cents}`
-  })
-  .filter(Boolean)
-ok(lineas.length > 0 && descuadres.length === 0,
-   `se re-reparte entre los cheques nuevos y sigue cuadrando${
-     descuadres.length ? ': ' + descuadres.join(' | ') : ` (${lineas.length === 1 ? '1 línea' : `${lineas.length} líneas`})`
-   }`)
+// El eje semanal ni se entera: las semanas del mes no dependen de cuándo te
+// pagan, así que el plan queda tal cual, al centavo.
+const planDiezmo = asignaciones_semana.filter((a) => a.linea_presupuesto_id === `l-${MES}-c-diezmo`)
+ok(planDiezmo.length === 5 && planDiezmo.reduce((s, a) => s + a.monto_cents, 0) === 36800,
+   `el plan semanal queda intacto: las semanas no dependen de los cheques (${planDiezmo.length} filas)`)
 
 await p.reload({ waitUntil: 'networkidle' })
 await p.waitForTimeout(900)
@@ -882,17 +954,16 @@ const botonCerrar = p.getByRole('button', { name: 'Cerrar el mes', exact: true }
 ok(await botonCerrar.isDisabled(), 'con dinero sin repartir no deja cerrar: base cero manda')
 ok(/por repartir|Te pasaste/.test(sinCuadrar), 'y dice cuánto falta, no solo que no se puede')
 
-// Se cuadra el mes: todo el ingreso a un solo sobre. Lo que entra se cuenta
-// como lo cuenta `mapeo` —lo real manda sobre lo esperado—, y el reparto lleva
-// el sobrante al primer cheque para que sume al centavo, no "casi".
+// Se cuadra el mes: todo el ingreso a una sola línea repartible, con su plan
+// semanal sumando el monto al centavo — que es lo que `cerrar_mes` revisa
+// desde 0006. Lo que entra se cuenta como lo cuenta `mapeo`: lo real manda
+// sobre lo esperado.
 const chequesAgosto = periodos.filter((x) => x.mes_id === MES)
 const entra = chequesAgosto.reduce((s, x) => s + (x.ingreso_real_cents ?? x.ingreso_esperado_cents), 0)
-const parejo = Math.floor(entra / chequesAgosto.length)
-lineas = [{ id: `l-${MES}-c-renta`, mes_id: MES, categoria_id: 'c-renta', monto_mensual_cents: entra }]
-asignaciones = chequesAgosto.map((x, i) => ({
-  mes_id: MES, linea_presupuesto_id: `l-${MES}-c-renta`, periodo_id: x.id,
-  monto_cents: i === 0 ? entra - parejo * (chequesAgosto.length - 1) : parejo,
-}))
+lineas = [{ id: `l-${MES}-c-diezmo`, mes_id: MES, categoria_id: 'c-diezmo', monto_mensual_cents: entra }]
+asignaciones_semana = [
+  { mes_id: MES, linea_presupuesto_id: `l-${MES}-c-diezmo`, semana: 1, monto_cents: entra },
+]
 
 await p.reload({ waitUntil: 'networkidle' })
 await p.waitForTimeout(900)
@@ -986,20 +1057,18 @@ ok(lineasSept.length > 0 && lineasSept.every((l) => l.monto_mensual_cents === en
 ok(lineas.some((l) => l.mes_id === MES),
    'sin tocar las de agosto: el mes cerrado se queda como quedó')
 
-const asigSept = asignaciones.filter((a) => a.periodo_id?.startsWith(`p-${sept?.id}`))
-const sumaSept = asigSept.reduce((s, a) => s + a.monto_cents, 0)
+const planSept = asignaciones_semana.filter((a) => a.mes_id === sept?.id)
+const sumaSept = planSept.reduce((s, a) => s + a.monto_cents, 0)
 ok(sumaSept === entra,
-   `el mes nuevo nace repartido y cuadrado al centavo: ${sumaSept} de ${entra}`)
+   `el mes nuevo nace con su plan semanal cuadrado al centavo: ${sumaSept} de ${entra}`)
 
-// Septiembre cae con tres cheques en una quincena, y el tercero es el extra.
-// No recibe reparto — el mes se presupuesta con los cheques normales y el
-// extra queda libre. Es la regla de la sección 6, vista desde el otro lado.
-const extras = chequesSept.filter((x) => x.es_extra)
-const conReparto = chequesSept.filter((x) => !x.es_extra)
-ok(asigSept.length === conReparto.length,
-   `el reparto va a los ${conReparto.length} cheques normales, no a los ${chequesSept.length}`)
-ok(extras.length === 0 || !asigSept.some((a) => extras.some((e) => e.id === a.periodo_id)),
-   `y el cheque extra de septiembre no recibe nada: ${extras.length} extra(s)`)
+// Septiembre de 2026 trae 30 días: semanas 1 a 5, la quinta de dos. El plan se
+// siembra en esas y en ninguna otra — una fila en una semana que el mes no
+// tiene sería dinero que ninguna vista enseña.
+ok(planSept.length > 0 && planSept.every((a) => a.semana >= 1 && a.semana <= 5),
+   `sembrado en las semanas del calendario, sin fantasmas: ${JSON.stringify(planSept.map((a) => a.semana))}`)
+ok(!escrituras.some((e) => e.tabla === 'asignaciones'),
+   'y en todo el camino el cliente nunca escribió el reparto por cheque')
 
 
 // ---- El historial: volver al mes que cerraste ----------------------------
