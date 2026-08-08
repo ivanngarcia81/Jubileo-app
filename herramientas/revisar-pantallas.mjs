@@ -168,7 +168,10 @@ for (const { w, quien, arbol } of ANCHOS) {
   const ancho = await v.evaluate((esMovil) => {
     // El primero del DOM no sirve: los dos arboles existen siempre y el movil
     // va antes, oculto y con ancho cero. Se busca el primero que se ve.
-    const candidatos = esMovil ? 'main' : '.bg-carbon'
+    // `[data-ancho="contenido"]` y no el elemento con `bg-carbon`: desde que el
+    // fondo llega de borde a borde, ese mide lo que mide la pantalla, a
+    // proposito. Lo que se vigila es el contenido de adentro.
+    const candidatos = esMovil ? 'main' : '[data-ancho="contenido"]'
     for (const el of document.querySelectorAll(candidatos)) {
       const r = el.getBoundingClientRect()
       if (r.width > 0) return r.width
@@ -178,6 +181,19 @@ for (const { w, quien, arbol } of ANCHOS) {
   revisar(ancho > 0, `${quien}: se encontro la pieza que se mide`)
   const tope = arbol === 'movil' ? 460 : 1440
   revisar(ancho <= tope, `${quien}: el contenido se detiene en ${Math.round(ancho)}px, no crece sin fin`)
+  // Y el reverso, que es lo que se rompio al poner el tope en el lugar
+  // equivocado: el fondo oscuro TIENE que llegar al borde. Con el tope afuera
+  // quedaban dos bloques carbon flotando sobre franjas de gris claro.
+  if (arbol !== 'movil') {
+    const fondo = await v.evaluate(() => {
+      for (const el of document.querySelectorAll('.bg-carbon')) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0) return r.width
+      }
+      return -1
+    })
+    revisar(fondo === w, `${quien}: el fondo oscuro llega al borde (${fondo} de ${w})`)
+  }
   await ctx.close()
 }
 

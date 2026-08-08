@@ -103,7 +103,10 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
   const pendientes = [...presupuesto.deudas].sort((a, b) => a.saldoCents - b.saldoCents)
 
   return (
-    <div className="bg-gris grid items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]">
+    <div
+      data-ancho="contenido"
+      className="bg-gris mx-auto grid max-w-app items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]"
+    >
       <div className="flex flex-col gap-4">
         <TarjetaEscritorio
           icono={<span className="text-[13px]">$</span>}
