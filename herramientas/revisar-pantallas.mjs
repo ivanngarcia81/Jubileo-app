@@ -138,6 +138,49 @@ for (const ruta of ['resumen', 'mes', 'deudas', 'metas', 'ajustes']) {
   revisar(ancho <= 1440, `escritorio ${ruta}: no se barre de lado (scrollWidth ${ancho})`)
 }
 await esc.close()
+
+// ---------- Los anchos de en medio, que es donde se rompia ----------
+// La app solo se veia bien en los dos anchos que dibujan los mockups: 352 y
+// 1420. En cualquier otro se estiraba. Aqui se miden los de en medio y el
+// extremo, que son los que nadie mira hasta que un cliente los reporta.
+const ANCHOS = [
+  { w: 768, quien: 'iPad vertical', arbol: 'movil' },
+  { w: 1024, quien: 'iPad horizontal', arbol: 'escritorio' },
+  { w: 1180, quien: 'laptop de 13"', arbol: 'escritorio' },
+  { w: 2560, quien: 'monitor externo', arbol: 'escritorio' },
+]
+for (const { w, quien, arbol } of ANCHOS) {
+  const ctx = await navegador.newContext({ viewport: { width: w, height: 900 } })
+  const v = vigilar(await ctx.newPage())
+  await v.goto(`${BASE}/#/${arbol === 'movil' ? 'semana' : 'resumen'}`, { waitUntil: 'networkidle' })
+  await v.waitForTimeout(400)
+  await v.screenshot({ path: `${SALIDA}/ancho-${w}.png` })
+
+  const barrido = await v.evaluate(() => document.documentElement.scrollWidth)
+  revisar(barrido <= w, `${quien} (${w}px): no se barre de lado (${barrido})`)
+
+  // Lo que de verdad se veia mal: el contenido creciendo sin tope. Se mide el
+  // elemento visible mas ancho de la pagina — en escritorio no hay `<main>`, y
+  // buscarlo devolvia cero, o sea una comprobacion que pasaba siempre.
+  // Se mide una pieza concreta y no "el elemento mas ancho": el fondo si llega
+  // hasta el borde a proposito, y medirlo todo hacia que la comprobacion
+  // midiera el contenedor raiz y no el contenido.
+  const ancho = await v.evaluate((esMovil) => {
+    // El primero del DOM no sirve: los dos arboles existen siempre y el movil
+    // va antes, oculto y con ancho cero. Se busca el primero que se ve.
+    const candidatos = esMovil ? 'main' : '.bg-carbon'
+    for (const el of document.querySelectorAll(candidatos)) {
+      const r = el.getBoundingClientRect()
+      if (r.width > 0) return r.width
+    }
+    return -1
+  }, arbol === 'movil')
+  revisar(ancho > 0, `${quien}: se encontro la pieza que se mide`)
+  const tope = arbol === 'movil' ? 460 : 1440
+  revisar(ancho <= tope, `${quien}: el contenido se detiene en ${Math.round(ancho)}px, no crece sin fin`)
+  await ctx.close()
+}
+
 await navegador.close()
 
 revisar(errores.length === 0, `sin errores en la consola${errores.length ? `: ${errores.join(' | ')}` : ''}`)

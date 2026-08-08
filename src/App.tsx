@@ -668,7 +668,7 @@ export function App() {
     <>
       {sinConexion && <SinConexion />}
 
-      <div className="lg:hidden">
+      <div className="panel:hidden">
         <Marco cabecera={cabeceraDe(enMovil, presupuesto, ir)} activa={enMovil} ir={ir}>
           {enMovil === 'ajustes' ? (
             <Ajustes
@@ -690,28 +690,36 @@ export function App() {
           contenido, y al pasarlo a React se perdió. Sin él, en un monitor
           grande la columna central crece sin límite mientras las laterales
           siguen en 262px, y el texto de 13px queda en renglones larguísimos. */}
-      <div className="bg-gris text-texto font-sans mx-auto hidden min-h-dvh max-w-app lg:block">
-        <BarraSuperior presupuesto={presupuesto} activa={enEscritorio} ir={ir} />
-        <BandaIndicadores presupuesto={presupuesto} fechaLibertad={fechaLibertad} />
+      <div className="bg-gris text-texto font-sans hidden min-h-dvh panel:block">
+        {/* El fondo llega hasta el borde; el contenido no. En el mockup eso lo
+            hacía `.win`: 1420px centrada. Al pasarlo a React se copiaron los
+            píxeles de adentro y se tiró ese marco, y sin él la columna central
+            crece sin límite mientras las laterales siguen en 262px. */}
+        <div className="mx-auto max-w-app">
+          <BarraSuperior presupuesto={presupuesto} activa={enEscritorio} ir={ir} />
+          <BandaIndicadores presupuesto={presupuesto} fechaLibertad={fechaLibertad} />
 
-        {enEscritorio === 'resumen' ? (
-          <Resumen presupuesto={presupuesto} />
-        ) : (
-          <div className="mx-auto max-w-[720px] p-[22px]">
-            {enEscritorio === 'ajustes' ? (
-              <Ajustes
-                presupuesto={presupuesto}
-                mes={mes}
-                recargar={fuente.recargar}
-                {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
-                {...(alGuardarNombre ? { alGuardarNombre } : {})}
-                {...(alGuardarAvisoDesdeAjustes ? { alGuardarAviso: alGuardarAvisoDesdeAjustes } : {})}
-              />
-            ) : (
-              <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
-            )}
-          </div>
-        )}
+          {enEscritorio === 'resumen' ? (
+            <Resumen presupuesto={presupuesto} />
+          ) : (
+            <div className="mx-auto max-w-[720px] p-[22px]">
+              {enEscritorio === 'ajustes' ? (
+                <Ajustes
+                  presupuesto={presupuesto}
+                  mes={mes}
+                  recargar={fuente.recargar}
+                  {...(alCambiarComoMePagan ? { alCambiarComoMePagan } : {})}
+                  {...(alGuardarNombre ? { alGuardarNombre } : {})}
+                  {...(alGuardarAvisoDesdeAjustes
+                    ? { alGuardarAviso: alGuardarAvisoDesdeAjustes }
+                    : {})}
+                />
+              ) : (
+                <Contenido ruta={enEscritorio} presupuesto={presupuesto} acciones={acciones} />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </>
   )

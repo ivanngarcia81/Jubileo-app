@@ -26,7 +26,7 @@ export function Cabecera({
   alTocarAvatar?: () => void
 }) {
   return (
-    <header className="flex items-center gap-[11px] px-[18px] pt-2">
+    <header className="mx-auto flex w-full max-w-movil items-center gap-[11px] px-[18px] pt-2">
       <button
         type="button"
         onClick={alTocarAvatar}
@@ -100,7 +100,11 @@ export function Marco({
   return (
     <div className="bg-gris text-texto font-sans flex min-h-dvh flex-col">
       {cabecera}
-      <main className="flex-1 px-4 pt-[14px] pb-[calc(110px+env(safe-area-inset-bottom))]">
+      {/* El mockup dibuja 352px porque está enseñando un iPhone. Sin tope, en
+          un iPad o en media ventana de laptop las tarjetas pensadas para esa
+          columna se estiran a mil píxeles y el texto de 14.5px queda flotando.
+          Se deja crecer un poco más que el mockup y ahí se detiene. */}
+      <main className="mx-auto w-full max-w-movil flex-1 px-4 pt-[14px] pb-[calc(110px+env(safe-area-inset-bottom))]">
         {children}
       </main>
       <NavFlotante activa={activa} ir={ir} />
