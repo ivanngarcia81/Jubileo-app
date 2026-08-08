@@ -111,20 +111,20 @@ export function ComoMePagan({
   if (!abierto) {
     return (
       <div className="bg-blanco border-linea rounded-[15px] border p-5">
-        <div className="text-texto-2 text-[11.5px] font-bold tracking-[.06em] uppercase">
+        <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cómo te pagan
         </div>
-        <h2 className="font-serif mt-1 text-[22px] leading-tight">
+        <h2 className="font-serif mt-1 text-titulo leading-tight">
           {presupuesto.usuario.frecuencia}
         </h2>
-        <p className="text-texto-2 mt-2 text-[13.5px] leading-[1.55]">
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
           {presupuesto.periodos.length} cheques este mes
           {cheque && ` · el primero el ${diaYMes(cheque.fechaPago)}`}
         </p>
         <button
           type="button"
           onClick={() => setAbierto(true)}
-          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-[14px] font-semibold"
+          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold"
         >
           Cambiar cómo me pagan
         </button>
@@ -134,14 +134,14 @@ export function ComoMePagan({
 
   return (
     <div className="bg-blanco border-linea rounded-[15px] border p-5">
-      <h2 className="font-serif text-[22px] leading-tight">Cómo te pagan</h2>
-      <p className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+      <h2 className="font-serif text-titulo leading-tight">Cómo te pagan</h2>
+      <p className="text-texto-2 mt-1 text-menor leading-[1.5]">
         Cambiar esto vuelve a armar tus cheques, pero <b>no rehace tu presupuesto</b>: los montos
         de cada categoría se quedan igual y solo se reparten distinto.
       </p>
 
       <fieldset className="mt-5">
-        <legend className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+        <legend className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
           ¿Cada cuánto te pagan?
         </legend>
         <div className="mt-2 flex flex-col gap-2">
@@ -161,8 +161,8 @@ export function ComoMePagan({
                 className="accent-teal size-4"
               />
               <span className="min-w-0">
-                <span className="text-texto block text-[15px] font-medium">{f.etiqueta}</span>
-                <span className="text-texto-2 block text-[12px]">{f.ayuda}</span>
+                <span className="text-texto block text-cuerpo font-medium">{f.etiqueta}</span>
+                <span className="text-texto-2 block text-menor">{f.ayuda}</span>
               </span>
             </label>
           ))}
@@ -182,16 +182,16 @@ export function ComoMePagan({
                 const n = Math.min(31, Math.max(1, Number(e.target.value.replace(/\D/g, '')) || 1))
                 setDias((d) => (i === 0 ? [n, d[1]] : [d[0], n]))
               }}
-              className="border-linea text-texto min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-[17px]"
+              className="border-linea text-texto min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-titulo"
             />
           ))}
-          <span className="text-texto-2 text-[12.5px]">días del mes</span>
+          <span className="text-texto-2 text-menor">días del mes</span>
         </div>
       )}
 
       <label
         htmlFor="ancla-ajustes"
-        className="text-texto-2 mt-5 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+        className="text-texto-2 mt-5 block text-rotulo font-semibold tracking-[.12em] uppercase"
       >
         ¿Cuándo fue tu último cheque?
       </label>
@@ -200,26 +200,26 @@ export function ComoMePagan({
         type="date"
         value={ancla}
         onChange={(e) => setAncla(e.target.value)}
-        className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px]"
+        className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo"
       />
 
       {!esVariable && (
         <>
           <label
             htmlFor="ingreso-ajustes"
-            className="text-texto-2 mt-5 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+            className="text-texto-2 mt-5 block text-rotulo font-semibold tracking-[.12em] uppercase"
           >
             ¿Cuánto entra en cada cheque?
           </label>
           <div className="border-linea mt-2 flex items-center gap-2 rounded-[11px] border px-4">
-            <span className="text-texto-2 text-[17px]">$</span>
+            <span className="text-texto-2 text-titulo">$</span>
             <input
               id="ingreso-ajustes"
               type="text"
               inputMode="decimal"
               value={ingreso}
               onChange={(e) => setIngreso(e.target.value.replace(/[^\d.]/g, ''))}
-              className="text-texto min-h-11 w-full bg-transparent py-3 text-[17px] [font-variant-numeric:tabular-nums] focus:outline-none"
+              className="text-texto min-h-11 w-full bg-transparent py-3 text-titulo [font-variant-numeric:tabular-nums] focus:outline-none"
             />
           </div>
         </>
@@ -227,12 +227,12 @@ export function ComoMePagan({
 
       {previa.length > 0 && (
         <div className="bg-gris mt-5 rounded-[11px] p-4">
-          <div className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+          <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
             Tus cheques quedarían así
           </div>
           <div className="mt-2 flex flex-col gap-1">
             {previa.map((p) => (
-              <div key={p.numero} className="flex justify-between text-[13px]">
+              <div key={p.numero} className="flex justify-between text-menor">
                 <span className="text-texto">
                   Cheque {p.numero} · {diaYMes(p.fechaPago)}
                   {p.esExtra && <span className="text-teal-osc font-semibold"> · extra</span>}
@@ -244,7 +244,7 @@ export function ComoMePagan({
             ))}
           </div>
           {cambia && (
-            <p className="text-texto-2 mt-3 text-[12.5px] leading-[1.5]">
+            <p className="text-texto-2 mt-3 text-menor leading-[1.5]">
               Pasas de {presupuesto.periodos.length} a {previa.length} cheques este mes. Lo que ya
               anotaste no se pierde: cada gasto se va al cheque que cubre su fecha.
             </p>
@@ -253,7 +253,7 @@ export function ComoMePagan({
       )}
 
       {error && (
-        <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+        <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
           {error}
         </p>
       )}
@@ -263,7 +263,7 @@ export function ComoMePagan({
           type="button"
           onClick={() => setAbierto(false)}
           disabled={guardando}
-          className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+          className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
         >
           Cancelar
         </button>
@@ -271,7 +271,7 @@ export function ComoMePagan({
           type="button"
           onClick={() => void guardar()}
           disabled={!listo || guardando}
-          className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+          className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
         >
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>

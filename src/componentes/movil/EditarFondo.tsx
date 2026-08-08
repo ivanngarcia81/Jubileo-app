@@ -65,13 +65,13 @@ export function EditarFondo({
 
   return (
     <Hoja etiqueta={nuevo ? 'Nuevo fondo de reserva' : `Fondo ${fondo.nombre}`} alCerrar={alCerrar}>
-      <div className="text-texto font-serif text-[22px] leading-tight">
+      <div className="text-texto font-serif text-titulo leading-tight">
         {nuevo ? 'Un fondo de reserva' : fondo.nombre}
       </div>
 
       {nuevo ? (
         <>
-          <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+          <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
             Algo que sabes que viene y no quieres que te agarre de sorpresa: llantas, Navidad, el
             viaje al país.
           </div>
@@ -84,7 +84,7 @@ export function EditarFondo({
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Llantas"
             aria-label="Nombre del fondo"
-            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] placeholder:text-[#9AA09E] focus:outline-none"
+            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
           />
 
           <Rotulo>¿Cuánto necesitas juntar?</Rotulo>
@@ -110,16 +110,16 @@ export function EditarFondo({
             disabled={guardando}
             onChange={(e) => setCuando(e.target.value)}
             aria-label="Para cuándo lo necesitas"
-            className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] focus:outline-none"
+            className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo focus:outline-none"
           />
-          <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+          <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             Con una fecha, la app te dice cuánto apartar en cada cheque. Sin ella, el fondo se
             queda en buena intención.
           </p>
         </>
       ) : (
         <>
-          <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+          <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
             Meta de {formatear(fondo.metaCents)}
             {fondo.mesesQueFaltan > 0 && ` · para ${fondo.mesObjetivo}`}
           </div>
@@ -132,7 +132,7 @@ export function EditarFondo({
             desactivado={guardando}
           />
           {acumuladoCents !== null && acumuladoCents >= fondo.metaCents && (
-            <p className="text-teal-osc mt-3 text-[13px] font-semibold">
+            <p className="text-teal-osc mt-3 text-menor font-semibold">
               Ya llegaste a la meta.
             </p>
           )}
@@ -140,7 +140,7 @@ export function EditarFondo({
       )}
 
       {error && (
-        <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+        <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
           {error}
         </p>
       )}
@@ -167,7 +167,7 @@ export function EditarFondo({
             type="button"
             disabled={guardando}
             onClick={() => setConfirmando(true)}
-            className="text-texto-2 min-h-11 text-[13.5px]"
+            className="text-texto-2 min-h-11 text-cuerpo"
           >
             Borrar este fondo
           </button>
@@ -176,7 +176,7 @@ export function EditarFondo({
 
       {confirmando && !nuevo && (
         <div className="border-linea mt-4 border-t pt-3">
-          <p className="text-texto text-[13.5px] leading-[1.55]">
+          <p className="text-texto text-cuerpo leading-[1.55]">
             Se borra <b>{fondo.nombre}</b> con lo que llevas apuntado. El dinero no se mueve de
             ningún lado — esto es solo la cuenta.
           </p>
@@ -185,7 +185,7 @@ export function EditarFondo({
               type="button"
               onClick={() => setConfirmando(false)}
               disabled={guardando}
-              className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+              className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
             >
               Mejor no
             </button>
@@ -193,7 +193,7 @@ export function EditarFondo({
               type="button"
               onClick={() => void intentar(alBorrar)}
               disabled={guardando}
-              className="bg-carbon min-h-11 flex-1 rounded-[11px] text-[14px] font-bold text-white disabled:opacity-50"
+              className="bg-carbon min-h-11 flex-1 rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
             >
               Borrarlo
             </button>
@@ -206,7 +206,7 @@ export function EditarFondo({
 
 function Rotulo({ children }: { children: string }) {
   return (
-    <div className="text-texto-2 mt-4 text-[11.5px] font-bold tracking-[.06em] uppercase">
+    <div className="text-texto-2 mt-4 text-menor font-bold tracking-[.06em] uppercase">
       {children}
     </div>
   )

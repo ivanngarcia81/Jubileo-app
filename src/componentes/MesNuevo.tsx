@@ -53,33 +53,33 @@ export function MesNuevo({
   return (
     <main className="bg-gris text-texto font-sans min-h-dvh px-4 py-8">
       <div className="mx-auto max-w-[46ch]">
-        <h1 className="font-serif text-[28px] leading-[1.15]">Vamos a armar {esteMes}</h1>
-        <p className="text-texto-2 mt-2 text-[15px] leading-[1.6]">
+        <h1 className="font-serif text-cifra leading-[1.15]">Vamos a armar {esteMes}</h1>
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.6]">
           Tus cheques salen de cómo te pagan, que ya está guardado. Y tus sobres arrancan con los
           montos de {mesPasado}, para que solo ajustes lo que cambió.
         </p>
 
         {trae.cuantasLineas > 0 && (
           <div className="bg-blanco border-linea mt-6 rounded-[15px] border p-5">
-            <div className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+            <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
               Lo que se arrastra de {mesPasado}
             </div>
             <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-texto text-[15px]">
+              <span className="text-texto text-cuerpo">
                 {trae.cuantasLineas === 1 ? '1 sobre' : `${trae.cuantasLineas} sobres`}
               </span>
-              <span className="font-serif text-[22px] [font-variant-numeric:tabular-nums]">
+              <span className="font-serif text-titulo [font-variant-numeric:tabular-nums]">
                 <Moneda centavos={centavos(trae.totalMensualCents)} />
               </span>
             </div>
-            <p className="text-texto-2 mt-3 text-[12.5px] leading-[1.55]">
+            <p className="text-texto-2 mt-3 text-menor leading-[1.55]">
               Son un punto de partida, no una decisión tomada. Los cambias en cuanto entres.
             </p>
           </div>
         )}
 
         {trae.seQuedaronFuera.length > 0 && (
-          <p className="text-texto-2 mt-4 text-[13px] leading-[1.55]">
+          <p className="text-texto-2 mt-4 text-menor leading-[1.55]">
             {trae.seQuedaronFuera.join(', ')}
             {trae.seQuedaronFuera.length === 1 ? ' no se arrastra' : ' no se arrastran'} porque ya
             no {trae.seQuedaronFuera.length === 1 ? 'está' : 'están'} en tu presupuesto.
@@ -87,7 +87,7 @@ export function MesNuevo({
         )}
 
         {error && (
-          <p className="text-ambar mt-5 text-[13.5px] leading-[1.5]" role="alert">
+          <p className="text-ambar mt-5 text-cuerpo leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -96,7 +96,7 @@ export function MesNuevo({
           type="button"
           onClick={() => void abrir()}
           disabled={abriendo}
-          className="bg-teal mt-7 min-h-12 w-full rounded-[11px] text-[15px] font-bold text-[#043432] disabled:opacity-50"
+          className="bg-teal mt-7 min-h-12 w-full rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
         >
           {abriendo ? 'Armando…' : `Armar ${esteMes}`}
         </button>

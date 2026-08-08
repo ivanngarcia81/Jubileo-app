@@ -38,17 +38,17 @@ export function Cabecera({
         type="button"
         onClick={alTocarAvatar}
         disabled={!alTocarAvatar}
-        className="bg-carbon text-teal font-serif relative grid size-9 shrink-0 place-items-center rounded-full text-[15px] enabled:before:absolute enabled:before:top-1/2 enabled:before:left-1/2 enabled:before:size-11 enabled:before:-translate-x-1/2 enabled:before:-translate-y-1/2 enabled:before:content-['']"
+        className="bg-carbon text-teal font-serif relative grid size-9 shrink-0 place-items-center rounded-full text-cuerpo enabled:before:absolute enabled:before:top-1/2 enabled:before:left-1/2 enabled:before:size-11 enabled:before:-translate-x-1/2 enabled:before:-translate-y-1/2 enabled:before:content-['']"
       >
         {avatar}
       </button>
       <div className="min-w-0 flex-1">
-        <div className="font-serif truncate text-[20px] leading-[1.1]">{titulo}</div>
-        <div className="text-texto-2 mt-[2px] text-[10.5px] font-semibold tracking-[.1em] uppercase">
+        <div className="font-serif truncate text-titulo leading-[1.1]">{titulo}</div>
+        <div className="text-texto-2 mt-[2px] text-rotulo font-semibold tracking-[.1em] uppercase">
           {subtitulo}
         </div>
       </div>
-      <div className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-full border text-[13px]">
+      <div className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-full border text-menor">
         {accion}
         {conAviso && <span className="bg-teal absolute top-2 right-[9px] size-[6px] rounded-full" />}
       </div>

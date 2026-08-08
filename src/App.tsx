@@ -369,7 +369,7 @@ function SinConexion() {
   return (
     <div
       role="status"
-      className="bg-ambar fixed inset-x-0 top-0 z-40 px-4 py-[6px] text-center text-[12px] font-semibold text-[#3A2A08]"
+      className="bg-ambar fixed inset-x-0 top-0 z-40 px-4 py-[6px] text-center text-menor font-semibold text-[#3A2A08]"
     >
       Sin conexión — estás viendo tu última copia guardada
     </div>
@@ -381,9 +381,9 @@ function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
   return (
     <main className="bg-gris text-texto font-sans grid min-h-dvh place-items-center p-gap">
       <div className="max-w-[38ch] text-center">
-        <h1 className="font-serif text-h1">{titulo}</h1>
+        <h1 className="font-serif text-cifra">{titulo}</h1>
         {cuerpo && (
-          <p className="text-texto-2 text-dato mt-2 leading-[1.6]">{cuerpo}</p>
+          <p className="text-texto-2 text-cuerpo mt-2 leading-[1.6]">{cuerpo}</p>
         )}
       </div>
     </main>

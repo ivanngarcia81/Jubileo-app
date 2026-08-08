@@ -92,19 +92,19 @@ export function Entrar() {
           className="mb-7 w-14"
         />
 
-        <h1 className="font-serif text-[32px] leading-[1.1]">
+        <h1 className="font-serif text-cifra leading-[1.1]">
           Jubileo<span className="text-teal">.</span>
         </h1>
-        <p className="mt-2 text-[15px] leading-[1.6] text-[#9AA09E]">
+        <p className="mt-2 text-cuerpo leading-[1.6] text-[#9AA09E]">
           Tu presupuesto ajustado a cómo te pagan de verdad.
         </p>
 
         {pidiendoCodigo ? (
           <div className="mt-8">
-            <label htmlFor="codigo" className="block text-[13px] font-semibold text-[#9AA09E]">
+            <label htmlFor="codigo" className="block text-menor font-semibold text-[#9AA09E]">
               Tu código
             </label>
-            <p className="mt-1 text-[13px] leading-[1.55] text-[#6E7473]">
+            <p className="mt-1 text-menor leading-[1.55] text-[#6E7473]">
               Le mandamos un código a <b className="text-white">{correo}</b>. Tecléalo aquí.
             </p>
 
@@ -120,15 +120,15 @@ export function Entrar() {
               onChange={(e) => alEscribirCodigo(e.target.value)}
               placeholder="······"
               aria-label="Código del correo"
-              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-[28px] tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-[#4A4F4E] focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
+              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-cifra tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-[#4A4F4E] focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
             />
 
             {estado.paso === 'verificando' && (
-              <p className="mt-3 text-[13px] text-[#9AA09E]">Entrando…</p>
+              <p className="mt-3 text-menor text-[#9AA09E]">Entrando…</p>
             )}
 
             {error && (
-              <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+              <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
                 {error}
               </p>
             )}
@@ -139,7 +139,7 @@ export function Entrar() {
               type="button"
               onClick={() => void verificar(codigo)}
               disabled={codigo.length < MINIMO || estado.paso === 'verificando'}
-              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
             >
               Entrar
             </button>
@@ -148,7 +148,7 @@ export function Entrar() {
               <button
                 type="button"
                 onClick={() => void mandar()}
-                className="text-teal min-h-11 text-left text-[14px] font-semibold"
+                className="text-teal min-h-11 text-left text-cuerpo font-semibold"
               >
                 Mándame otro código
               </button>
@@ -158,19 +158,19 @@ export function Entrar() {
                   setEstado({ paso: 'correo' })
                   setError(null)
                 }}
-                className="min-h-11 text-left text-[14px] text-[#6E7473]"
+                className="min-h-11 text-left text-cuerpo text-[#6E7473]"
               >
                 Usar otro correo
               </button>
             </div>
 
-            <p className="mt-6 text-[12.5px] leading-[1.55] text-[#6E7473]">
+            <p className="mt-6 text-menor leading-[1.55] text-[#6E7473]">
               Si no llega en un minuto, revisa la carpeta de correo no deseado.
             </p>
           </div>
         ) : (
           <form onSubmit={mandar} className="mt-8">
-            <label htmlFor="correo" className="block text-[13px] font-semibold text-[#9AA09E]">
+            <label htmlFor="correo" className="block text-menor font-semibold text-[#9AA09E]">
               Tu correo
             </label>
             <input
@@ -182,24 +182,24 @@ export function Entrar() {
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               placeholder="tu@correo.com"
-              className="bg-carbon-2 border-carbon-3 mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] text-white placeholder:text-[#6E7473] focus:border-[color:var(--teal)] focus:outline-none"
+              className="bg-carbon-2 border-carbon-3 mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo text-white placeholder:text-[#6E7473] focus:border-[color:var(--teal)] focus:outline-none"
             />
 
             <button
               type="submit"
               disabled={estado.paso === 'mandando' || correo.trim() === ''}
-              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
             >
               {estado.paso === 'mandando' ? 'Mandando…' : 'Mándame el código'}
             </button>
 
             {error && (
-              <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+              <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
                 {error}
               </p>
             )}
 
-            <p className="mt-4 text-[12.5px] leading-[1.55] text-[#6E7473]">
+            <p className="mt-4 text-menor leading-[1.55] text-[#6E7473]">
               Si es tu primera vez, con esto se crea tu cuenta. No hay contraseña que recordar.
             </p>
           </form>

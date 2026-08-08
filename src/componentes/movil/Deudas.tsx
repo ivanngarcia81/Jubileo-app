@@ -94,13 +94,13 @@ export function Deudas({
       <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#2A2D2E_0%,#1C1E1F_100%)] px-[18px] pt-[17px] pb-4 text-white">
         <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
         <div className="relative">
-          <div className="text-[10.5px] font-bold tracking-[.12em] text-[#787E7D] uppercase">
+          <div className="text-rotulo font-bold tracking-[.12em] text-[#787E7D] uppercase">
             Tu fecha de libertad
           </div>
-          <div className="font-serif mt-[6px] mb-[3px] text-[40px] leading-none">
+          <div className="font-serif mt-[6px] mb-[3px] text-heroe leading-none">
             {plan.fechaLibertad ? mesYAnio(plan.fechaLibertad) : 'Sin fecha todavía'}
           </div>
-          <div className="text-teal text-[12px]">
+          <div className="text-teal text-menor">
             {ganadosContraMinimos && ganadosContraMinimos > 0
               ? `${meses(ganadosContraMinimos)} menos que pagando solo los mínimos`
               : 'Pagando solo los mínimos'}
@@ -109,7 +109,7 @@ export function Deudas({
       </div>
 
       <Tarjeta className="mt-[13px]">
-        <label htmlFor={idDeslizador} className="text-texto-2 mb-[14px] block text-[12.5px]">
+        <label htmlFor={idDeslizador} className="text-texto-2 mb-[14px] block text-menor">
           ¿Y si mandas un pago extra cada mes?
         </label>
 
@@ -120,7 +120,7 @@ export function Deudas({
             style={{ width: `${(extra / EXTRA_MAXIMO) * 100}%` }}
           />
           <div
-            className="pointer-events-none absolute -top-[26px] -translate-x-1/2 text-[13px] font-bold whitespace-nowrap"
+            className="pointer-events-none absolute -top-[26px] -translate-x-1/2 text-menor font-bold whitespace-nowrap"
             style={{ left: `${(extra / EXTRA_MAXIMO) * 100}%` }}
           >
             +{formatearRedondo(centavos(extra))}
@@ -143,7 +143,7 @@ export function Deudas({
           />
         </div>
 
-        <div className="text-teal-osc text-[13px] font-semibold">
+        <div className="text-teal-osc text-menor font-semibold">
           {extra === 0
             ? 'Mueve el deslizador para ver cuánto se adelanta.'
             : conExtra.fechaLibertad === null
@@ -153,7 +153,7 @@ export function Deudas({
                 }`}
         </div>
         {extraActual > 0 && (
-          <div className="text-texto-2 mt-[6px] text-[11.5px]">
+          <div className="text-texto-2 mt-[6px] text-menor">
             Ya mandas <Moneda centavos={extraActual} /> extra al mes por encima de los mínimos.
           </div>
         )}
@@ -231,8 +231,8 @@ export function Deudas({
         <>
           <Seccion>Vale la pena revisar</Seccion>
           <Tarjeta>
-            <div className="text-[14px] font-semibold">{presupuesto.observacion.titulo}</div>
-            <div className="text-texto-2 mt-[5px] text-[12.5px] leading-[1.5]">
+            <div className="text-cuerpo font-semibold">{presupuesto.observacion.titulo}</div>
+            <div className="text-texto-2 mt-[5px] text-menor leading-[1.5]">
               {presupuesto.observacion.cuerpo}
             </div>
           </Tarjeta>

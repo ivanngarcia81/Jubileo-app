@@ -37,7 +37,7 @@ const SEMANAS = [
 function Grafica() {
   return (
     <>
-      <div className="text-texto-2 mt-[2px] mb-[11px] flex items-center gap-[7px] text-[10.5px] font-semibold tracking-[.11em] uppercase">
+      <div className="text-texto-2 mt-[2px] mb-[11px] flex items-center gap-[7px] text-rotulo font-semibold tracking-[.11em] uppercase">
         <span className="bg-teal size-[6px] rounded-full" />
         Planeado vs. gastado por semana
       </div>
@@ -65,7 +65,7 @@ function Grafica() {
               )}
             </div>
             <div
-              className={`text-[11.5px] ${semana.activa ? 'text-texto font-bold' : 'text-texto-2'}`}
+              className={`text-menor ${semana.activa ? 'text-texto font-bold' : 'text-texto-2'}`}
             >
               {semana.etiqueta}
             </div>
@@ -73,7 +73,7 @@ function Grafica() {
         ))}
       </div>
 
-      <div className="text-texto-2 mt-3 flex gap-4 text-[11.5px]">
+      <div className="text-texto-2 mt-3 flex gap-4 text-menor">
         <span className="flex items-center gap-[6px]">
           <i className="bg-teal block size-[9px] rounded-[3px]" /> Gastado
         </span>
@@ -128,7 +128,7 @@ export function Resumen({
           icono={<IconoDeudas tam={16} />}
           titulo="Salir de deudas"
           derecha={
-            <div className="font-serif text-[19px]">
+            <div className="font-serif text-titulo">
               {plan.fechaLibertad ? mesYAnio(plan.fechaLibertad) : 'Sin fecha'}
             </div>
           }
@@ -136,7 +136,7 @@ export function Resumen({
           {pendientes.map((deuda) => (
             <div
               key={deuda.id}
-              className="border-linea flex items-center justify-between border-b py-[9px] text-[13px] last:border-b-0"
+              className="border-linea flex items-center justify-between border-b py-[9px] text-menor last:border-b-0"
             >
               <span className="text-texto-2">
                 {deuda.nombre} ·{' '}
@@ -151,7 +151,7 @@ export function Resumen({
               </span>
             </div>
           ))}
-          <div className="border-linea flex items-center justify-between border-t py-[9px] text-[13px]">
+          <div className="border-linea flex items-center justify-between border-t py-[9px] text-menor">
             <span className="text-teal-osc font-semibold">Si mandas +$150 al mes</span>
             <span className="text-teal-osc font-semibold">
               {conMas.fechaLibertad ? `Sales en ${mesYAnioEnFrase(conMas.fechaLibertad)}` : '—'}
@@ -169,7 +169,7 @@ export function Resumen({
               <button
                 type="button"
                 onClick={alVerMovimientos}
-                className="border-linea text-texto-2 rounded-[9px] border px-[10px] py-[6px] text-[11.5px] font-semibold"
+                className="border-linea text-texto-2 rounded-[9px] border px-[10px] py-[6px] text-menor font-semibold"
               >
                 Ver todos
               </button>
@@ -179,17 +179,17 @@ export function Resumen({
           {/* Solo los últimos: la lista completa vive en su pantalla. */}
           {presupuesto.movimientos.slice(0, 6).map((m) => (
             <div key={m.id} className="bg-gris mb-[6px] flex items-center gap-[10px] rounded-[10px] px-[10px] py-[9px]">
-              <div className="bg-blanco border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-[12px]">
+              <div className="bg-blanco border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-menor">
                 <IconoDeClave clave={m.icono} tam={13} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] font-medium">{m.nombre}</div>
-                <div className="text-texto-2 mt-[1px] text-[10.5px]">
+                <div className="truncate text-menor font-medium">{m.nombre}</div>
+                <div className="text-texto-2 mt-[1px] text-rotulo">
                   {m.categoria} · {diaDe(m.fecha)} {nombreDeMes(mesDe(m.fecha)).slice(0, 3)}
                 </div>
               </div>
               <div
-                className={`text-[12.5px] font-semibold whitespace-nowrap ${
+                className={`text-menor font-semibold whitespace-nowrap ${
                   m.tipo === 'ingreso' ? 'text-teal-osc' : ''
                 }`}
               >
@@ -201,23 +201,23 @@ export function Resumen({
         </TarjetaEscritorio>
 
         <div className="bg-carbon rounded-[15px] p-[18px] text-white">
-          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-[13px] text-[#043432]">
+          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-menor text-[#043432]">
             <IconoEnfoque tam={12} />
           </div>
-          <h4 className="font-serif mb-2 text-[21px] leading-[1.15] font-normal">
+          <h4 className="font-serif mb-2 text-titulo leading-[1.15] font-normal">
             Conecta tu banco
           </h4>
-          <p className="mb-[13px] text-[12px] leading-[1.5] text-[#9AA09E]">
+          <p className="mb-[13px] text-menor leading-[1.5] text-[#9AA09E]">
             La app trae tus gastos y tú solo los mandas a su sobre. Incluye avisos al teléfono y
             modo pareja.
           </p>
           <button
             type="button"
-            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-[12.5px] font-bold text-[#043432]"
+            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-menor font-bold text-[#043432]"
           >
             Hazte Premium
           </button>
-          <div className="mt-[9px] text-[11px] text-[#787E7D]">$8 al mes · o $79 al año</div>
+          <div className="mt-[9px] text-rotulo text-[#787E7D]">$8 al mes · o $79 al año</div>
         </div>
       </div>
 
@@ -230,7 +230,7 @@ export function Resumen({
         <ListaSeccion
           icono={<IconoMetas tam={16} />}
           titulo="Fondos de reserva"
-          columnas="minmax(0,1fr) 48px 84px"
+          columnas="minmax(0,1fr) 40px 76px"
         >
           {presupuesto.fondos.map((fondo) => (
             <FilaFondo
@@ -260,12 +260,12 @@ export function Resumen({
         {presupuesto.coach && (
           <TarjetaEscritorio icono={<IconoCoach tam={16} />} titulo="Tu coach">
             <div className="flex items-center gap-[11px]">
-              <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-[16px]">
+              <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-titulo">
                 {presupuesto.coach.iniciales}
               </div>
               <div>
-                <div className="text-[13px] font-semibold">{presupuesto.coach.titulo}</div>
-                <div className="text-texto-2 mt-[2px] text-[11.5px]">{presupuesto.coach.detalle}</div>
+                <div className="text-menor font-semibold">{presupuesto.coach.titulo}</div>
+                <div className="text-texto-2 mt-[2px] text-menor">{presupuesto.coach.detalle}</div>
               </div>
             </div>
           </TarjetaEscritorio>

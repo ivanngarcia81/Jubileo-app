@@ -60,10 +60,10 @@ export function NuevaCategoria({
         role="dialog"
         aria-label={esFija ? 'Nuevo gasto fijo' : 'Nuevo sobre'}
       >
-        <div className="text-texto font-serif text-[22px] leading-tight">
+        <div className="text-texto font-serif text-titulo leading-tight">
           {esFija ? 'Nuevo gasto fijo' : 'Nuevo sobre'}
         </div>
-        <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+        <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
           {esFija
             ? 'Algo que se paga el mismo día cada mes: renta, seguro, un préstamo.'
             : 'Algo que cambia de semana a semana: comida, gasolina, gastos personales.'}
@@ -78,14 +78,14 @@ export function NuevaCategoria({
           onKeyDown={(e) => e.key === 'Enter' && !esFija && void crear()}
           placeholder={esFija ? 'Seguro del carro' : 'Comida'}
           aria-label="Nombre de la categoría"
-          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] placeholder:text-[#9AA09E] focus:outline-none"
+          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
         />
 
         {esFija && (
           <>
             <label
               htmlFor="dia-vencimiento"
-              className="text-texto-2 mt-4 mb-2 block text-[11.5px] font-bold tracking-[.06em] uppercase"
+              className="text-texto-2 mt-4 mb-2 block text-menor font-bold tracking-[.06em] uppercase"
             >
               ¿Qué día del mes se vence?
             </label>
@@ -98,9 +98,9 @@ export function NuevaCategoria({
               onChange={(e) => setDia(e.target.value.replace(/\D/g, '').slice(0, 2))}
               onKeyDown={(e) => e.key === 'Enter' && void crear()}
               placeholder="15"
-              className="border-linea text-texto min-h-11 w-24 rounded-[11px] border px-4 py-3 text-center text-[17px] [font-variant-numeric:tabular-nums] placeholder:text-[#9AA09E] focus:outline-none"
+              className="border-linea text-texto min-h-11 w-24 rounded-[11px] border px-4 py-3 text-center text-titulo [font-variant-numeric:tabular-nums] placeholder:text-[#9AA09E] focus:outline-none"
             />
-            <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+            <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
               Con esto la app sabe con qué cheque se paga, y el aviso del domingo puede
               recordártelo.
             </p>
@@ -108,7 +108,7 @@ export function NuevaCategoria({
         )}
 
         {error && (
-          <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+          <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -118,7 +118,7 @@ export function NuevaCategoria({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -126,7 +126,7 @@ export function NuevaCategoria({
             type="button"
             onClick={() => void crear()}
             disabled={!listo || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
           >
             {guardando ? 'Creando…' : 'Crear'}
           </button>

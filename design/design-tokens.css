@@ -44,14 +44,19 @@
   --serif: 'Instrument Serif', Georgia, serif;   /* títulos y cifras héroe */
   --sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Escala. Móvil nunca baja de 17px en texto de lectura. */
-  --t-hero:   52px;   /* la cifra grande de la pantalla, en serif */
-  --t-h1:     26px;
-  --t-h2:     19px;
-  --t-cuerpo: 17px;   /* móvil */
-  --t-dato:   15px;
-  --t-sec:    13px;
-  --t-etiq:   11px;   /* mayúsculas con letter-spacing .12em */
+  /* ---------- La escala: seis tamaños y nada más ----------
+     Aquí vivía una escala de siete tamaños que **nadie usaba**: cada
+     componente escribía su `text-[13.5px]` a mano, copiado píxel por píxel de
+     tres mockups dibujados por separado. Así se llegó a treinta tamaños en 334
+     lugares, con diferencias —13 contra 13.5 contra 14— que no distingue
+     nadie. Estos seis son los que hay; si un diseño pide un séptimo, la
+     pregunta es qué papel nuevo cumple, no cuántos píxeles mide. */
+  --texto-rotulo: 11px;    /* versalitas con letter-spacing .12em */
+  --texto-menor:  12.5px;  /* secundario: detalles, notas al pie de una fila */
+  --texto-cuerpo: 14px;    /* el renglón de una lista, los botones */
+  --texto-titulo: 17px;    /* títulos de sección y de hoja, campos de texto */
+  --texto-cifra:  26px;    /* cifras en serif y títulos de pantalla */
+  --texto-heroe:  38px;    /* la cifra grande de la pantalla, una por pantalla */
 
   /* ---------- Forma y espacio ---------- */
   --r-card:   15px;

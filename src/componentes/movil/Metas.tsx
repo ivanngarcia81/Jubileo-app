@@ -86,7 +86,7 @@ export function Metas({
             {...(editable ? { alTocar: () => setEditando(null) } : {})}
           />
         ) : (
-          <p className="text-texto-2 px-[12px] py-3 text-[12.5px] leading-[1.55] panel:px-[18px]">
+          <p className="text-texto-2 px-[12px] py-3 text-menor leading-[1.55] panel:px-[18px]">
             El nivel gratis lleva {FONDOS_GRATIS} fondos. Con Premium no hay tope — y los que ya
             tienes se quedan como están.
           </p>
@@ -95,7 +95,7 @@ export function Metas({
 
       <Seccion>Lo que apartas</Seccion>
       <Tarjeta>
-        <div className="text-texto-2 text-[12.5px] leading-[1.5]">
+        <div className="text-texto-2 text-menor leading-[1.5]">
           De cada cheque apartas{' '}
           <b className="text-texto font-semibold">
             <Moneda centavos={apartadoPorCheque} />

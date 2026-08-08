@@ -86,17 +86,17 @@ export function PrimerMes({
   return (
     <main className="bg-gris text-texto font-sans min-h-dvh px-4 py-8">
       <form onSubmit={guardar} className="mx-auto max-w-[46ch]">
-        <h1 className="font-serif text-[28px] leading-[1.15]">
+        <h1 className="font-serif text-cifra leading-[1.15]">
           Vamos a armar {nombreDeMes(mes.mes).toLowerCase()}
         </h1>
-        <p className="text-texto-2 mt-2 text-[15px] leading-[1.6]">
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.6]">
           Empezamos por cómo te pagan. Con eso la app sabe cuántos cheques te caen este mes y
           cuándo.
         </p>
 
         <label
           htmlFor="tu-nombre"
-          className="text-texto-2 mt-7 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+          className="text-texto-2 mt-7 block text-rotulo font-semibold tracking-[.12em] uppercase"
         >
           ¿Cómo te llamas?
         </label>
@@ -107,11 +107,11 @@ export function PrimerMes({
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Iván"
           autoComplete="given-name"
-          className="border-linea bg-blanco text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] placeholder:text-[#9AA09E] focus:outline-none"
+          className="border-linea bg-blanco text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
         />
 
         <fieldset className="mt-7">
-          <legend className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+          <legend className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
             ¿Cada cuánto te pagan?
           </legend>
           <div className="mt-3 flex flex-col gap-2">
@@ -131,8 +131,8 @@ export function PrimerMes({
                   className="accent-[color:var(--teal)] size-[18px]"
                 />
                 <span className="flex-1">
-                  <span className="block text-[15px] font-medium">{f.etiqueta}</span>
-                  <span className="text-texto-2 block text-[12.5px]">{f.ayuda}</span>
+                  <span className="block text-cuerpo font-medium">{f.etiqueta}</span>
+                  <span className="text-texto-2 block text-menor">{f.ayuda}</span>
                 </span>
               </label>
             ))}
@@ -141,7 +141,7 @@ export function PrimerMes({
 
         {frecuencia === 'dos_veces_al_mes' && (
           <div className="mt-5">
-            <span className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+            <span className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
               ¿Qué días del mes?
             </span>
             <div className="mt-3 flex items-center gap-3">
@@ -157,10 +157,10 @@ export function PrimerMes({
                     setDias((d) => (i === 0 ? [v, d[1]] : [d[0], v]))
                   }}
                   aria-label={i === 0 ? 'Primer día de pago' : 'Segundo día de pago'}
-                  className="bg-blanco border-linea min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-[17px]"
+                  className="bg-blanco border-linea min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-titulo"
                 />
               ))}
-              <span className="text-texto-2 text-[13px]">Si te pagan el último, pon 31.</span>
+              <span className="text-texto-2 text-menor">Si te pagan el último, pon 31.</span>
             </div>
           </div>
         )}
@@ -168,7 +168,7 @@ export function PrimerMes({
         <div className="mt-6">
           <label
             htmlFor="ancla"
-            className="text-texto-2 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+            className="text-texto-2 block text-rotulo font-semibold tracking-[.12em] uppercase"
           >
             ¿Cuándo fue tu último cheque?
           </label>
@@ -178,9 +178,9 @@ export function PrimerMes({
             required
             value={ancla}
             onChange={(e) => setAncla(e.target.value)}
-            className="bg-blanco border-linea mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px]"
+            className="bg-blanco border-linea mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo"
           />
-          <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+          <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             Con una fecha basta. De ahí sale todo tu calendario.
           </p>
         </div>
@@ -189,12 +189,12 @@ export function PrimerMes({
           <div className="mt-6">
             <label
               htmlFor="ingreso"
-              className="text-texto-2 block text-[10.5px] font-semibold tracking-[.12em] uppercase"
+              className="text-texto-2 block text-rotulo font-semibold tracking-[.12em] uppercase"
             >
               ¿Cuánto entra en cada cheque?
             </label>
             <div className="bg-blanco border-linea mt-3 flex items-center rounded-[11px] border px-4">
-              <span className="text-texto-2 text-[17px]">$</span>
+              <span className="text-texto-2 text-titulo">$</span>
               <input
                 id="ingreso"
                 type="number"
@@ -205,10 +205,10 @@ export function PrimerMes({
                 value={ingreso}
                 onChange={(e) => setIngreso(e.target.value)}
                 placeholder="1240"
-                className="min-h-11 w-full bg-transparent py-3 pl-2 text-[17px] focus:outline-none"
+                className="min-h-11 w-full bg-transparent py-3 pl-2 text-titulo focus:outline-none"
               />
             </div>
-            <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+            <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
               Más o menos. Después confirmas lo que entró de verdad.
             </p>
           </div>
@@ -216,12 +216,12 @@ export function PrimerMes({
 
         {previa.length > 0 && (
           <div className="bg-carbon mt-7 rounded-[15px] p-[18px] text-white">
-            <div className="text-[10px] font-semibold tracking-[.14em] text-[#787E7D] uppercase">
+            <div className="text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
               Tus cheques de {nombreDeMes(mes.mes)}
             </div>
             <div className="mt-3 flex flex-col gap-2">
               {previa.map((p) => (
-                <div key={p.numero} className="flex items-baseline justify-between text-[14px]">
+                <div key={p.numero} className="flex items-baseline justify-between text-cuerpo">
                   <span className={p.esExtra ? 'text-ambar' : ''}>
                     {p.esExtra ? 'Cheque extra' : `Cheque ${p.numero}`} · {p.fechaPago.slice(8)} de{' '}
                     {nombreDeMes(Number(p.fechaPago.slice(5, 7))).toLowerCase()}
@@ -237,13 +237,13 @@ export function PrimerMes({
               ))}
             </div>
             {previa.some((p) => p.esExtra) && (
-              <p className="mt-3 text-[12.5px] leading-[1.5] text-[#9AA09E]">
+              <p className="mt-3 text-menor leading-[1.5] text-[#9AA09E]">
                 Este mes te caen <b className="text-ambar">{previa.length} cheques</b>. El extra no
                 se reparte entre categorías: llega completo.
               </p>
             )}
             {esVariable && (
-              <p className="mt-3 text-[12.5px] leading-[1.5] text-[#9AA09E]">
+              <p className="mt-3 text-menor leading-[1.5] text-[#9AA09E]">
                 Como tu ingreso es variable, cada semana capturas lo que entró y ahí se reparte.
               </p>
             )}
@@ -251,7 +251,7 @@ export function PrimerMes({
         )}
 
         {error && (
-          <p className="text-rojo mt-4 text-[13px] leading-[1.5]" role="alert">
+          <p className="text-rojo mt-4 text-menor leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -259,7 +259,7 @@ export function PrimerMes({
         <button
           type="submit"
           disabled={!listo || guardando}
-          className="bg-carbon mt-6 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-white disabled:opacity-40"
+          className="bg-carbon mt-6 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-white disabled:opacity-40"
         >
           {guardando ? 'Armando tu mes…' : 'Armar mi mes'}
         </button>

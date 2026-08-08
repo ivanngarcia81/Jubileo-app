@@ -42,10 +42,10 @@ export function Tarjeta({
 /** Encabezado de sección: etiqueta en mayúsculas y, a la derecha, un dato. */
 export function Seccion({ children, dato }: { children: ReactNode; dato?: ReactNode }) {
   return (
-    <div className="text-texto-2 mt-5 mb-[9px] flex items-center justify-between text-[10.5px] font-semibold tracking-[.12em] uppercase">
+    <div className="text-texto-2 mt-5 mb-[9px] flex items-center justify-between text-rotulo font-semibold tracking-[.12em] uppercase">
       <span>{children}</span>
       {dato !== undefined && (
-        <span className="text-teal-osc text-[11.5px] font-medium tracking-normal normal-case">
+        <span className="text-teal-osc text-menor font-medium tracking-normal normal-case">
           {dato}
         </span>
       )}
@@ -153,7 +153,7 @@ export function ChipCategoria({
     // categoría largo se corta dentro de ella en vez de empujar al cheque
     // fuera de la fila.
     <span
-      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-full px-2 text-[10.5px] font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
+      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-full px-2 text-rotulo font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
     >
       {clave !== undefined && <IconoDeClave clave={clave} tam={11} className="shrink-0" />}
       <span className="truncate">{children}</span>
@@ -183,7 +183,7 @@ export function Segmentado({
             type="button"
             onClick={() => alElegir(opcion)}
             aria-pressed={activo}
-            className={`flex-1 rounded-full px-[13px] py-[6px] text-[11.5px] ${
+            className={`flex-1 rounded-full px-[13px] py-[6px] text-menor ${
               activo
                 ? 'bg-blanco text-texto font-semibold shadow-[0_1px_3px_rgba(0,0,0,.09)]'
                 : 'text-texto-2 font-medium'
@@ -283,7 +283,7 @@ function Encabezados({
   const primero = rotulos.findIndex((r) => r !== null)
   return (
     <div
-      className={`${className} ${FILA} ${COLUMNAS} border-linea text-texto-2 min-h-0 border-b pb-2 text-[10px] font-semibold tracking-[.12em] uppercase`}
+      className={`${className} ${FILA} ${COLUMNAS} border-linea text-texto-2 min-h-0 border-b pb-2 text-rotulo font-semibold tracking-[.12em] uppercase`}
     >
       {rotulos.map((rotulo, i) => (
         <span key={i} className={i === primero ? '' : 'text-right'}>
@@ -333,8 +333,8 @@ export function ListaSeccion({
               {icono}
             </div>
           )}
-          <h3 className="font-serif min-w-0 flex-1 truncate text-[17px] font-normal">{titulo}</h3>
-          {dato !== undefined && <div className="text-texto-2 text-[12px]">{dato}</div>}
+          <h3 className="font-serif min-w-0 flex-1 truncate text-titulo font-normal">{titulo}</h3>
+          {dato !== undefined && <div className="text-texto-2 text-menor">{dato}</div>}
         </div>
       )}
       {encabezados !== undefined && (
@@ -399,7 +399,7 @@ export function Fila({
  */
 export function Vacio({ children }: { children: ReactNode }) {
   return (
-    <p className="text-texto-2 px-[12px] py-7 text-center text-[13px] leading-[1.6] text-balance panel:px-[18px]">
+    <p className="text-texto-2 px-[12px] py-7 text-center text-menor leading-[1.6] text-balance panel:px-[18px]">
       {children}
     </p>
   )
@@ -415,8 +415,8 @@ export function FilaAgregar({
 }) {
   return (
     <Fila {...(alTocar ? { alTocar } : {})} etiqueta={texto}>
-      <div className="text-texto-2 flex min-w-0 items-center gap-2 py-2 text-[13px]">
-        <span className="text-teal-osc shrink-0 text-[17px] leading-none">+</span>
+      <div className="text-texto-2 flex min-w-0 items-center gap-2 py-2 text-menor">
+        <span className="text-teal-osc shrink-0 text-titulo leading-none">+</span>
         <span className="truncate">{texto}</span>
       </div>
     </Fila>
@@ -443,9 +443,9 @@ export function CeldaNombre({
         </div>
       )}
       <div className="min-w-0">
-        <div className="truncate text-[13.5px] font-medium">{children}</div>
+        <div className="truncate text-cuerpo font-medium">{children}</div>
         {detalle !== undefined && (
-          <div className="text-texto-2 mt-[1px] truncate text-[11px]">{detalle}</div>
+          <div className="text-texto-2 mt-[1px] truncate text-rotulo">{detalle}</div>
         )}
       </div>
     </div>
@@ -465,7 +465,7 @@ export function CeldaCifra({
   return (
     <div
       className={`text-right whitespace-nowrap [font-variant-numeric:tabular-nums] ${
-        apagada ? 'text-texto-2 text-[13px]' : 'text-[13.5px] font-semibold'
+        apagada ? 'text-texto-2 text-menor' : 'text-cuerpo font-semibold'
       } ${className}`}
     >
       {children}
@@ -505,7 +505,7 @@ export function CeldasDeAvance({
       </CeldaCifra>
       <CeldaCifra className={`panel:hidden ${pasado ? 'text-rojo' : ''}`}>
         <Moneda centavos={gastadoCents} />
-        <div className="text-texto-2 text-[11px] font-normal">
+        <div className="text-texto-2 text-rotulo font-normal">
           de <Moneda centavos={delMesCents} />
         </div>
       </CeldaCifra>
@@ -540,7 +540,7 @@ export function FilaFondo({
       <Barra porcentaje={avance} color="var(--teal)" />
       <CeldaCifra>
         <Moneda centavos={acumuladoCents} />
-        <div className="text-texto-2 text-[11px] font-normal">
+        <div className="text-texto-2 text-rotulo font-normal">
           de <Moneda centavos={metaCents} />
         </div>
       </CeldaCifra>
@@ -599,7 +599,7 @@ export function CampoDinero({
 }) {
   return (
     <div className="border-linea mt-2 flex items-center gap-2 rounded-[13px] border px-4">
-      <span className="text-texto-2 font-serif text-[26px]">$</span>
+      <span className="text-texto-2 font-serif text-cifra">$</span>
       <input
         type="text"
         inputMode="decimal"
@@ -609,7 +609,7 @@ export function CampoDinero({
         onChange={(e) => alCambiar(e.target.value)}
         placeholder="0.00"
         aria-label={etiqueta}
-        className="text-texto font-serif min-h-14 w-full bg-transparent text-[30px] [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+        className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
       />
     </div>
   )
@@ -637,7 +637,7 @@ export function PieDeHoja({
         type="button"
         onClick={alCancelar}
         disabled={ocupado}
-        className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+        className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
       >
         {cancelar}
       </button>
@@ -645,7 +645,7 @@ export function PieDeHoja({
         type="button"
         onClick={alConfirmar}
         disabled={!listo || ocupado}
-        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
       >
         {ocupado ? 'Guardando…' : confirmar}
       </button>

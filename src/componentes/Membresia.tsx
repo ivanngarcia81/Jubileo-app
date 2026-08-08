@@ -65,11 +65,11 @@ export function Membresia({
   if (nivel === 'premium') {
     return (
       <div className="bg-blanco border-linea rounded-[15px] border p-5">
-        <div className="text-teal-osc text-[11.5px] font-bold tracking-[.06em] uppercase">
+        <div className="text-teal-osc text-menor font-bold tracking-[.06em] uppercase">
           Cuenta Premium
         </div>
-        <h2 className="font-serif mt-1 text-[24px] leading-tight">Gracias.</h2>
-        <p className="text-texto-2 mt-2 text-[13.5px] leading-[1.55]">
+        <h2 className="font-serif mt-1 text-cifra leading-tight">Gracias.</h2>
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
           {venceEn
             ? `Tu membresía sigue activa hasta el ${venceEn}.`
             : 'Tu membresía está activa.'}
@@ -79,18 +79,18 @@ export function Membresia({
             type="button"
             onClick={() => void intentar(alAdministrar)}
             disabled={ocupado}
-            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-[14px] font-semibold disabled:opacity-50"
+            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold disabled:opacity-50"
           >
             {ocupado ? 'Abriendo…' : 'Administrar mi membresía'}
           </button>
         )}
-        <p className="text-texto-2 mt-3 text-[12.5px] leading-[1.5]">
+        <p className="text-texto-2 mt-3 text-menor leading-[1.5]">
           Ahí puedes cambiar tu tarjeta, ver tus recibos o cancelar. Si cancelas, tu membresía dura
           hasta el final del periodo que ya pagaste, y después la cuenta baja a gratis sin borrar
           nada.
         </p>
         {error && (
-          <p className="text-ambar mt-3 text-[13px]" role="alert">
+          <p className="text-ambar mt-3 text-menor" role="alert">
             {error}
           </p>
         )}
@@ -103,13 +103,13 @@ export function Membresia({
   return (
     <div className="flex flex-col gap-3">
       <div className="bg-blanco border-linea rounded-[15px] border p-5">
-        <div className="text-texto-2 text-[11.5px] font-bold tracking-[.06em] uppercase">
+        <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cuenta gratis
         </div>
-        <h2 className="font-serif mt-1 text-[22px] leading-tight">Lo que ya tienes</h2>
+        <h2 className="font-serif mt-1 text-titulo leading-tight">Lo que ya tienes</h2>
         <ul className="mt-3 flex flex-col gap-2">
           {LO_QUE_YA_TIENES.map((t) => (
-            <li key={t} className="text-texto flex gap-2 text-[13.5px] leading-[1.5]">
+            <li key={t} className="text-texto flex gap-2 text-cuerpo leading-[1.5]">
               {/* Un SVG no se alinea como un carácter: sin `shrink-0` se aplasta
                   cuando el texto es largo, y sin el empujón flota sobre la línea. */}
               <span className="text-teal-osc mt-[3px] shrink-0">
@@ -119,18 +119,18 @@ export function Membresia({
             </li>
           ))}
         </ul>
-        <p className="text-texto-2 mt-3 text-[12.5px] leading-[1.5]">
+        <p className="text-texto-2 mt-3 text-menor leading-[1.5]">
           Nada de esto tiene fecha ni tope. El presupuesto cheque a cheque es el producto, no el
           anzuelo.
         </p>
       </div>
 
       <div className="bg-carbon rounded-[15px] p-5 text-white">
-        <div className="text-teal text-[11.5px] font-bold tracking-[.06em] uppercase">Premium</div>
-        <h2 className="font-serif mt-1 text-[22px] leading-tight">Lo que agrega</h2>
+        <div className="text-teal text-menor font-bold tracking-[.06em] uppercase">Premium</div>
+        <h2 className="font-serif mt-1 text-titulo leading-tight">Lo que agrega</h2>
         <ul className="mt-3 flex flex-col gap-2">
           {LO_QUE_AGREGA.map((t) => (
-            <li key={t} className="flex gap-2 text-[13.5px] leading-[1.5] text-[#C9CECC]">
+            <li key={t} className="flex gap-2 text-cuerpo leading-[1.5] text-[#C9CECC]">
               <span className="text-teal">+</span>
               {t}
             </li>
@@ -148,9 +148,9 @@ export function Membresia({
                 plan === p ? 'border-teal bg-carbon-2' : 'border-carbon-3'
               }`}
             >
-              <span className="block text-[15px] font-bold">{PRECIOS[p].etiqueta}</span>
+              <span className="block text-cuerpo font-bold">{PRECIOS[p].etiqueta}</span>
               {p === 'anual' && (
-                <span className="text-teal block text-[11.5px] font-semibold">
+                <span className="text-teal block text-menor font-semibold">
                   ahorras {formatear(ahorro)}
                 </span>
               )}
@@ -163,19 +163,19 @@ export function Membresia({
             type="button"
             onClick={() => void intentar(() => alPagar(plan))}
             disabled={ocupado}
-            className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-[15px] font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
           >
             {ocupado ? 'Abriendo…' : `Hacerme Premium · ${PRECIOS[plan].etiqueta}`}
           </button>
         )}
 
         {error && (
-          <p className="text-ambar mt-3 text-[13px]" role="alert">
+          <p className="text-ambar mt-3 text-menor" role="alert">
             {error}
           </p>
         )}
 
-        <p className="mt-3 text-[12px] leading-[1.5] text-[#8E9492]">
+        <p className="mt-3 text-menor leading-[1.5] text-[#8E9492]">
           El pago se hace en Stripe. Puedes cancelar cuando quieras desde tu cuenta, y si cancelas
           no se borra nada.
         </p>
@@ -187,7 +187,7 @@ export function Membresia({
             <>
               <label
                 htmlFor="codigo-cortesia"
-                className="text-texto-2 block text-[11.5px] font-bold tracking-[.06em] uppercase"
+                className="text-texto-2 block text-menor font-bold tracking-[.06em] uppercase"
               >
                 Tu código
               </label>
@@ -199,14 +199,14 @@ export function Membresia({
                 autoCapitalize="characters"
                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                 placeholder="COACH2026"
-                className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] tracking-[.12em] placeholder:tracking-normal placeholder:text-[#9AA09E] focus:outline-none"
+                className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo tracking-[.12em] placeholder:tracking-normal placeholder:text-[#9AA09E] focus:outline-none"
               />
               <div className="mt-3 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setCanjeando(false)}
                   disabled={ocupado}
-                  className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+                  className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
                 >
                   Cancelar
                 </button>
@@ -214,7 +214,7 @@ export function Membresia({
                   type="button"
                   onClick={() => void intentar(() => alCanjear(codigo))}
                   disabled={ocupado || codigo.trim() === ''}
-                  className="bg-carbon min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-white disabled:opacity-50"
+                  className="bg-carbon min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
                 >
                   {ocupado ? 'Canjeando…' : 'Canjear'}
                 </button>
@@ -224,13 +224,13 @@ export function Membresia({
             <button
               type="button"
               onClick={() => setCanjeando(true)}
-              className="text-texto-2 min-h-11 w-full text-left text-[13.5px]"
+              className="text-texto-2 min-h-11 w-full text-left text-cuerpo"
             >
               ¿Tienes un código de tu coach?
             </button>
           )}
           {error && (
-            <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+            <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
               {error}
             </p>
           )}

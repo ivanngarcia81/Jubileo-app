@@ -61,10 +61,10 @@ export function Anotar({
         role="dialog"
         aria-label="Anotar un gasto"
       >
-        <div className="text-texto font-serif text-[22px] leading-tight">Anotar un gasto</div>
+        <div className="text-texto font-serif text-titulo leading-tight">Anotar un gasto</div>
 
         <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
-          <span className="text-texto-2 font-serif text-[26px]">$</span>
+          <span className="text-texto-2 font-serif text-cifra">$</span>
           <input
             ref={campo}
             type="text"
@@ -74,7 +74,7 @@ export function Anotar({
             onChange={(e) => setTexto(e.target.value)}
             placeholder="0.00"
             aria-label="Cuánto gastaste"
-            className="text-texto font-serif min-h-14 w-full bg-transparent text-[30px] [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
           />
         </div>
 
@@ -85,10 +85,13 @@ export function Anotar({
           onChange={(e) => setDescripcion(e.target.value)}
           placeholder="¿En qué? (opcional)"
           aria-label="En qué gastaste"
-          className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[15px] placeholder:text-[#9AA09E] focus:outline-none"
+          // 17px y no 14: iOS hace zoom a la página al enfocar un campo de
+          // menos de 16px, y salir de ese zoom es cosa del usuario. Todos los
+          // campos de texto de la app van en `text-titulo` por lo mismo.
+          className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
         />
 
-        <div className="text-texto-2 mt-5 mb-2 text-[11.5px] font-bold tracking-[.06em] uppercase">
+        <div className="text-texto-2 mt-5 mb-2 text-menor font-bold tracking-[.06em] uppercase">
           ¿De qué sobre sale?
         </div>
         <div className="flex flex-col gap-2">
@@ -105,9 +108,9 @@ export function Anotar({
                   elegido ? 'border-teal border-2' : 'border-linea'
                 }`}
               >
-                <span className="text-texto text-[15px]">{sobre.nombre}</span>
+                <span className="text-texto text-cuerpo">{sobre.nombre}</span>
                 <span
-                  className={`text-[13px] [font-variant-numeric:tabular-nums] ${
+                  className={`text-menor [font-variant-numeric:tabular-nums] ${
                     queda < 0 ? 'text-rojo' : 'text-texto-2'
                   }`}
                 >
@@ -120,13 +123,13 @@ export function Anotar({
         </div>
 
         {presupuesto.sobres.length === 0 && (
-          <p className="text-texto-2 text-[13px] leading-[1.55]">
+          <p className="text-texto-2 text-menor leading-[1.55]">
             Todavía no tienes sobres con dinero. Ve a El mes y reparte tu cheque primero.
           </p>
         )}
 
         {error && (
-          <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+          <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -136,7 +139,7 @@ export function Anotar({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -144,7 +147,7 @@ export function Anotar({
             type="button"
             onClick={() => void guardar()}
             disabled={!listo || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
           >
             {guardando ? 'Anotando…' : 'Anotar'}
           </button>

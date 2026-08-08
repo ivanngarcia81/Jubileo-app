@@ -50,11 +50,11 @@ export function CerrarMes({
   if (yaCerrado) {
     return (
       <div className="bg-blanco border-linea mt-4 rounded-[15px] border p-5">
-        <div className="text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase">
+        <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
           {presupuesto.mes.etiqueta}
         </div>
-        <h2 className="font-serif mt-1 text-[20px] leading-tight">Mes cerrado</h2>
-        <p className="text-texto-2 mt-2 text-[13.5px] leading-[1.55]">
+        <h2 className="font-serif mt-1 text-titulo leading-tight">Mes cerrado</h2>
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
           Cuando entre el mes que viene, tus sobres van a arrancar con estos montos.
         </p>
       </div>
@@ -63,15 +63,15 @@ export function CerrarMes({
 
   return (
     <div className="bg-blanco border-linea mt-4 rounded-[15px] border p-5">
-      <h2 className="font-serif text-[20px] leading-tight">Cerrar el mes</h2>
+      <h2 className="font-serif text-titulo leading-tight">Cerrar el mes</h2>
 
       {cuadrado ? (
-        <p className="text-texto-2 mt-2 text-[13.5px] leading-[1.55]">
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
           Todo tu dinero tiene nombre. Al cerrar, el mes que viene nace con estos mismos montos y
           solo ajustas lo que cambie.
         </p>
       ) : (
-        <p className="text-texto-2 mt-2 text-[13.5px] leading-[1.55]">
+        <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
           {sobra > 0 ? (
             <>
               Te faltan <b className="text-texto">{<Moneda centavos={sobra} />}</b> por repartir.
@@ -87,7 +87,7 @@ export function CerrarMes({
       )}
 
       {error && (
-        <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+        <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
           {error}
         </p>
       )}
@@ -96,7 +96,7 @@ export function CerrarMes({
         type="button"
         onClick={() => void cerrar()}
         disabled={!cuadrado || cerrando}
-        className="bg-teal mt-4 min-h-11 w-full rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-40"
+        className="bg-teal mt-4 min-h-11 w-full rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-40"
       >
         {cerrando ? 'Cerrando…' : 'Cerrar el mes'}
       </button>

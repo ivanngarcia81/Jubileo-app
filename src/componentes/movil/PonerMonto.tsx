@@ -99,19 +99,19 @@ export function PonerMonto({
             disabled={guardando}
             onChange={(e) => setNombre(e.target.value)}
             aria-label={`Nombre de ${linea.nombre}`}
-            className="border-linea text-texto font-serif min-h-11 w-full rounded-[11px] border px-3 text-[22px] focus:outline-none"
+            className="border-linea text-texto font-serif min-h-11 w-full rounded-[11px] border px-3 text-titulo focus:outline-none"
           />
         ) : (
           <>
-            <div className="text-texto font-serif text-[22px] leading-tight">{linea.nombre}</div>
-            <div className="text-texto-2 mt-1 text-[12.5px]">
+            <div className="text-texto font-serif text-titulo leading-tight">{linea.nombre}</div>
+            <div className="text-texto-2 mt-1 text-menor">
               {linea.detalle || 'Cuánto va a esta categoría en el mes'}
             </div>
           </>
         )}
 
         <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
-          <span className="text-texto-2 font-serif text-[26px]">$</span>
+          <span className="text-texto-2 font-serif text-cifra">$</span>
           <input
             ref={campo}
             type="text"
@@ -122,12 +122,12 @@ export function PonerMonto({
             onKeyDown={(e) => e.key === 'Enter' && void guardar()}
             placeholder="0.00"
             aria-label={`Monto mensual de ${linea.nombre}`}
-            className="text-texto font-serif min-h-14 w-full bg-transparent text-[30px] [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
           />
         </div>
 
         {porCheque.length > 0 && monto !== null && monto > 0 && (
-          <p className="text-texto-2 mt-3 text-[12.5px] leading-[1.5]">
+          <p className="text-texto-2 mt-3 text-menor leading-[1.5]">
             Se reparte en{' '}
             <b className="text-teal-osc font-semibold">
               {porCheque.map((c) => formatear(c)).join(' · ')}
@@ -137,7 +137,7 @@ export function PonerMonto({
         )}
 
         {error && (
-          <p className="text-ambar mt-3 text-[12.5px] leading-[1.5]" role="alert">
+          <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -147,7 +147,7 @@ export function PonerMonto({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -155,7 +155,7 @@ export function PonerMonto({
             type="button"
             onClick={() => void guardar()}
             disabled={monto === null || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
           >
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
@@ -170,7 +170,7 @@ export function PonerMonto({
                 onClick={() =>
                   renombrando ? void intentar(() => alRenombrar(nombre)) : setRenombrando(true)
                 }
-                className="text-teal-osc min-h-11 text-[13.5px] font-semibold"
+                className="text-teal-osc min-h-11 text-cuerpo font-semibold"
               >
                 {renombrando ? 'Guardar el nombre' : 'Renombrar'}
               </button>
@@ -180,7 +180,7 @@ export function PonerMonto({
                 type="button"
                 disabled={guardando}
                 onClick={() => setConfirmandoQuitar(true)}
-                className="text-texto-2 min-h-11 text-[13.5px]"
+                className="text-texto-2 min-h-11 text-cuerpo"
               >
                 Quitar del mes
               </button>
@@ -190,7 +190,7 @@ export function PonerMonto({
 
         {confirmandoQuitar && alQuitar && (
           <div className="border-linea mt-4 border-t pt-3">
-            <p className="text-texto text-[13.5px] leading-[1.55]">
+            <p className="text-texto text-cuerpo leading-[1.55]">
               {linea.montoMensualCents > 0 ? (
                 <>
                   Se quita <b>{linea.nombre}</b> del mes junto con sus{' '}
@@ -208,7 +208,7 @@ export function PonerMonto({
                 type="button"
                 onClick={() => setConfirmandoQuitar(false)}
                 disabled={guardando}
-                className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+                className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
               >
                 Mejor no
               </button>
@@ -216,7 +216,7 @@ export function PonerMonto({
                 type="button"
                 onClick={() => void intentar(alQuitar)}
                 disabled={guardando}
-                className="bg-carbon min-h-11 flex-1 rounded-[11px] text-[14px] font-bold text-white disabled:opacity-50"
+                className="bg-carbon min-h-11 flex-1 rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
               >
                 Quitar del mes
               </button>

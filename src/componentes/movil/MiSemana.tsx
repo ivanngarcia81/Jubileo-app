@@ -50,13 +50,13 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
     <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#0A847F_0%,#0ABBB4_100%)] px-[18px] pt-[17px] pb-4 text-[#022B29]">
       <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
       <div className="relative">
-        <div className="text-[10.5px] font-bold tracking-[.12em] text-[#022B29]/60 uppercase">
+        <div className="text-rotulo font-bold tracking-[.12em] text-[#022B29]/60 uppercase">
           Te queda esta semana
         </div>
-        <div className="font-serif mt-[6px] mb-[3px] text-[52px] leading-none [font-variant-numeric:tabular-nums]">
+        <div className="font-serif mt-[6px] mb-[3px] text-heroe leading-none [font-variant-numeric:tabular-nums]">
           {formatearRedondo(disponible)}
         </div>
-        <div className="text-[12px] text-[#022B29]/75">
+        <div className="text-menor text-[#022B29]/75">
           Entró <Moneda centavos={ingresoPorChequeCents} /> el {DIAS[dia]} {diaDe(activo.fechaPago)}{' '}
           de {MESES[mesDe(activo.fechaPago) - 1]}
         </div>
@@ -71,10 +71,10 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
                 : 'bg-white/[.28]'
             return (
               <div key={periodo.numero} className={`flex-1 rounded-[8px] px-[5px] py-[6px] text-center ${fondo}`}>
-                <div className="text-[8.5px] font-bold tracking-[.07em] uppercase opacity-70">
+                <div className="text-rotulo font-bold tracking-[.07em] uppercase opacity-70">
                   {periodo.esExtra ? 'Extra' : `Chq ${periodo.numero}`}
                 </div>
-                <div className="mt-[1px] text-[12px] font-bold">
+                <div className="mt-[1px] text-menor font-bold">
                   <Moneda centavos={libreporPeriodoCents[i]!} />
                 </div>
               </div>
@@ -141,7 +141,7 @@ export function MiSemana({
             disabled={
               (texto === 'Anotar' && !alAnotar) || (texto === 'Semana' && !alCerrarSemana)
             }
-            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-[11.5px] font-semibold disabled:opacity-50"
+            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-menor font-semibold disabled:opacity-50"
           >
             {/* El círculo sube a 20 y el icono baja a 12: a 15 dentro de 17
                 quedaba pegado al borde por los cuatro lados. */}
@@ -231,7 +231,7 @@ export function MiSemana({
         <button
           type="button"
           onClick={alVerMovimientos}
-          className="bg-blanco border-linea text-texto mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[15px] border text-[13px] font-semibold"
+          className="bg-blanco border-linea text-texto mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[15px] border text-menor font-semibold"
         >
           <IconoMovimientos tam={15} />
           Ver todos los movimientos

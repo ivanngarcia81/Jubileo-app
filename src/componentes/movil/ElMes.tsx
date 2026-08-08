@@ -60,13 +60,13 @@ function SelectorDeMes({
     <div className="bg-blanco border-linea rounded-[15px] border px-[14px] pt-[15px] pb-3">
       <div className="mb-[14px] text-center">
         <div
-          className={`font-serif text-[38px] leading-none [font-variant-numeric:tabular-nums] ${
+          className={`font-serif text-heroe leading-none [font-variant-numeric:tabular-nums] ${
             vista === 'Sobró' && sobra !== 0 ? 'text-ambar' : 'text-teal-osc'
           }`}
         >
           {formatearRedondo(cifra)}
         </div>
-        <div className="text-texto-2 mt-[3px] text-[11.5px]">
+        <div className="text-texto-2 mt-[3px] text-menor">
           {vista === 'Sobró'
             ? sobra === 0
               ? 'Sin repartir — tu presupuesto cuadra'
@@ -113,7 +113,7 @@ function SelectorDeMes({
                   style={{ height: `${altos[i] ?? 0}%` }}
                 />
               </div>
-              <div className={`text-[10.5px] ${activo ? 'text-texto font-bold' : 'text-texto-2'}`}>
+              <div className={`text-rotulo ${activo ? 'text-texto font-bold' : 'text-texto-2'}`}>
                 {m.etiqueta}
               </div>
             </button>
@@ -298,10 +298,10 @@ export function ElMes({
                     tam={14}
                     className={`text-texto-2 shrink-0 ${abierto ? 'rotate-90' : ''}`}
                   />
-                  <span className="bg-gris border-linea text-texto-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-[5px] border px-[5px] text-[10.5px] font-bold">
+                  <span className="bg-gris border-linea text-texto-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-[5px] border px-[5px] text-rotulo font-bold">
                     {grupo.lineas.length}
                   </span>
-                  <span className="truncate text-[14px] font-semibold">{grupo.titulo}</span>
+                  <span className="truncate text-cuerpo font-semibold">{grupo.titulo}</span>
                 </div>
                 <CeldasDeAvance gastadoCents={gastado} delMesCents={total} />
               </Fila>

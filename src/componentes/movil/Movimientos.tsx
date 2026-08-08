@@ -64,15 +64,15 @@ function Detalle({
 
   return (
     <>
-      <div className="text-texto-2 flex items-baseline justify-between text-[11.5px]">
+      <div className="text-texto-2 flex items-baseline justify-between text-menor">
         <span>{fechaLarga(m.fecha)}</span>
         <span>{m.revisado ? 'Revisado' : 'Sin revisar'}</span>
       </div>
-      <h4 className="font-serif mt-[7px] mb-[3px] text-[26px] leading-[1.1] font-normal">
+      <h4 className="font-serif mt-[7px] mb-[3px] text-cifra leading-[1.1] font-normal">
         {m.nombre}
       </h4>
       <div
-        className={`font-serif mt-[2px] text-[34px] leading-none [font-variant-numeric:tabular-nums] ${
+        className={`font-serif mt-[2px] text-heroe leading-none [font-variant-numeric:tabular-nums] ${
           m.tipo === 'ingreso' ? 'text-teal-osc' : ''
         }`}
       >
@@ -80,7 +80,7 @@ function Detalle({
         <Moneda centavos={m.montoCents} redondo={false} />
       </div>
 
-      <div className="border-linea mt-4 flex flex-col gap-3 border-t pt-[14px] text-[12.5px]">
+      <div className="border-linea mt-4 flex flex-col gap-3 border-t pt-[14px] text-menor">
         <div className="text-texto-2 flex items-center gap-3">
           <span className="w-[86px] shrink-0">Sobre</span>
           <ChipCategoria {...(m.asignado ? { clave: m.icono } : {})}>{m.categoria}</ChipCategoria>
@@ -103,17 +103,17 @@ function Detalle({
 
       {linea && linea.montoMensualCents > 0 && (
         <div className="border-linea mt-4 border-t pt-[13px]">
-          <div className="text-texto-2 mb-[9px] text-[10px] font-semibold tracking-[.12em] uppercase">
+          <div className="text-texto-2 mb-[9px] text-rotulo font-semibold tracking-[.12em] uppercase">
             En este sobre, este mes
           </div>
-          <div className="border-linea flex items-baseline justify-between border-b py-[6px] text-[12.5px]">
+          <div className="border-linea flex items-baseline justify-between border-b py-[6px] text-menor">
             <span className="text-texto-2">Gastado</span>
             <b className="font-semibold">
               <Moneda centavos={linea.gastadoCents} /> de{' '}
               <Moneda centavos={linea.montoMensualCents} />
             </b>
           </div>
-          <div className="flex items-baseline justify-between py-[6px] text-[12.5px]">
+          <div className="flex items-baseline justify-between py-[6px] text-menor">
             <span className="text-texto-2">
               {linea.gastadoCents > linea.montoMensualCents ? 'Te pasaste' : 'Te queda'}
             </span>
@@ -233,7 +233,7 @@ export function Movimientos({
       {/* La barra solo aparece cuando hay algo que hacer. Una que diga
           "0 pendientes" es ruido permanente. */}
       {sinRevisar.length > 0 && (
-        <div className="bg-brillo-teal border-linea flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-[12px] py-[9px] text-[12.5px] panel:px-[18px]">
+        <div className="bg-brillo-teal border-linea flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-[12px] py-[9px] text-menor panel:px-[18px]">
           <span>
             <b className="font-semibold">
               {sinRevisar.length === 1 ? '1 movimiento' : `${sinRevisar.length} movimientos`}
@@ -245,7 +245,7 @@ export function Movimientos({
               type="button"
               onClick={() => marcar(sinRevisar.map((m) => m.id), true)}
               disabled={ocupados.length > 0}
-              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-[11.5px] font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-menor font-bold text-[#043432] disabled:opacity-50"
             >
               {sinRevisar.length === 1
                 ? 'Marcarlo como revisado'
@@ -263,9 +263,9 @@ export function Movimientos({
       ) : (
         dias.map((dia) => (
           <div key={dia.fecha}>
-            <div className="text-texto-2 flex items-baseline justify-between px-[12px] pt-[14px] pb-[7px] text-[10.5px] font-semibold tracking-[.12em] uppercase panel:px-[18px]">
+            <div className="text-texto-2 flex items-baseline justify-between px-[12px] pt-[14px] pb-[7px] text-rotulo font-semibold tracking-[.12em] uppercase panel:px-[18px]">
               <span>{etiquetaDeDia(dia.fecha, hoy)}</span>
-              <span className="text-texto text-[12px] font-semibold tracking-normal normal-case">
+              <span className="text-texto text-menor font-semibold tracking-normal normal-case">
                 {dia.entroCents > 0 && (
                   <span className="text-teal-osc">
                     +<Moneda centavos={centavos(dia.entroCents)} redondo={false} />
@@ -314,7 +314,7 @@ export function Movimientos({
             <button
               type="button"
               onClick={() => setEscogido(null)}
-              className="border-linea text-texto-2 mt-5 min-h-11 w-full rounded-[11px] border text-[14px] font-semibold"
+              className="border-linea text-texto-2 mt-5 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold"
             >
               Cerrar
             </button>

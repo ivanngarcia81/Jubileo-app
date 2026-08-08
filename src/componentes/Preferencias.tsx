@@ -12,7 +12,7 @@ import type { Presupuesto } from '../datos/tipos'
  * Nada aquí es una función nueva. Es terminar dos que ya existían a medias.
  */
 
-const ETIQUETA = 'text-texto-2 text-[10.5px] font-semibold tracking-[.12em] uppercase'
+const ETIQUETA = 'text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase'
 const TARJETA = 'bg-blanco border-linea rounded-[15px] border p-5'
 
 function Guardar({ listo, guardando, children }: { listo: boolean; guardando: boolean; children: string }) {
@@ -20,7 +20,7 @@ function Guardar({ listo, guardando, children }: { listo: boolean; guardando: bo
     <button
       type="submit"
       disabled={!listo || guardando}
-      className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-[14px] font-semibold disabled:opacity-40"
+      className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold disabled:opacity-40"
     >
       {guardando ? 'Guardando…' : children}
     </button>
@@ -59,7 +59,7 @@ export function TuNombre({
   return (
     <form onSubmit={guardar} className={TARJETA}>
       <div className={ETIQUETA}>Cómo te llamamos</div>
-      <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+      <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
         Sale en el saludo de tu semana y al principio del correo del domingo.
       </p>
       <input
@@ -69,15 +69,15 @@ export function TuNombre({
         aria-label="Tu nombre"
         placeholder="Iván García"
         autoComplete="name"
-        className="border-linea text-texto mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-[17px] placeholder:text-[#9AA09E] focus:outline-none"
+        className="border-linea text-texto mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
       />
       {error && (
-        <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+        <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
           {error}
         </p>
       )}
       {listo && !cambio && (
-        <p className="text-teal-osc mt-3 text-[13px] font-semibold" role="status">
+        <p className="text-teal-osc mt-3 text-menor font-semibold" role="status">
           Guardado.
         </p>
       )}
@@ -124,7 +124,7 @@ export function TuAviso({
   return (
     <form onSubmit={guardar} className={TARJETA}>
       <div className={ETIQUETA}>Tu aviso</div>
-      <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+      <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
         El correo que te llega el día que arranca un cheque, con lo que entra, lo que se vence y
         cuánto queda libre.
       </p>
@@ -136,7 +136,7 @@ export function TuAviso({
           onChange={(e) => setActivo(e.target.checked)}
           className="accent-teal size-4"
         />
-        <span className="text-texto text-[15px]">Quiero recibirlo</span>
+        <span className="text-texto text-cuerpo">Quiero recibirlo</span>
       </label>
 
       {activo && (
@@ -149,21 +149,21 @@ export function TuAviso({
             type="time"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
-            className="border-linea text-texto mt-2 min-h-11 rounded-[11px] border px-4 py-3 text-[17px]"
+            className="border-linea text-texto mt-2 min-h-11 rounded-[11px] border px-4 py-3 text-titulo"
           />
-          <p className="text-texto-2 mt-2 text-[12.5px] leading-[1.5]">
+          <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             En tu reloj, no en el del servidor.
           </p>
         </>
       )}
 
       {error && (
-        <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+        <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
           {error}
         </p>
       )}
       {listo && !cambio && (
-        <p className="text-teal-osc mt-3 text-[13px] font-semibold" role="status">
+        <p className="text-teal-osc mt-3 text-menor font-semibold" role="status">
           Guardado.
         </p>
       )}

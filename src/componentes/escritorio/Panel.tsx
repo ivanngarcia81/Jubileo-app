@@ -58,12 +58,12 @@ export function BarraSuperior({
         data-ancho="contenido"
         className="mx-auto flex max-w-app items-center gap-[26px] px-[26px] py-[17px]"
       >
-        <div className="font-serif flex items-center gap-2 text-[21px]">
+        <div className="font-serif flex items-center gap-2 text-titulo">
           Jubileo<span className="text-teal">.</span>
         </div>
         <nav
           aria-label="Navegación principal"
-          className="flex gap-5 text-[13.5px]"
+          className="flex gap-5 text-cuerpo"
         >
           {ENLACES.map(({ ruta, texto }) => {
             const activo = ruta === activa;
@@ -84,11 +84,11 @@ export function BarraSuperior({
           })}
         </nav>
         <div className="ml-auto flex items-center gap-[9px]">
-          <div className="bg-carbon-2 relative grid size-[35px] place-items-center rounded-full text-[13px] text-[#A7ACAB]">
+          <div className="bg-carbon-2 relative grid size-[35px] place-items-center rounded-full text-menor text-[#A7ACAB]">
             <IconoAviso tam={17} />
             <span className="bg-teal border-carbon-2 absolute top-[7px] right-2 size-[7px] rounded-full border-[1.5px]" />
           </div>
-          <div className="bg-carbon-3 grid size-[35px] place-items-center rounded-full text-[11.5px] font-semibold text-white">
+          <div className="bg-carbon-3 grid size-[35px] place-items-center rounded-full text-menor font-semibold text-white">
             {presupuesto.usuario.iniciales}
           </div>
         </div>
@@ -110,13 +110,13 @@ function Indicador({
 }) {
   return (
     <div>
-      <div className="text-[12px] text-[#787E7D]">{titulo}</div>
+      <div className="text-menor text-[#787E7D]">{titulo}</div>
       <div
-        className={`mt-[3px] text-[29px] font-semibold [font-variant-numeric:tabular-nums] ${teal ? "text-teal" : ""}`}
+        className={`mt-[3px] text-cifra font-semibold [font-variant-numeric:tabular-nums] ${teal ? "text-teal" : ""}`}
       >
         {formatearRedondo(valor)}
       </div>
-      <div className="mt-1 text-[11.5px] text-[#6E7473]">{detalle}</div>
+      <div className="mt-1 text-menor text-[#6E7473]">{detalle}</div>
     </div>
   );
 }
@@ -147,10 +147,10 @@ export function BandaIndicadores({
         className="mx-auto grid max-w-app items-center gap-[34px] px-[26px] pt-[26px] pb-[30px] ancho:grid-cols-[1fr_500px]"
       >
         <div>
-          <div className="font-serif mb-5 text-[26px]">
+          <div className="font-serif mb-5 text-cifra">
             Buenos días, {presupuesto.usuario.nombre}
             <span className="text-teal">.</span>
-            <div className="font-sans mt-[5px] text-[11px] font-semibold tracking-[.14em] text-[#787E7D] uppercase">
+            <div className="font-sans mt-[5px] text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
               {presupuesto.mes.etiqueta} ·{" "}
               {presupuesto.usuario.frecuencia.toLowerCase()} ·{" "}
               {presupuesto.usuario.nivel === "premium" ? "Premium" : "Gratis"}
@@ -208,7 +208,7 @@ export function BandaIndicadores({
         </div>
 
         <div>
-          <div className="mb-[10px] text-[10px] font-semibold tracking-[.14em] text-[#787E7D] uppercase">
+          <div className="mb-[10px] text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
             Tus cheques de {nombreDeMes(presupuesto.mes.mes)}
           </div>
           <div className="grid grid-cols-3 gap-[10px]">
@@ -227,7 +227,7 @@ export function BandaIndicadores({
                   } ${cerrado ? "opacity-55" : ""}`}
                 >
                   <div
-                    className={`text-[9.5px] font-semibold tracking-[.1em] uppercase ${
+                    className={`text-rotulo font-semibold tracking-[.1em] uppercase ${
                       esActivo && !periodo.esExtra
                         ? "text-[#022B29]/70"
                         : "text-[#787E7D]"
@@ -238,14 +238,14 @@ export function BandaIndicadores({
                     {nombreDeMes(mesDe(periodo.fechaPago)).slice(0, 3)}
                   </div>
                   <div
-                    className={`font-serif mt-[6px] mb-[2px] text-[28px] leading-[1.1] [font-variant-numeric:tabular-nums] ${
+                    className={`font-serif mt-[6px] mb-[2px] text-cifra leading-[1.1] [font-variant-numeric:tabular-nums] ${
                       periodo.esExtra ? "text-ambar" : ""
                     }`}
                   >
                     {formatearRedondo(libreporPeriodoCents[i]!)}
                   </div>
                   <div
-                    className={`text-[10.5px] leading-[1.35] ${
+                    className={`text-rotulo leading-[1.35] ${
                       esActivo && !periodo.esExtra
                         ? "text-[#022B29]/70"
                         : "text-[#787E7D]"
@@ -262,7 +262,7 @@ export function BandaIndicadores({
             })}
           </div>
           {hayExtra && (
-            <div className="mt-[10px] text-[11px] text-[#787E7D]">
+            <div className="mt-[10px] text-rotulo text-[#787E7D]">
               Este mes te caen{" "}
               <b className="text-ambar font-semibold">
                 {periodos.length} cheques
@@ -297,10 +297,10 @@ export function TarjetaEscritorio({
       className={`bg-blanco border-linea rounded-[15px] border p-[18px] ${className}`}
     >
       <div className="mb-[15px] flex items-center gap-[10px]">
-        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-[9px] text-[14px]">
+        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-[9px] text-cuerpo">
           {icono}
         </div>
-        <h3 className="font-serif flex-1 text-[17px] font-normal">{titulo}</h3>
+        <h3 className="font-serif flex-1 text-titulo font-normal">{titulo}</h3>
         {derecha}
       </div>
       {children}

@@ -58,13 +58,13 @@
   --font-serif: var(--serif);
   --font-sans: var(--sans);
 
-  --text-hero: var(--t-hero);
-  --text-h1: var(--t-h1);
-  --text-h2: var(--t-h2);
-  --text-cuerpo: var(--t-cuerpo);
-  --text-dato: var(--t-dato);
-  --text-sec: var(--t-sec);
-  --text-etiq: var(--t-etiq);
+  /* Seis y nada más. Ver el comentario de `design-tokens.css`. */
+  --text-rotulo: var(--texto-rotulo);
+  --text-menor: var(--texto-menor);
+  --text-cuerpo: var(--texto-cuerpo);
+  --text-titulo: var(--texto-titulo);
+  --text-cifra: var(--texto-cifra);
+  --text-heroe: var(--texto-heroe);
 
   /* ---------- Forma y espacio ---------- */
   --radius-card: var(--r-card);

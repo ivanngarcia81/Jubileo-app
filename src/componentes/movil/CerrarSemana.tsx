@@ -84,22 +84,22 @@ export function CerrarSemana({
         role="dialog"
         aria-label="Cerrar la semana"
       >
-        <div className="text-texto-2 mb-1 text-[11.5px] font-bold tracking-[.06em] uppercase">
+        <div className="text-texto-2 mb-1 text-menor font-bold tracking-[.06em] uppercase">
           Cerrar la semana · {paso} de {PASOS}
         </div>
 
         {paso === 1 && (
           <>
-            <div className="text-texto font-serif text-[22px] leading-tight">
+            <div className="text-texto font-serif text-titulo leading-tight">
               ¿Entró lo que esperabas?
             </div>
-            <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+            <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
               {esperado === null
                 ? 'Tu ingreso es variable, así que aquí va lo que entró de verdad.'
                 : `Tenías apuntado ${formatear(esperado)}. Si entró otra cosa, corrígelo.`}
             </div>
             <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
-              <span className="text-texto-2 font-serif text-[26px]">$</span>
+              <span className="text-texto-2 font-serif text-cifra">$</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -108,7 +108,7 @@ export function CerrarSemana({
                 onChange={(e) => setIngreso(e.target.value)}
                 placeholder="0.00"
                 aria-label="Cuánto entró de verdad"
-                className="text-texto font-serif min-h-14 w-full bg-transparent text-[30px] [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+                className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
               />
             </div>
           </>
@@ -116,10 +116,10 @@ export function CerrarSemana({
 
         {paso === 2 && (
           <>
-            <div className="text-texto font-serif text-[22px] leading-tight">
+            <div className="text-texto font-serif text-titulo leading-tight">
               ¿Cuánto gastaste en los sobres?
             </div>
-            <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+            <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
               Esto es lo que la app tiene anotado. Corrige lo que no cuadre; la diferencia se anota
               como un movimiento aparte y lo de antes no se borra.
             </div>
@@ -130,13 +130,13 @@ export function CerrarSemana({
                   className="border-linea flex items-center justify-between gap-3 rounded-[11px] border px-4 py-2"
                 >
                   <div className="min-w-0">
-                    <div className="text-texto truncate text-[15px]">{sobre.nombre}</div>
-                    <div className="text-texto-2 text-[12px]">
+                    <div className="text-texto truncate text-cuerpo">{sobre.nombre}</div>
+                    <div className="text-texto-2 text-menor">
                       de {formatear(sobre.presupuestoCents)}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <span className="text-texto-2 text-[17px]">$</span>
+                    <span className="text-texto-2 text-titulo">$</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -144,13 +144,13 @@ export function CerrarSemana({
                       disabled={guardando}
                       onChange={(e) => setGastos((g) => ({ ...g, [sobre.id]: e.target.value }))}
                       aria-label={`Gastado en ${sobre.nombre}`}
-                      className="text-texto min-h-11 w-24 bg-transparent text-right text-[17px] [font-variant-numeric:tabular-nums] focus:outline-none"
+                      className="text-texto min-h-11 w-24 bg-transparent text-right text-titulo [font-variant-numeric:tabular-nums] focus:outline-none"
                     />
                   </div>
                 </div>
               ))}
               {presupuesto.sobres.length === 0 && (
-                <p className="text-texto-2 text-[13px]">Este cheque no tiene sobres variables.</p>
+                <p className="text-texto-2 text-menor">Este cheque no tiene sobres variables.</p>
               )}
             </div>
           </>
@@ -158,10 +158,10 @@ export function CerrarSemana({
 
         {paso === 3 && (
           <>
-            <div className="text-texto font-serif text-[22px] leading-tight">
+            <div className="text-texto font-serif text-titulo leading-tight">
               ¿Pagaste lo que faltaba?
             </div>
-            <div className="text-texto-2 mt-1 text-[12.5px] leading-[1.5]">
+            <div className="text-texto-2 mt-1 text-menor leading-[1.5]">
               {pendientes.length === 0
                 ? 'No quedó nada pendiente en este cheque.'
                 : 'Marca lo que sí pagaste. Lo que dejes sin marcar se queda pendiente.'}
@@ -177,10 +177,10 @@ export function CerrarSemana({
                     etiqueta={pago.nombre}
                     alCambiar={() => setPagados((p) => ({ ...p, [pago.id]: !p[pago.id] }))}
                   />
-                  <span className="text-texto min-w-0 flex-1 truncate text-[15px]">
+                  <span className="text-texto min-w-0 flex-1 truncate text-cuerpo">
                     {pago.nombre}
                   </span>
-                  <span className="text-texto-2 text-[14px] [font-variant-numeric:tabular-nums]">
+                  <span className="text-texto-2 text-cuerpo [font-variant-numeric:tabular-nums]">
                     {formatear(pago.montoCents)}
                   </span>
                 </div>
@@ -190,7 +190,7 @@ export function CerrarSemana({
         )}
 
         {error && (
-          <p className="text-ambar mt-3 text-[13px] leading-[1.5]" role="alert">
+          <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
             {error}
           </p>
         )}
@@ -200,7 +200,7 @@ export function CerrarSemana({
             type="button"
             onClick={() => (paso === 1 ? alCerrar() : setPaso(paso - 1))}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-[14px] font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
           >
             {paso === 1 ? 'Ahora no' : 'Atrás'}
           </button>
@@ -208,7 +208,7 @@ export function CerrarSemana({
             type="button"
             onClick={() => (paso === PASOS ? void terminar() : setPaso(paso + 1))}
             disabled={guardando || (paso === 1 && ingresoCents === null && ingreso.trim() !== '')}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-[14px] font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
           >
             {guardando ? 'Cerrando…' : paso === PASOS ? 'Cerrar la semana' : 'Siguiente'}
           </button>

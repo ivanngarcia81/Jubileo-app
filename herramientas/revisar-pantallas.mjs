@@ -86,6 +86,55 @@ const toque = await p.evaluate(() => {
 })
 revisar(toque, 'la casilla de pago responde en un área de 44px')
 
+// Seis tamaños de letra y nada más. La escala es de las reglas que se rompen
+// solas: el primer `text-[13.5px]` que alguien escriba "solo por esta vez" no
+// truena nada y ya son siete.
+const PERMITIDOS = ['11px', '12.5px', '14px', '17px', '26px', '38px']
+const colados = new Set()
+let medidos = 0
+for (const ruta of ['semana', 'mes', 'deudas', 'metas', 'movimientos']) {
+  await p.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
+  await p.waitForTimeout(250)
+  const r = await p.evaluate((ok) => {
+    // Se recorren los **nodos de texto**, no los elementos: un `<div>` que solo
+    // envuelve heredaría los 16px del navegador y saldría como si fuera un
+    // tamaño de la app. Lo que cuenta es la letra que se ve.
+    const malos = []
+    let n, cuantos = 0
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    while ((n = w.nextNode())) {
+      if (!n.textContent.trim()) continue
+      cuantos++
+      const t = getComputedStyle(n.parentElement).fontSize
+      if (!ok.includes(t)) malos.push(`${t} en "${n.textContent.trim().slice(0, 24)}"`)
+    }
+    return { malos, cuantos }
+  }, PERMITIDOS)
+  medidos += r.cuantos
+  r.malos.forEach((m) => colados.add(`${ruta}: ${m}`))
+}
+await p.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+revisar(medidos > 100, `se midieron ${medidos} textos, no dos`)
+revisar(colados.size === 0,
+  `la escala tipográfica sigue en seis tamaños${colados.size ? `: ${[...colados].slice(0, 6).join(' · ')}` : ''}`)
+
+// Un campo de texto de menos de 16px hace que iOS le haga zoom a la página al
+// enfocarlo, y salir de ese zoom es cosa del usuario. Se mide en el navegador
+// porque en el código el tamaño puede venir heredado.
+for (const ruta of ['semana', 'mes', 'ajustes']) {
+  await p.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
+  await p.waitForTimeout(250)
+  const chicos = await p.evaluate(() =>
+    [...document.querySelectorAll('input, textarea')]
+      .filter((e) => !['checkbox', 'radio', 'range', 'hidden'].includes(e.type))
+      .map((e) => [e.getAttribute('aria-label') ?? e.type, parseFloat(getComputedStyle(e).fontSize)])
+      .filter(([, t]) => t < 16),
+  )
+  revisar(chicos.length === 0,
+    `${ruta}: ningún campo de texto baja de 16px${chicos.length ? ` — ${chicos.map(([n, t]) => `${n} en ${t}px`).join(', ')}` : ''}`)
+}
+await p.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+
 // Las cifras héroe dependen de Instrument Serif: sin ella el diseño se cae.
 const fuentes = await p.evaluate(async () => {
   await document.fonts.ready

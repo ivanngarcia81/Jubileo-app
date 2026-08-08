@@ -53,17 +53,6 @@ recibe columnas: no es que se le hayan olvidado. Y como el mockup es un document
 app arranca en 320, la sección acepta dos juegos —el del teléfono y, desde el corte `panel`, el
 del mockup— en vez de fingir que un solo juego sirve para los dos.
 
-**Lo que falta y no se hizo solo: cerrar la escala tipográfica.** Hoy la app usa **treinta tamaños
-de letra distintos** en 334 lugares —10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15…— y la
-mitad de esas diferencias no las distingue nadie. Salieron de copiar píxel por píxel tres mockups
-que se dibujaron por separado, y ese es justo el problema: no hay una escala, hay tres. La
-propuesta es seis tamaños y nada más: **11 · 12.5 · 14 · 17 · 26 · 38**, con el 11 para rótulos en
-versalitas, el 12.5 para el texto secundario, el 14 para el cuerpo, el 17 para títulos de sección,
-y los dos grandes en serif para las cifras héroe. No se aplicó todavía **a propósito**: mover 334
-tamaños cambia todas las pantallas a la vez, y los píxeles de hoy vienen del contrato visual, que
-`CLAUDE.md` dice que no se rediseña por cuenta propia. Es un cambio de una sola pasada, mecánico,
-que hay que ver con los ojos y no con una prueba — así que pide el visto bueno del mapeo antes.
-
 Eso obligó a cambiar también la prueba. `revisar-pantallas.mjs` medía el primer elemento visible con
 `bg-carbon` y exigía que no pasara de 1440 px; con el arreglo bueno ese elemento mide lo que mide la
 pantalla, **a propósito**, así que la prueba habría fallado justo cuando el código quedó bien. Ahora
@@ -71,3 +60,28 @@ apunta a `[data-ancho="contenido"]`, un gancho puesto para eso, y se le agregó 
 inversa —que el fondo oscuro sí llegue al borde—, que es exactamente lo que se había roto. En un
 monitor de 2560 px las dos respuestas juntas son la prueba de que el patrón está bien: fondo 2560,
 contenido 1420.
+
+**La escala tipográfica: de treinta tamaños a seis.** La app llegó a usar **treinta tamaños de
+letra distintos en 335 lugares** —10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15…— y la mitad
+de esas diferencias no las distingue nadie. Salieron de copiar píxel por píxel tres mockups
+dibujados por separado: no había una escala, había tres. Lo curioso es que el contrato **sí traía
+una escala** —`--t-hero`, `--t-h1`, `--t-cuerpo`…— y no la usaba ningún componente; cada uno
+escribía su `text-[13.5px]` a mano. Una escala que nadie usa no existe.
+
+Ahora son seis: **11 · 12.5 · 14 · 17 · 26 · 38**. El 11 para rótulos en versalitas, el 12.5 para
+el texto secundario, el 14 para el renglón de una lista y los botones, el 17 para títulos de
+sección y **todos los campos de texto**, y los dos grandes en serif para cifras y héroes. El precio
+que se pagó a conciencia: la cifra de Mi semana bajó de 52 a 38 y la de Deudas de 40 a 38 — a
+cambio, la cifra héroe de las cinco pantallas mide lo mismo, que antes eran 52, 38, 40, 34 y 60 sin
+ninguna razón. Los títulos de hoja bajaron de 22 a 17, que es el mismo 17 en serif que el mockup
+usa para el encabezado de un panel.
+
+Los 17px de los campos de texto no son estética: **iOS le hace zoom a la página al enfocar un campo
+de menos de 16px**, y salir de ese zoom es cosa del usuario. Había uno en 15px desde antes; ahora
+está en 17 como los demás, y hay una comprobación de navegador que lo mide en tres pantallas.
+
+La escala se fija con una prueba, no con buena voluntad: `revisar-pantallas.mjs` recorre los
+**nodos de texto** de cinco pantallas —mil y pico— y revienta si aparece un tamaño que no sea uno
+de los seis. Recorre nodos de texto y no elementos a propósito: un `<div>` que solo envuelve hereda
+los 16px del navegador y saldría como si fuera un tamaño de la app. Y cuenta cuántos midió, porque
+una comprobación que mide dos cosas y pasa no vale nada.
