@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema de listas — Jubileo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carbon:#1C1E1F; --carbon-2:#2A2D2E; --carbon-3:#3A3E3F;
+    --gris:#F2F3F1; --blanco:#FFFFFF; --linea:#E2E4E1;
+    --teal:#0ABBB4; --teal-osc:#057F7A; --ambar:#E8A33D; --rojo:#D9503F;
+    --texto:#1C1E1F; --texto-2:#6B7175;
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --ancho-max:1420px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--carbon);color:var(--texto);
+    padding:30px 16px 70px;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  /* ---------- documento ---------- */
+  .doc{max-width:var(--ancho-max);margin:0 auto 30px;color:#fff}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .doc h1{font-family:var(--serif);font-size:clamp(28px,4.6vw,42px);font-weight:400;margin:9px 0 12px;line-height:1.05}
+  .doc p{color:#9AA09E;max-width:74ch;font-size:14.5px;line-height:1.62}
+  .doc p b{color:var(--teal);font-weight:600}
+  .doc p+p{margin-top:9px}
+
+  .lienzo{max-width:var(--ancho-max);margin:0 auto;background:var(--gris);
+    border-radius:20px;padding:24px}
+  .titulo-seccion{display:flex;align-items:baseline;gap:11px;margin:6px 0 14px}
+  .titulo-seccion b{font-family:var(--serif);font-size:24px;font-weight:400}
+  .titulo-seccion span{font-size:12px;color:var(--texto-2)}
+  .titulo-seccion+.titulo-seccion{margin-top:0}
+  .separador{height:34px}
+
+  .nota{font-size:12.5px;color:#8A908F;line-height:1.6;border-left:2px solid var(--carbon-2);
+    padding-left:14px;max-width:var(--ancho-max);margin:16px auto 0}
+  .nota b{color:#C9CCCA;font-weight:600}
+  .nota li{list-style:none;margin-top:5px;padding-left:14px;position:relative}
+  .nota li::before{content:"—";position:absolute;left:0;color:var(--teal)}
+
+  /* ---------- la tarjeta es la seccion, no la fila ---------- */
+  .panel{background:var(--blanco);border:1px solid var(--linea);border-radius:15px;overflow:hidden}
+  .panel-hd{display:flex;align-items:center;gap:11px;padding:15px 18px 13px}
+  .panel-hd .ico{width:28px;height:28px;border-radius:9px;background:var(--carbon);color:var(--teal);
+    display:grid;place-items:center;flex-shrink:0}
+  .panel-hd h3{font-family:var(--serif);font-size:17px;font-weight:400;flex:1}
+  .panel-hd .dato{font-size:12px;color:var(--texto-2)}
+  .panel-hd .dato b{color:var(--texto);font-weight:600}
+
+  /* encabezados de columna: lo que hace que una lista se lea como tabla */
+  .cols{display:grid;align-items:center;gap:0 14px;padding:0 18px 8px;
+    grid-template-columns:minmax(150px,1fr) 88px minmax(90px,300px) 88px;
+    font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-2);font-weight:600;
+    border-bottom:1px solid var(--linea)}
+  .cols .d{text-align:right}
+
+  /* ---------- filas alineadas en columnas ---------- */
+  .fila{display:grid;align-items:center;gap:0 14px;padding:0 18px;min-height:44px;
+    grid-template-columns:minmax(150px,1fr) 88px minmax(90px,300px) 88px;
+    border-bottom:1px solid var(--linea);position:relative;cursor:default}
+  .fila:last-child{border-bottom:0}
+  .fila:hover{background:#FAFBFA}
+  .fila .n{display:flex;align-items:center;gap:9px;min-width:0}
+  .fila .n .tx{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fila .cifra{font-size:13.5px;font-weight:600;text-align:right}
+  .fila .meta{font-size:13px;color:var(--texto-2);text-align:right}
+
+  /* grupo padre */
+  .fila.grupo{background:#FBFCFB}
+  .fila.grupo .tx{font-weight:600;font-size:14px}
+  .cuenta{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;
+    border-radius:5px;background:var(--gris);border:1px solid var(--linea);
+    font-size:10.5px;font-weight:700;color:var(--texto-2)}
+  .flecha{width:14px;height:14px;flex-shrink:0;color:var(--texto-2)}
+  .flecha.abierta{transform:rotate(90deg)}
+
+  /* hijo: sangria con hilo de conexion */
+  .fila.hijo .n{padding-left:27px;position:relative}
+  .fila.hijo .n::before{content:"";position:absolute;left:11px;top:-50%;bottom:50%;
+    width:1px;background:var(--linea)}
+  .fila.hijo .n::after{content:"";position:absolute;left:11px;top:50%;width:9px;height:1px;background:var(--linea)}
+  .fila.hijo .tx{font-weight:400;color:#3E4342}
+
+  /* icono de categoria */
+  .cat{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;
+    background:var(--gris);border:1px solid var(--linea);color:var(--texto-2)}
+  .cat svg{width:13px;height:13px}
+
+  /* la barra: mismo carril en todas las filas, para poder comparar */
+  .barra{height:5px;border-radius:99px;background:var(--gris);overflow:hidden}
+  .barra i{display:block;height:100%;border-radius:99px;background:var(--teal)}
+  .barra i.ojo{background:var(--ambar)}
+  .barra i.mal{background:var(--rojo)}
+  .fila.pasado .cifra{color:var(--rojo)}
+
+  /* ---------- pildoras de categoria ---------- */
+  .chip{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 8px;border-radius:99px;
+    font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .chip svg{width:11px;height:11px}
+  .chip.casa{background:rgba(10,187,180,.13);color:var(--teal-osc)}
+  .chip.comida{background:rgba(232,163,61,.16);color:#8A5C10}
+  .chip.auto{background:rgba(28,30,31,.07);color:#4A4F4E}
+  .chip.salud{background:rgba(217,80,63,.13);color:#A63C2E}
+  .chip.dar{background:rgba(10,187,180,.13);color:var(--teal-osc)}
+
+  /* ---------- movimientos ---------- */
+  .dosPaneles{display:grid;gap:16px;align-items:start;grid-template-columns:1fr}
+  @media(min-width:1080px){.dosPaneles{grid-template-columns:1fr 340px}}
+
+  .dia{display:flex;align-items:baseline;justify-content:space-between;
+    padding:14px 18px 7px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--texto-2);font-weight:600}
+  .dia b{letter-spacing:0;text-transform:none;font-size:12px;font-weight:600;color:var(--texto)}
+
+  .mov{display:grid;align-items:center;gap:0 12px;padding:0 18px;min-height:46px;
+    grid-template-columns:19px minmax(120px,1fr) auto 96px;
+    border-bottom:1px solid var(--linea);position:relative}
+  .mov:hover{background:#FAFBFA}
+  .mov .m{min-width:0}
+  .mov .t{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mov .s{font-size:11px;color:var(--texto-2);margin-top:1px}
+  .mov .a{font-size:14px;font-weight:600;text-align:right}
+  .mov .a.entra{color:var(--teal-osc)}
+  .mov.viva{background:var(--gris)}
+  .mov.viva::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--teal)}
+
+  .casilla{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--linea);background:var(--blanco)}
+  .casilla.on{background:var(--teal);border-color:var(--teal);position:relative}
+  .casilla.on::after{content:"";position:absolute;left:5px;top:2.5px;width:5px;height:8px;
+    border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(40deg)}
+
+  .insignia{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;
+    background:var(--gris);border:1px solid var(--linea);font-size:9.5px;font-weight:700;color:var(--texto-2)}
+
+  /* barra de pendientes */
+  .pendientes{display:flex;align-items:center;gap:11px;padding:11px 18px;background:rgba(10,187,180,.07);
+    border-bottom:1px solid var(--linea);font-size:12.5px}
+  .pendientes b{font-weight:600}
+  .pendientes .btn{margin-left:auto;background:var(--teal);color:#043432;border:0;border-radius:99px;
+    padding:8px 14px;font-size:11.5px;font-weight:700;font-family:var(--sans);cursor:pointer}
+
+  /* ---------- inspector ---------- */
+  .insp{background:var(--blanco);border:1px solid var(--linea);border-radius:15px;padding:18px}
+  .insp .arr{display:flex;align-items:baseline;justify-content:space-between;font-size:11.5px;color:var(--texto-2)}
+  .insp h4{font-family:var(--serif);font-size:26px;font-weight:400;margin:7px 0 3px;line-height:1.1}
+  .insp .cifra{font-family:var(--serif);font-size:34px;line-height:1;margin-top:2px}
+  .insp .cta{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12.5px;color:var(--texto-2)}
+  .insp .campos{margin-top:16px;border-top:1px solid var(--linea);padding-top:14px;display:flex;
+    flex-direction:column;gap:12px}
+  .insp .campo{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--texto-2)}
+  .insp .campo .lb{width:86px;flex-shrink:0}
+  .insp .mas{width:26px;height:26px;border-radius:99px;border:1px dashed var(--linea);background:transparent;
+    display:grid;place-items:center;color:var(--texto-2);cursor:pointer}
+  .insp .nota-campo{margin-top:15px;border-top:1px solid var(--linea);padding-top:14px;
+    font-size:12.5px;color:#9AA09E}
+  .insp .hist{margin-top:16px;border-top:1px solid var(--linea);padding-top:13px}
+  .insp .hist .k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-2);
+    font-weight:600;margin-bottom:9px}
+  .insp .hist .h{display:flex;align-items:baseline;justify-content:space-between;font-size:12.5px;
+    padding:6px 0;border-bottom:1px solid var(--linea)}
+  .insp .hist .h:last-child{border-bottom:0}
+  .insp .hist .h span{color:var(--texto-2)}
+
+  /* pie */
+  .pie{max-width:var(--ancho-max);margin:26px auto 0;color:#8A908F;font-size:13px;line-height:1.65}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-casa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+  <symbol id="i-luz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3Z"/></symbol>
+  <symbol id="i-carrito" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 10.4a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V11l2-4h10l2 4v5"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></symbol>
+  <symbol id="i-corazon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9.5A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.5c0 5.1-7 9.5-7 9.5Z"/></symbol>
+  <symbol id="i-mano" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M8 7l4-4 4 4"/><path d="M5 14c0 4 3 7 7 7s7-3 7-7"/></symbol>
+  <symbol id="i-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-pesos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16 7.5c0-1.7-1.8-2.5-4-2.5s-4 .9-4 2.6c0 4 8 2.4 8 6.4 0 1.7-1.8 2.5-4 2.5s-4-.8-4-2.5"/></symbol>
+  <symbol id="i-flujo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V6"/><path d="M4 9l3-3 3 3"/><path d="M17 3v15"/><path d="M20 15l-3 3-3-3"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+    stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+</svg>
+
+<div class="doc">
+  <div class="eyebrow">Sistema de listas · para Claude Code</div>
+  <h1>Lo que hace que una app se sienta pagada</h1>
+  <p>Las dos cosas que circulaste no son estilo: son <b>un sistema de filas</b>. En Copilot la tarjeta es la sección y las filas viven dentro, alineadas en columnas, con la barra siempre en el mismo carril. Eso es lo que deja comparar diez renglones de un vistazo, y es lo que hace que se sienta una herramienta y no una plantilla.</p>
+  <p>Hoy Jubileo hace lo contrario: cada línea del presupuesto es su propia tarjeta con su propio borde y su propio relleno (<b>ElMes.tsx</b>, cada fila envuelta en <b>&lt;Tarjeta&gt;</b>). Nada se alinea entre renglones, cada barra tiene su propio ancho, y en una pantalla caben seis líneas donde caben dieciséis.</p>
+  <p>Esto está armado con <b>tus mismos tokens</b>, en claro, a propósito: la sensación de producto pagado no viene del fondo oscuro de Copilot, viene de la alineación, la densidad y la jerarquía.</p>
+</div>
+
+<div class="lienzo">
+
+  <div class="titulo-seccion"><b>El mes</b><span>presupuesto por categoría · grupos que se abren y se cierran</span></div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <div class="ico"><svg width="15" height="15"><use href="#i-pesos"/></svg></div>
+      <h3>Categorías de agosto</h3>
+      <div class="dato">Sin repartir <b class="num">$0</b> · repartido <b class="num">$4,180</b></div>
+    </div>
+
+    <div class="cols">
+      <span>Categoría</span>
+      <span class="d">Gastado</span>
+      <span></span>
+      <span class="d">Del mes</span>
+    </div>
+
+    <!-- ---- grupo: dar ---- -->
+    <div class="fila grupo">
+      <div class="n">
+        <svg class="flecha abierta"><use href="#i-flecha"/></svg>
+        <span class="cuenta">1</span>
+        <span class="tx">Mayordomía</span>
+      </div>
+      <div class="cifra num">$418</div>
+      <div><div class="barra"><i style="width:100%"></i></div></div>
+      <div class="meta num">$418</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-mano"/></svg></div><span class="tx">Diezmo y ofrenda</span></div>
+      <div class="cifra num">$418</div>
+      <div><div class="barra"><i style="width:100%"></i></div></div>
+      <div class="meta num">$418</div>
+    </div>
+
+    <!-- ---- grupo: fijos ---- -->
+    <div class="fila grupo">
+      <div class="n">
+        <svg class="flecha abierta"><use href="#i-flecha"/></svg>
+        <span class="cuenta">4</span>
+        <span class="tx">Gastos fijos</span>
+      </div>
+      <div class="cifra num">$1,742</div>
+      <div><div class="barra"><i class="ojo" style="width:92%"></i></div></div>
+      <div class="meta num">$1,890</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-casa"/></svg></div><span class="tx">Renta</span></div>
+      <div class="cifra num">$1,350</div>
+      <div><div class="barra"><i style="width:100%"></i></div></div>
+      <div class="meta num">$1,350</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-luz"/></svg></div><span class="tx">Luz y gas</span></div>
+      <div class="cifra num">$164</div>
+      <div><div class="barra"><i class="ojo" style="width:82%"></i></div></div>
+      <div class="meta num">$200</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-escudo"/></svg></div><span class="tx">Seguro del carro</span></div>
+      <div class="cifra num">$228</div>
+      <div><div class="barra"><i style="width:76%"></i></div></div>
+      <div class="meta num">$300</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-corazon"/></svg></div><span class="tx">Teléfono</span></div>
+      <div class="cifra num">$0</div>
+      <div><div class="barra"><i style="width:0%"></i></div></div>
+      <div class="meta num">$40</div>
+    </div>
+
+    <!-- ---- grupo: sobres ---- -->
+    <div class="fila grupo pasado">
+      <div class="n">
+        <svg class="flecha abierta"><use href="#i-flecha"/></svg>
+        <span class="cuenta">3</span>
+        <span class="tx">Sobres variables</span>
+      </div>
+      <div class="cifra num">$792</div>
+      <div><div class="barra"><i class="mal" style="width:100%"></i></div></div>
+      <div class="meta num">$760</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-carrito"/></svg></div><span class="tx">Comida de casa</span></div>
+      <div class="cifra num">$402</div>
+      <div><div class="barra"><i class="ojo" style="width:89%"></i></div></div>
+      <div class="meta num">$450</div>
+    </div>
+    <div class="fila hijo pasado">
+      <div class="n"><div class="cat"><svg><use href="#i-auto"/></svg></div><span class="tx">Gasolina</span></div>
+      <div class="cifra num">$248</div>
+      <div><div class="barra"><i class="mal" style="width:100%"></i></div></div>
+      <div class="meta num">$210</div>
+    </div>
+    <div class="fila hijo">
+      <div class="n"><div class="cat"><svg><use href="#i-corazon"/></svg></div><span class="tx">Gastos personales</span></div>
+      <div class="cifra num">$142</div>
+      <div><div class="barra"><i style="width:71%"></i></div></div>
+      <div class="meta num">$200</div>
+    </div>
+
+    <!-- ---- grupo cerrado ---- -->
+    <div class="fila grupo">
+      <div class="n">
+        <svg class="flecha"><use href="#i-flecha"/></svg>
+        <span class="cuenta">4</span>
+        <span class="tx">Deudas</span>
+      </div>
+      <div class="cifra num">$685</div>
+      <div><div class="barra"><i style="width:100%"></i></div></div>
+      <div class="meta num">$685</div>
+    </div>
+    <div class="fila grupo">
+      <div class="n">
+        <svg class="flecha"><use href="#i-flecha"/></svg>
+        <span class="cuenta">3</span>
+        <span class="tx">Fondos de reserva</span>
+      </div>
+      <div class="cifra num">$427</div>
+      <div><div class="barra"><i style="width:100%"></i></div></div>
+      <div class="meta num">$427</div>
+    </div>
+  </div>
+
+  <div class="separador"></div>
+
+  <div class="titulo-seccion"><b>Movimientos</b><span>agrupados por día · con bandeja de pendientes y panel de detalle</span></div>
+
+  <div class="dosPaneles">
+    <div class="panel">
+      <div class="pendientes">
+        <span class="casilla"></span>
+        <span><b>3 movimientos</b> sin sobre asignado</span>
+        <button class="btn">Marcar los 3 como revisados</button>
+      </div>
+
+      <div class="dia"><span>Hoy · viernes 8</span><b class="num">$63.20</b></div>
+      <div class="mov viva">
+        <span class="casilla"></span>
+        <div class="m"><div class="t">Supermercado González</div><div class="s">Débito · 4412</div></div>
+        <span class="chip comida"><svg><use href="#i-carrito"/></svg>Comida de casa</span>
+        <div class="a num">$48.30</div>
+      </div>
+      <div class="mov">
+        <span class="casilla"></span>
+        <div class="m"><div class="t">Shell</div><div class="s">Débito · 4412</div></div>
+        <span class="chip auto"><svg><use href="#i-auto"/></svg>Gasolina</span>
+        <div class="a num">$14.90</div>
+      </div>
+
+      <div class="dia"><span>Ayer · jueves 7</span><b class="num">$1,368.00</b></div>
+      <div class="mov">
+        <span class="casilla on"></span>
+        <div class="m"><div class="t">Renta de agosto <span class="insignia">R</span></div><div class="s">Débito · 4412</div></div>
+        <span class="chip casa"><svg><use href="#i-casa"/></svg>Renta</span>
+        <div class="a num">$1,350.00</div>
+      </div>
+      <div class="mov">
+        <span class="casilla on"></span>
+        <div class="m"><div class="t">Farmacia del Ahorro</div><div class="s">Tarjeta · 8891</div></div>
+        <span class="chip salud"><svg><use href="#i-corazon"/></svg>Salud</span>
+        <div class="a num">$18.00</div>
+      </div>
+
+      <div class="dia"><span>Miércoles 6</span><b class="num">+$1,240.00</b></div>
+      <div class="mov">
+        <span class="casilla on"></span>
+        <div class="m"><div class="t">Cheque del 6 de agosto</div><div class="s">Depósito · 4412</div></div>
+        <span class="chip dar"><svg><use href="#i-flujo"/></svg>Entró</span>
+        <div class="a num entra">+$1,240.00</div>
+      </div>
+      <div class="mov">
+        <span class="casilla on"></span>
+        <div class="m"><div class="t">Diezmo <span class="insignia">R</span></div><div class="s">Transferencia · 4412</div></div>
+        <span class="chip dar"><svg><use href="#i-mano"/></svg>Diezmo</span>
+        <div class="a num">$124.00</div>
+      </div>
+    </div>
+
+    <div class="insp">
+      <div class="arr"><span>Viernes 8 de agosto</span><span>Sin revisar</span></div>
+      <h4>Supermercado González</h4>
+      <div class="cifra num">$48.30</div>
+      <div class="cta"><div class="cat"><svg><use href="#i-carrito"/></svg></div>Débito · 4412</div>
+
+      <div class="campos">
+        <div class="campo">
+          <span class="lb">Sobre</span>
+          <span class="chip comida"><svg><use href="#i-carrito"/></svg>Comida de casa</span>
+        </div>
+        <div class="campo">
+          <span class="lb">Cheque</span>
+          <span style="color:var(--texto);font-weight:500">Cheque 2 · 6 al 19 de agosto</span>
+        </div>
+        <div class="campo">
+          <span class="lb">Etiqueta</span>
+          <button class="mas"><svg width="13" height="13"><use href="#i-mas"/></svg></button>
+        </div>
+      </div>
+
+      <div class="nota-campo">Agregar una nota…</div>
+
+      <div class="hist">
+        <div class="k">En este sobre, este mes</div>
+        <div class="h"><span>Gastado</span><b class="num">$402 de $450</b></div>
+        <div class="h"><span>Te queda</span><b class="num" style="color:var(--teal-osc)">$48</b></div>
+        <div class="h"><span>Promedio de los 3 meses</span><b class="num">$437</b></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nota">
+  <b>Qué cambia en el código, en orden de impacto:</b>
+  <li>La tarjeta pasa de ser la <b>fila</b> a ser la <b>sección</b>. `&lt;Tarjeta&gt;` por renglón desaparece; entra un contenedor con filas separadas por una línea de 1px.</li>
+  <li>Las filas usan <b>grid con las mismas columnas</b> en toda la app, no flex. Ahí nace la alineación.</li>
+  <li>La barra vive en su propia columna, con <b>el mismo carril</b> en todas las filas. Sin eso no se puede comparar nada.</li>
+  <li>Encabezados de columna (Gastado / Del mes) y <b>grupos que se abren y se cierran</b> con su contador.</li>
+  <li>Fila de 44px de alto mínimo: sigue siendo tocable en el teléfono y caben el triple de renglones.</li>
+  <li>La píldora de categoría es una sola pieza reutilizable, igual en la lista, en el detalle y en el panel.</li>
+</div>
+
+<div class="pie">
+  Hecho con los tokens de <b>design/design-tokens.css</b>: carbón #1C1E1F, lienzo #F2F3F1, teal #0ABBB4, ámbar #E8A33D para “ojo”, rojo #D9503F solo cuando ya se pasó. Instrument Serif para títulos y cifras héroe, Inter para todo lo demás, cifras de ancho fijo en todo lo que sea dinero.
+</div>
+
+</body>
+</html>
