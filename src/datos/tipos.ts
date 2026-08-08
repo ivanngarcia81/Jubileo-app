@@ -1,3 +1,4 @@
+import type { ClaveIcono } from '../componentes/iconos'
 import type { DeudaSimulada } from '../lib/deudas'
 import type { Centavos } from '../lib/dinero'
 import type { FechaCivil } from '../lib/fecha'
@@ -42,7 +43,7 @@ export interface Fondo {
 export interface LineaMes {
   id: string
   nombre: string
-  icono: string
+  icono: ClaveIcono
   detalle: string
   montoMensualCents: Centavos
 }
@@ -50,7 +51,7 @@ export interface LineaMes {
 export interface Movimiento {
   id: string
   nombre: string
-  icono: string
+  icono: ClaveIcono
   categoria: string
   fecha: FechaCivil
   montoCents: Centavos

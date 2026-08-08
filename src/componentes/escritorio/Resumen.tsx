@@ -6,6 +6,7 @@ import { diaDe, mesDe } from '../../lib/fecha'
 import { FilaFondo, Moneda, Segmentado } from '../base'
 import {
   IconoCoach,
+  IconoDeClave,
   IconoDeudas,
   IconoEnfoque,
   IconoMetas,
@@ -157,7 +158,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
           {presupuesto.movimientos.map((m) => (
             <div key={m.id} className="bg-gris mb-[6px] flex items-center gap-[10px] rounded-[10px] px-[10px] py-[9px]">
               <div className="bg-blanco border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-[12px]">
-                {m.icono}
+                <IconoDeClave clave={m.icono} tam={13} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[12.5px] font-medium">{m.nombre}</div>

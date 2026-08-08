@@ -1,3 +1,4 @@
+import type { ClaveIcono } from '../componentes/iconos'
 import type { Fondo, LineaMes, Movimiento, Pago, Presupuesto, Sobre } from '../datos/tipos'
 import { type Centavos, centavos, suma } from '../lib/dinero'
 import { type FechaCivil, anioDe, diaDelMesRecortado, fecha, mesDe } from '../lib/fecha'
@@ -212,7 +213,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     return i === -1 ? null : i + 1
   }
 
-  const aLineaMes = (c: (typeof filas.categorias)[number], icono: string): LineaMes => {
+  const aLineaMes = (c: (typeof filas.categorias)[number], icono: ClaveIcono): LineaMes => {
     const cheque = c.dia_vencimiento === null ? null : chequeQuePaga(c.dia_vencimiento)
     return {
       id: c.id,
@@ -309,7 +310,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     .map((t) => ({
       id: t.id,
       nombre: t.descripcion ?? t.comercio ?? 'Movimiento',
-      icono: t.tipo === 'ingreso' ? '↓' : '·',
+      icono: t.tipo === 'ingreso' ? 'ingreso' : 'gasto',
       categoria: t.categoria_id ? (categoriaPorId.get(t.categoria_id)?.nombre ?? '') : 'Sin asignar',
       fecha: fecha(t.fecha),
       montoCents: centavos(t.monto_cents),
@@ -362,10 +363,10 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     pagos,
     sobres,
     mayordomia: mayordomia
-      ? aLineaMes(mayordomia, '✦')
-      : { id: 'mayordomia', nombre: 'Mayordomía', icono: '✦', detalle: '', montoMensualCents: centavos(0) },
-    fijos: enCategoria('fijo').map((c) => aLineaMes(c, '·')),
-    variables: enCategoria('variable').map((c) => aLineaMes(c, '◇')),
+      ? aLineaMes(mayordomia, 'mayordomia')
+      : { id: 'mayordomia', nombre: 'Mayordomía', icono: 'mayordomia', detalle: '', montoMensualCents: centavos(0) },
+    fijos: enCategoria('fijo').map((c) => aLineaMes(c, 'fijo')),
+    variables: enCategoria('variable').map((c) => aLineaMes(c, 'variable')),
     fondos,
 
     deudas: [...filas.deudas]

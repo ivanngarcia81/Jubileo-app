@@ -3,6 +3,7 @@ import type { LineaMes, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { alturas } from '../../lib/mes/barras'
 import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
+import { IconoDeClave } from '../iconos'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
@@ -152,7 +153,11 @@ export function ElMes({
   const filaEditable = (linea: LineaMes) => (
     <Tarjeta key={linea.id}>
       <Fila
-        izquierda={<Icono>{linea.icono}</Icono>}
+        izquierda={
+          <Icono>
+            <IconoDeClave clave={linea.icono} tam={14} />
+          </Icono>
+        }
         titulo={linea.nombre}
         detalle={linea.detalle}
         derecha={

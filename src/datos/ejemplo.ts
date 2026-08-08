@@ -120,15 +120,15 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   // Los mismos sobres de arriba, pero con su monto del mes entero: es lo que
   // se reparte entre los cheques.
   variables: [
-    { id: 'comida', nombre: 'Comida', icono: '◇', detalle: '', montoMensualCents: centavos(45000) },
-    { id: 'gasolina', nombre: 'Gasolina', icono: '◇', detalle: '', montoMensualCents: centavos(18000) },
-    { id: 'personal', nombre: 'Personal', icono: '◇', detalle: '', montoMensualCents: centavos(12000) },
+    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', montoMensualCents: centavos(45000) },
+    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', montoMensualCents: centavos(18000) },
+    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', montoMensualCents: centavos(12000) },
   ],
 
   mayordomia: {
     id: 'diezmo',
     nombre: 'Diezmo y ofrenda',
-    icono: '✦',
+    icono: 'mayordomia',
     detalle: '10% · en los 2 cheques',
     montoMensualCents: centavos(36800),
   },
@@ -137,21 +137,21 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'renta',
       nombre: 'Renta',
-      icono: '⌂',
+      icono: 'casa',
       detalle: 'Vence el 3 · Cheque 1',
       montoMensualCents: centavos(90000),
     },
     {
       id: 'servicios',
       nombre: 'Luz y agua',
-      icono: '⚡',
+      icono: 'servicios',
       detalle: 'Vence el 4 · Cheque 1',
       montoMensualCents: centavos(13000),
     },
     {
       id: 'seguro',
       nombre: 'Seguro del carro',
-      icono: '⛨',
+      icono: 'seguro',
       detalle: 'Vence el 18 · Cheque 2',
       montoMensualCents: centavos(14200),
     },
@@ -224,7 +224,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'm1',
       nombre: 'Cheque de nómina',
-      icono: '↓',
+      icono: 'ingreso',
       categoria: 'Ingreso',
       fecha: fecha('2026-08-03'),
       montoCents: centavos(124000),
@@ -233,7 +233,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'm2',
       nombre: 'Renta',
-      icono: '⌂',
+      icono: 'casa',
       categoria: 'Vivienda',
       fecha: fecha('2026-08-03'),
       montoCents: centavos(90000),
@@ -242,7 +242,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'm3',
       nombre: 'Diezmo',
-      icono: '✦',
+      icono: 'mayordomia',
       categoria: 'Mayordomía',
       fecha: fecha('2026-08-03'),
       montoCents: centavos(12400),
@@ -251,7 +251,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'm4',
       nombre: 'PSE&G',
-      icono: '⚡',
+      icono: 'servicios',
       categoria: 'Servicios',
       fecha: fecha('2026-08-04'),
       montoCents: centavos(8500),
@@ -260,7 +260,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     {
       id: 'm5',
       nombre: 'Supermercado',
-      icono: '☰',
+      icono: 'fijo',
       categoria: 'Comida',
       fecha: fecha('2026-08-04'),
       montoCents: centavos(6200),
