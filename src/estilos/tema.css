@@ -51,4 +51,8 @@
   --radius-btn: var(--r-btn);
   --spacing-gap: var(--gap);
   --spacing-toque: var(--toque);
+
+  /* `--container-*` es lo que Tailwind convierte en `max-w-*`. */
+  --container-app: var(--ancho-max);
+  --container-movil: var(--ancho-movil);
 }

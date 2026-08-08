@@ -45,6 +45,15 @@
   --r-btn:    11px;
   --gap:      16px;
   --toque:    44px;   /* mínimo tocable */
+
+  /* El ancho de la ventana que dibuja el mockup de escritorio. En el mockup es
+     el marco del documento; en la app es el ancho máximo del contenido. Sin
+     él, en un monitor de 2560px la columna central se estira sin fin mientras
+     las laterales siguen clavadas en 262px. */
+  --ancho-max: 1420px;
+  /* El ancho cómodo de una columna de teléfono. El mockup dibuja 352px porque
+     está enseñando un iPhone; la app lo deja crecer un poco y ahí se detiene. */
+  --ancho-movil: 440px;
 }
 
 /* ============================================================

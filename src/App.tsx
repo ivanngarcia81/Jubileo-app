@@ -685,7 +685,12 @@ export function App() {
         </Marco>
       </div>
 
-      <div className="bg-gris text-texto font-sans hidden min-h-dvh lg:block">
+      {/* El mockup dibuja la ventana de escritorio dentro de `.win`, de 1420px
+          centrada. Eso no era el marco del documento: era el ancho del
+          contenido, y al pasarlo a React se perdió. Sin él, en un monitor
+          grande la columna central crece sin límite mientras las laterales
+          siguen en 262px, y el texto de 13px queda en renglones larguísimos. */}
+      <div className="bg-gris text-texto font-sans mx-auto hidden min-h-dvh max-w-app lg:block">
         <BarraSuperior presupuesto={presupuesto} activa={enEscritorio} ir={ir} />
         <BandaIndicadores presupuesto={presupuesto} fechaLibertad={fechaLibertad} />
 
