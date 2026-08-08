@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Fondo, Presupuesto } from '../../datos/tipos'
 import { type Centavos, centavos } from '../../lib/dinero'
 import { FONDOS_GRATIS, puede } from '../../lib/membresia'
-import { FilaAgregar, FilaFondo, ListaSeccion, Moneda, Seccion, Tarjeta } from '../base'
+import { FilaAgregar, FilaFondo, ListaSeccion, Moneda, Seccion, Tarjeta, Vacio } from '../base'
 import { IconoMetas } from '../iconos'
 import { meses } from '../textos'
 import { EditarFondo } from './EditarFondo'
@@ -58,6 +58,12 @@ export function Metas({
         encabezados={['Fondo', null, 'Llevas']}
         {...FONDOS}
       >
+        {presupuesto.fondos.length === 0 && (
+          <Vacio>
+            Un fondo de reserva es dinero apartado para lo que ya sabes que
+            viene: las llantas, la Navidad, el viaje. Empieza por uno.
+          </Vacio>
+        )}
         {presupuesto.fondos.map((fondo) => (
           <FilaFondo
             key={fondo.id}

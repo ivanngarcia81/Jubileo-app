@@ -19,6 +19,7 @@ import {
   ListaSeccion,
   Moneda,
   Segmentado,
+  Vacio,
 } from '../base'
 import { IconoAbrir, IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
 import { CerrarMes } from './CerrarMes'
@@ -235,23 +236,35 @@ export function ElMes({
   // están aquí: hoy no tienen categoría, así que su dinero no entra en el
   // reparto — van en su propia lista, abajo, para no decir que sí.
   const grupos = [
-    { clave: 'mayordomia' as const, titulo: 'Mayordomía', lineas: [presupuesto.mayordomia] },
+    {
+      clave: 'mayordomia' as const,
+      titulo: 'Mayordomía',
+      lineas: [presupuesto.mayordomia],
+      vacio: 'Lo primero que sale, antes que todo lo demás.',
+    },
     {
       clave: 'fijo' as const,
       titulo: 'Gastos fijos',
       lineas: presupuesto.fijos,
       agregar: 'Agregar un gasto fijo',
+      vacio: 'La renta, la luz, el seguro: lo que llega todos los meses con fecha.',
     },
     {
       clave: 'variable' as const,
       titulo: 'Sobres variables',
       lineas: presupuesto.variables,
       agregar: 'Agregar un sobre',
+      vacio: 'Comida, gasolina, gastos personales: lo que cambia de mes a mes.',
     },
     // Las deudas se ven y no se tocan desde aquí: su monto mensual cuelga de la
     // deuda, y cambiarlo por un lado sin el otro las deja diciendo cosas
     // distintas. Se editan en su pantalla.
-    { clave: 'deuda' as const, titulo: 'Deudas', lineas: presupuesto.lineasDeuda },
+    {
+      clave: 'deuda' as const,
+      titulo: 'Deudas',
+      lineas: presupuesto.lineasDeuda,
+      vacio: 'Sin deudas por ahora. Las que agregues en Deudas aparecen aquí.',
+    },
   ]
   const cuantasCategorias = grupos.reduce((n, g) => n + g.lineas.length, 0)
 
@@ -292,6 +305,7 @@ export function ElMes({
                 </div>
                 <CeldasDeAvance gastadoCents={gastado} delMesCents={total} />
               </Fila>
+              {abierto && grupo.lineas.length === 0 && <Vacio>{grupo.vacio}</Vacio>}
               {abierto && grupo.lineas.map((l) => filaHija(l, puedeEditar))}
               {abierto && grupo.agregar && alCrearCategoria && (
                 <FilaAgregar
@@ -329,6 +343,12 @@ export function ElMes({
         encabezados={['Fondo', null, 'Llevas']}
         {...FONDOS}
       >
+        {presupuesto.fondos.length === 0 && (
+          <Vacio>
+            Un fondo de reserva es dinero apartado para lo que ya sabes que
+            viene: las llantas, la Navidad, el viaje.
+          </Vacio>
+        )}
         {presupuesto.fondos.slice(0, 2).map((fondo) => (
           <FilaFondo
             key={fondo.id}

@@ -390,6 +390,21 @@ export function Fila({
   )
 }
 
+/**
+ * Una lista vacía.
+ *
+ * Un panel en blanco con su encabezado y nada adentro se lee como un error de
+ * carga. Aquí va una frase que diga qué falta y por qué vale la pena — no
+ * "sin datos", que es lo que dice un sistema, no una app.
+ */
+export function Vacio({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-texto-2 px-[12px] py-7 text-center text-[13px] leading-[1.6] text-balance panel:px-[18px]">
+      {children}
+    </p>
+  )
+}
+
 /** La última fila de una lista: la que la hace crecer. */
 export function FilaAgregar({
   texto,

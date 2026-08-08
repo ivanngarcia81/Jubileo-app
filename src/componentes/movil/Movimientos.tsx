@@ -12,6 +12,7 @@ import {
   Hoja,
   ListaSeccion,
   Moneda,
+  Vacio,
 } from '../base'
 import { IconoMovimientos } from '../iconos'
 import { etiquetaDeDia, fechaLarga } from '../textos'
@@ -255,11 +256,10 @@ export function Movimientos({
       )}
 
       {dias.length === 0 ? (
-        <p className="text-texto-2 px-[12px] py-6 text-center text-[13px] leading-[1.55] panel:px-[18px]">
-          Todavía no hay nada anotado este mes.
-          <br />
-          Lo que anotes en Mi semana aparece aquí.
-        </p>
+        <Vacio>
+          Todavía no hay nada anotado este mes. Lo que anotes en Mi semana
+          aparece aquí, con su sobre y su cheque.
+        </Vacio>
       ) : (
         dias.map((dia) => (
           <div key={dia.fecha}>

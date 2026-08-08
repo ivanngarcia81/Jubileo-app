@@ -53,6 +53,17 @@ recibe columnas: no es que se le hayan olvidado. Y como el mockup es un document
 app arranca en 320, la sección acepta dos juegos —el del teléfono y, desde el corte `panel`, el
 del mockup— en vez de fingir que un solo juego sirve para los dos.
 
+**Lo que falta y no se hizo solo: cerrar la escala tipográfica.** Hoy la app usa **treinta tamaños
+de letra distintos** en 334 lugares —10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15…— y la
+mitad de esas diferencias no las distingue nadie. Salieron de copiar píxel por píxel tres mockups
+que se dibujaron por separado, y ese es justo el problema: no hay una escala, hay tres. La
+propuesta es seis tamaños y nada más: **11 · 12.5 · 14 · 17 · 26 · 38**, con el 11 para rótulos en
+versalitas, el 12.5 para el texto secundario, el 14 para el cuerpo, el 17 para títulos de sección,
+y los dos grandes en serif para las cifras héroe. No se aplicó todavía **a propósito**: mover 334
+tamaños cambia todas las pantallas a la vez, y los píxeles de hoy vienen del contrato visual, que
+`CLAUDE.md` dice que no se rediseña por cuenta propia. Es un cambio de una sola pasada, mecánico,
+que hay que ver con los ojos y no con una prueba — así que pide el visto bueno del mapeo antes.
+
 Eso obligó a cambiar también la prueba. `revisar-pantallas.mjs` medía el primer elemento visible con
 `bg-carbon` y exigía que no pasara de 1440 px; con el arreglo bueno ese elemento mide lo que mide la
 pantalla, **a propósito**, así que la prueba habría fallado justo cuando el código quedó bien. Ahora

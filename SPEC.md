@@ -114,6 +114,10 @@ Nombres orientativos; ajusta a la convención del proyecto.
 - id, usuario_id, periodo_id, categoria_id (nulo si está pendiente), fecha, monto_cents
 - tipo (`gasto` | `ingreso`), descripcion, comercio
 - origen (`manual` | `plaid`), estado (`pendiente` | `asignada`)
+- revisada (booleano) — **el usuario ya lo vio.** Lo que anota a mano nace en
+  `true`; lo que llegue del banco, en `false`. Es otra pregunta que `estado`,
+  que dice si tiene sobre: del banco puede llegar algo categorizado y sin ver,
+  o visto y todavía sin sobre.
 
 **deudas**
 - id, usuario_id, nombre, saldo_cents, pago_minimo_cents, tasa_interes, orden
@@ -171,19 +175,36 @@ El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, e
 - `/design/escritorio.html` — panel de computadora
 - `/design/movil.html` — cuatro pantallas de teléfono
 - `/design/design-tokens.css` — variables de color y tipografía
+- `/design/listas.html` — el sistema de listas: la tarjeta es la **sección**, no
+  el renglón; filas en grid con las mismas columnas, la barra en su propio
+  carril, grupos que se abren y se cierran, y la píldora de categoría
 
 ### Móvil
 
 1. **Mi semana** *(inicio)* — Héroe turquesa con el dinero que queda en el periodo y el riel de cheques dentro. Debajo, chips de acción rápida: *Anotar · Pagué · Semana*. Luego los pagos del periodo con casilla de marcado, y los sobres variables con barra de progreso.
 2. **El mes** — Base cero. Selector de mes con barras (entra / sale / sobró). Primero mayordomía, luego fijos con su día de vencimiento y su cheque asignado, luego fondos de reserva.
 3. **Deudas** — Héroe carbón con la fecha de libertad. Deslizador de "¿y si mandas un pago extra?" que recalcula la fecha en vivo. Lista en orden de saldo, menor primero, con la de enfoque marcada.
-4. **El aviso** — No es una pantalla de la app: es la notificación. Ver sección 9.
+4. **Metas** — Los fondos de reserva, con su barra y para cuándo se necesitan.
+5. **Movimientos** — Todo lo del mes agrupado por día, con lo que entró y lo que
+   salió en cada encabezado, la píldora del sobre, el cheque del que salió y la
+   casilla de revisado. Arriba, cuando hay algo que hacer, la barra de "te
+   faltan N por revisar" con la acción en bloque.
+6. **El aviso** — No es una pantalla de la app: es la notificación. Ver sección 9.
 
-Navegación flotante en píldora oscura, cuatro destinos: Semana · Mes · Deudas · Metas.
+Navegación flotante en píldora oscura, cuatro destinos: Semana · Mes · Deudas ·
+Metas. **Ajustes y Movimientos viven fuera de la píldora** —son cuatro y así lo
+dibuja el mockup—: a Ajustes se llega tocando el avatar y a Movimientos desde el
+pie de Mi semana.
+
+El detalle de un movimiento es **un solo componente** para los dos lados: en la
+computadora es la columna de la derecha que sigue a la fila escogida; en el
+teléfono sube desde abajo en una hoja.
 
 ### Escritorio
 
 Barra carbón arriba. Banda oscura con cuatro indicadores (entra, sale, sin repartir, a la deuda) con comparación contra el mes anterior, y los cheques del mes a la derecha. Lienzo claro de tres columnas: reparto y gráfica de planeado vs. gastado; movimientos y bloque de premium; fondos de reserva y bloque del coach.
+
+El "Ver todos" de la tarjeta de movimientos abre la pantalla de Movimientos.
 
 ### Onboarding — 6 pasos, nada más
 
@@ -201,6 +222,9 @@ Al terminar, el usuario ve su primera semana ya armada. Nunca una pantalla vací
 ## 8. Estados vacíos y errores
 
 - Pantalla vacía = invitación a actuar, con el botón que resuelve. Nunca un dibujo con "no hay nada aquí".
+- Lista vacía = una frase que diga **qué falta y por qué vale la pena**, no "sin
+  datos". Un panel en blanco con su encabezado y nada adentro se lee como un
+  error de carga.
 - Los errores dicen qué pasó y cómo arreglarlo, sin disculparse y sin jerga.
 - Si el usuario se pasó de un sobre, la app lo dice sin regañar: *"Te pasaste $12 en gasolina. ¿De dónde lo tomamos?"* con opciones concretas.
 

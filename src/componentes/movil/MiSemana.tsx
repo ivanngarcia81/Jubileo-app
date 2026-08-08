@@ -12,6 +12,7 @@ import {
   Fila,
   ListaSeccion,
   Moneda,
+  Vacio,
 } from '../base'
 import { Anotar } from './Anotar'
 import { CerrarSemana, type RespuestaCierre } from './CerrarSemana'
@@ -160,6 +161,12 @@ export function MiSemana({
         className="mt-3"
         {...PAGOS}
       >
+        {presupuesto.pagos.length === 0 && (
+          <Vacio>
+            Ningún pago vence en este cheque. Los gastos fijos con día de
+            vencimiento aparecen aquí la semana que toca.
+          </Vacio>
+        )}
         {presupuesto.pagos.map((pago) => {
           const pagado = pago.pagado
           return (
@@ -210,6 +217,12 @@ export function MiSemana({
         className="mt-3"
         {...SOBRES}
       >
+        {presupuesto.sobres.length === 0 && (
+          <Vacio>
+            Todavía no tienes sobres. Ve a El mes y reparte tu cheque: ahí es
+            donde el dinero recibe su trabajo.
+          </Vacio>
+        )}
         {presupuesto.sobres.map((sobre) => (
           <Sobre key={sobre.id} {...sobre} />
         ))}

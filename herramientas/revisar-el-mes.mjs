@@ -582,6 +582,9 @@ void gastadoAntes
 // ---- Deudas ---------------------------------------------------------------
 await p.goto(SITIO + '/#/deudas', { waitUntil: 'networkidle' })
 await p.waitForTimeout(700)
+// Sin deudas todavía: la lista tiene que invitar, no quedarse en blanco.
+ok((await p.locator('main').innerText()).includes('Sin deudas pendientes'),
+   'la lista de deudas vacía dice qué falta, en vez de quedarse en blanco')
 await p.getByRole('button', { name: 'Agregar una deuda' }).first().click()
 await p.getByRole('dialog').first().waitFor({ state: 'visible' })
 await p.getByLabel('Nombre de la deuda').first().fill('Capital One')
@@ -612,6 +615,8 @@ ok(deudas[0].es_enfoque === true, 'el enfoque se puede poner desde la pantalla')
 // ---- Fondos ---------------------------------------------------------------
 await p.goto(SITIO + '/#/metas', { waitUntil: 'networkidle' })
 await p.waitForTimeout(700)
+ok((await p.locator('main').innerText()).includes('dinero apartado para lo que ya sabes que viene'),
+   'y la de fondos explica para qué sirve un fondo de reserva')
 await p.getByRole('button', { name: 'Agregar un fondo' }).first().click()
 await p.getByRole('dialog').first().waitFor({ state: 'visible' })
 await p.getByLabel('Nombre del fondo').first().fill('Llantas')

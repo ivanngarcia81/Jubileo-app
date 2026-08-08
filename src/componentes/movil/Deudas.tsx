@@ -13,6 +13,7 @@ import {
   ListaSeccion,
   Moneda,
   Seccion,
+  Vacio,
   Tarjeta,
   porcentaje,
 } from '../base'
@@ -166,6 +167,12 @@ export function Deudas({
         className="mt-3"
         {...DEUDAS}
       >
+        {pendientes.length === 0 && (
+          <Vacio>
+            Sin deudas pendientes. Si tienes una, agrégala aquí y la app te dice
+            en qué mes sales.
+          </Vacio>
+        )}
         {pendientes.map((deuda) => (
           <Fila
             key={deuda.id}
