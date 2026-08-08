@@ -59,6 +59,8 @@ export interface Movimiento {
   nombre: string
   icono: ClaveIcono
   categoria: string
+  /** Para poder enseñar cómo va ese sobre sin amarrarlo por nombre. */
+  categoriaId: string | null
   /** Falso cuando todavía no tiene sobre: el usuario tiene que decidirlo. */
   asignado: boolean
   /** El usuario ya lo vio. Lo que anota a mano nace revisado; lo del banco no. */

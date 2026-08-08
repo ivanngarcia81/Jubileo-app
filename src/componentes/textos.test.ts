@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { fecha } from '../lib/fecha'
-import { etiquetaDeDia } from './textos'
+import { etiquetaDeDia, fechaLarga } from './textos'
+
+describe('la fecha larga del detalle', () => {
+  it('lleva día de la semana, día y mes', () => {
+    expect(fechaLarga(fecha('2026-08-08'))).toBe('Sábado 8 de agosto')
+    expect(fechaLarga(fecha('2026-01-01'))).toBe('Jueves 1 de enero')
+  })
+})
 
 describe('el encabezado de un día de movimientos', () => {
   const hoy = fecha('2026-08-08')

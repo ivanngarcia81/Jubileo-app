@@ -461,6 +461,22 @@ await p.waitForTimeout(1300)
 ok(transacciones.find((t) => t.id === 't-banco-1')?.revisada === false,
    'desmarcar uno lo regresa a por revisar')
 
+// ---- El detalle sigue a la fila escogida ----------------------------------
+await p.getByRole('button', { name: 'Ver Supermercado' }).first().click()
+await p.waitForTimeout(400)
+const hojaDetalle = await p.getByRole('dialog').first().innerText()
+ok(hojaDetalle.includes('Supermercado'), 'tocar el nombre abre el detalle del movimiento')
+ok(hojaDetalle.includes('Cheque 1'), 'con el cheque del que salió')
+// El sobre se busca por llave, no por nombre: si se buscara por nombre esto
+// diría lo mismo, así que se comprueba la cifra, que solo puede salir de ahí.
+// $600 es el monto **del mes** de Comida; $150 sería el del cheque. Que sean
+// distintos es justo lo que hace útil la comprobación.
+ok(/Gastado[\s\S]*\$26 de \$600/.test(hojaDetalle),
+   `y cómo va ese sobre en el mes: ${hojaDetalle.match(/\$\d+ de \$\d+/)?.[0] ?? '—'}`)
+await p.screenshot({ path: RAIZ + 'capturas/app-movimiento-detalle.png' })
+await p.getByRole('button', { name: 'Cerrar' }).first().click()
+await p.waitForTimeout(300)
+
 await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(600)
 

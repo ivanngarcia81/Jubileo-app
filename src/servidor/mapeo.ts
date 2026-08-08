@@ -334,6 +334,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
         // comida trae el icono de comida y no el genérico de gasto.
         icono: t.tipo === 'ingreso' ? 'ingreso' : ((categoria?.grupo ?? 'gasto') as ClaveIcono),
         categoria: categoria?.nombre ?? (t.tipo === 'ingreso' ? 'Entró' : 'Sin asignar'),
+        categoriaId: t.categoria_id,
         asignado: categoria !== undefined || t.tipo === 'ingreso',
         revisado: t.revisada,
         fecha: fecha(t.fecha),

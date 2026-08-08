@@ -60,6 +60,11 @@ const DIAS = [
  * el reloj de la máquina no es el del usuario, y quien vive en otra zona vería
  * "hoy" en el día equivocado durante unas horas todos los días.
  */
+/** "Viernes 8 de agosto". Para el detalle, donde sí hay lugar para todo. */
+export function fechaLarga(f: FechaCivil): string {
+  return conMayuscula(`${DIAS[diaSemana(f)]} ${diaDe(f)} de ${nombreDeMes(mesDe(f))}`)
+}
+
 export function etiquetaDeDia(f: FechaCivil, hoy: FechaCivil): string {
   // El mes va cuando no es el de hoy. Los cheques cruzan meses a propósito
   // —el que financia agosto puede caer el 20 de julio— así que un "Martes 28"

@@ -9,11 +9,12 @@ import {
   CeldaNombre,
   ChipCategoria,
   Fila,
+  Hoja,
   ListaSeccion,
   Moneda,
 } from '../base'
 import { IconoMovimientos } from '../iconos'
-import { etiquetaDeDia } from '../textos'
+import { etiquetaDeDia, fechaLarga } from '../textos'
 
 /**
  * Movimientos — todo lo que pasó en el mes, por día.
@@ -33,38 +34,153 @@ const COLUMNAS = {
   columnasPanel: '21px minmax(150px,1fr) 190px 110px',
 }
 
+/**
+ * El detalle de un movimiento. Uno solo para los dos lados: en la computadora
+ * vive en el panel de la derecha y sigue a la fila escogida; en el teléfono
+ * sube desde abajo en una hoja. Si fueran dos, se desparejarían.
+ *
+ * Lo que el mockup dibuja y no está: la etiqueta, la nota y el promedio de los
+ * tres meses. Ninguno existe en la base todavía, y un campo que no se puede
+ * llenar es peor que no tenerlo.
+ */
+function Detalle({
+  movimiento: m,
+  presupuesto,
+  alRevisar,
+}: {
+  movimiento: Movimiento
+  presupuesto: Presupuesto
+  alRevisar?: ((revisado: boolean) => void) | undefined
+}) {
+  // El sobre se busca por llave y no por nombre: renombrar una categoría no
+  // puede romper el enlace en silencio.
+  const linea = [
+    presupuesto.mayordomia,
+    ...presupuesto.fijos,
+    ...presupuesto.variables,
+    ...presupuesto.lineasDeuda,
+  ].find((l) => l.id === m.categoriaId)
+
+  return (
+    <>
+      <div className="text-texto-2 flex items-baseline justify-between text-[11.5px]">
+        <span>{fechaLarga(m.fecha)}</span>
+        <span>{m.revisado ? 'Revisado' : 'Sin revisar'}</span>
+      </div>
+      <h4 className="font-serif mt-[7px] mb-[3px] text-[26px] leading-[1.1] font-normal">
+        {m.nombre}
+      </h4>
+      <div
+        className={`font-serif mt-[2px] text-[34px] leading-none [font-variant-numeric:tabular-nums] ${
+          m.tipo === 'ingreso' ? 'text-teal-osc' : ''
+        }`}
+      >
+        {m.tipo === 'ingreso' && '+'}
+        <Moneda centavos={m.montoCents} redondo={false} />
+      </div>
+
+      <div className="border-linea mt-4 flex flex-col gap-3 border-t pt-[14px] text-[12.5px]">
+        <div className="text-texto-2 flex items-center gap-3">
+          <span className="w-[86px] shrink-0">Sobre</span>
+          <ChipCategoria {...(m.asignado ? { clave: m.icono } : {})}>{m.categoria}</ChipCategoria>
+        </div>
+        {m.cheque !== null && (
+          <div className="text-texto-2 flex items-center gap-3">
+            <span className="w-[86px] shrink-0">Cheque</span>
+            <span className="text-texto font-medium">Cheque {m.cheque}</span>
+          </div>
+        )}
+        <div className="text-texto-2 flex items-center gap-3">
+          <span className="w-[86px] shrink-0">Revisado</span>
+          <Casilla
+            marcada={m.revisado}
+            etiqueta={`${m.nombre} como revisado`}
+            {...(alRevisar ? { alCambiar: () => alRevisar(!m.revisado) } : {})}
+          />
+        </div>
+      </div>
+
+      {linea && linea.montoMensualCents > 0 && (
+        <div className="border-linea mt-4 border-t pt-[13px]">
+          <div className="text-texto-2 mb-[9px] text-[10px] font-semibold tracking-[.12em] uppercase">
+            En este sobre, este mes
+          </div>
+          <div className="border-linea flex items-baseline justify-between border-b py-[6px] text-[12.5px]">
+            <span className="text-texto-2">Gastado</span>
+            <b className="font-semibold">
+              <Moneda centavos={linea.gastadoCents} /> de{' '}
+              <Moneda centavos={linea.montoMensualCents} />
+            </b>
+          </div>
+          <div className="flex items-baseline justify-between py-[6px] text-[12.5px]">
+            <span className="text-texto-2">
+              {linea.gastadoCents > linea.montoMensualCents ? 'Te pasaste' : 'Te queda'}
+            </span>
+            <b
+              className={`font-semibold ${
+                linea.gastadoCents > linea.montoMensualCents ? 'text-rojo' : 'text-teal-osc'
+              }`}
+            >
+              <Moneda
+                centavos={centavos(Math.abs(linea.montoMensualCents - linea.gastadoCents))}
+              />
+            </b>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 function FilaMovimiento({
   movimiento: m,
   alRevisar,
+  alEscoger,
+  escogido,
   ocupada,
 }: {
   movimiento: Movimiento
   alRevisar?: ((revisado: boolean) => void) | undefined
+  alEscoger: () => void
+  escogido: boolean
   ocupada: boolean
 }) {
   const chip = (
     <ChipCategoria {...(m.asignado ? { clave: m.icono } : {})}>{m.categoria}</ChipCategoria>
   )
   return (
-    <Fila className={m.asignado ? '' : 'bg-gris'}>
+    // La fila no es el botón, como en las otras listas: aquí ya hay una casilla
+    // adentro, y un botón dentro de otro botón no es HTML válido. El nombre es
+    // el que abre el detalle, y la casilla sigue siendo suya.
+    <Fila
+      className={`relative ${escogido ? 'bg-brillo-teal before:bg-teal before:absolute before:inset-y-0 before:left-0 before:w-[2px] before:content-[""]' : m.asignado ? '' : 'bg-gris'}`}
+    >
       <Casilla
         marcada={m.revisado}
         etiqueta={`${m.nombre} como revisado`}
         ocupada={ocupada}
         {...(alRevisar ? { alCambiar: () => alRevisar(!m.revisado) } : {})}
       />
-      <CeldaNombre
-        detalle={
-          <span className="flex min-w-0 items-center gap-2">
-            {/* En el teléfono no hay columna para la píldora: se va debajo del
-                nombre. Es la misma píldora, no otra. */}
-            <span className="flex min-w-0 panel:hidden">{chip}</span>
-            {m.cheque !== null && <span className="shrink-0">Cheque {m.cheque}</span>}
-          </span>
-        }
+      <button
+        type="button"
+        onClick={alEscoger}
+        aria-label={`Ver ${m.nombre}`}
+        aria-pressed={escogido}
+        className="min-w-0 text-left"
       >
-        {m.nombre}
-      </CeldaNombre>
+        <CeldaNombre
+          detalle={
+            <span className="flex min-w-0 items-center gap-2">
+              {/* En el teléfono no hay columna para la píldora: se va debajo
+                  del nombre. Es la misma píldora, no otra. */}
+              <span className="flex min-w-0 panel:hidden">{chip}</span>
+              {m.cheque !== null && <span className="shrink-0">Cheque {m.cheque}</span>}
+            </span>
+          }
+        >
+          {m.nombre}
+        </CeldaNombre>
+      </button>
       <div className="hidden panel:block">{chip}</div>
       <CeldaCifra className={m.tipo === 'ingreso' ? 'text-teal-osc' : ''}>
         {m.tipo === 'ingreso' && '+'}
@@ -85,8 +201,12 @@ export function Movimientos({
   // El hoy del calendario del usuario, no el de UTC.
   const hoy = hoyDelUsuario()
   const [ocupados, setOcupados] = useState<readonly string[]>([])
+  const [escogidoId, setEscogido] = useState<string | null>(null)
   const dias = porDia(presupuesto.movimientos)
   const sinRevisar = presupuesto.movimientos.filter((m) => !m.revisado)
+  // Por llave y no por objeto: al recargar el mes los objetos son otros, y un
+  // detalle amarrado al objeto viejo se quedaría enseñando lo de antes.
+  const escogido = presupuesto.movimientos.find((m) => m.id === escogidoId) ?? null
 
   const marcar = (ids: readonly string[], revisado: boolean) => {
     if (!alRevisar) return
@@ -94,7 +214,15 @@ export function Movimientos({
     void alRevisar(ids, revisado).finally(() => setOcupados([]))
   }
 
-  return (
+  const detalle = escogido && (
+    <Detalle
+      movimiento={escogido}
+      presupuesto={presupuesto}
+      {...(alRevisar ? { alRevisar: (v: boolean) => marcar([escogido.id], v) } : {})}
+    />
+  )
+
+  const lista = (
     <ListaSeccion
       titulo={`Movimientos de ${presupuesto.mes.etiqueta.toLowerCase()}`}
       icono={<IconoMovimientos tam={15} />}
@@ -153,6 +281,8 @@ export function Movimientos({
               <FilaMovimiento
                 key={m.id}
                 movimiento={m}
+                escogido={m.id === escogidoId}
+                alEscoger={() => setEscogido(m.id === escogidoId ? null : m.id)}
                 ocupada={ocupados.includes(m.id)}
                 {...(alRevisar ? { alRevisar: (v: boolean) => marcar([m.id], v) } : {})}
               />
@@ -161,5 +291,36 @@ export function Movimientos({
         ))
       )}
     </ListaSeccion>
+  )
+
+  return (
+    <>
+      {/* En la computadora el detalle es una columna que sigue a la fila
+          escogida; en el teléfono no cabe, y sube desde abajo como todas las
+          demás decisiones que tocan dinero. */}
+      <div className="grid items-start gap-4 panel:grid-cols-[minmax(0,1fr)_340px]">
+        {lista}
+        {detalle && (
+          <aside className="bg-blanco border-linea hidden rounded-[15px] border p-[18px] panel:block">
+            {detalle}
+          </aside>
+        )}
+      </div>
+
+      {detalle && (
+        <div className="panel:hidden">
+          <Hoja etiqueta={escogido.nombre} alCerrar={() => setEscogido(null)}>
+            {detalle}
+            <button
+              type="button"
+              onClick={() => setEscogido(null)}
+              className="border-linea text-texto-2 mt-5 min-h-11 w-full rounded-[11px] border text-[14px] font-semibold"
+            >
+              Cerrar
+            </button>
+          </Hoja>
+        </div>
+      )}
+    </>
   )
 }
