@@ -127,6 +127,11 @@ function cabeceraDe(
 /** Lo que la pantalla puede escribir. Ausente con datos de ejemplo. */
 interface Acciones {
   alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>;
+  alPonerSemana?: (
+    categoriaId: string,
+    semana: number,
+    montoCents: Centavos,
+  ) => Promise<void>;
   alRenombrar?: (categoriaId: string, nombre: string) => Promise<void>;
   alQuitar?: (categoriaId: string) => Promise<void>;
   alCrearCategoria?: (
@@ -182,6 +187,7 @@ function Contenido({
 }) {
   const {
     alPonerMonto,
+    alPonerSemana,
     alRenombrar,
     alQuitar,
     alCrearCategoria,
@@ -206,6 +212,7 @@ function Contenido({
         <ElMes
           presupuesto={presupuesto}
           {...(alPonerMonto ? { alPonerMonto } : {})}
+          {...(alPonerSemana ? { alPonerSemana } : {})}
           {...(alRenombrar ? { alRenombrar } : {})}
           {...(alQuitar ? { alQuitar } : {})}
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
@@ -478,6 +485,15 @@ export function App() {
       }
     : undefined;
 
+  const alPonerSemana = mesId
+    ? async (categoriaId: string, semana: number, montoCents: Centavos) => {
+        const { ponerMontoDeSemana } =
+          await import("./servidor/repositorios/semanas");
+        await ponerMontoDeSemana(mesId, categoriaId, semana, montoCents);
+        fuente.recargar();
+      }
+    : undefined;
+
   const hogarId = presupuesto.hogarId;
   const alRenombrar = mesId
     ? async (categoriaId: string, nombre: string) => {
@@ -723,6 +739,7 @@ export function App() {
   const acciones: Acciones = {
     ...metas,
     ...(alPonerMonto ? { alPonerMonto } : {}),
+    ...(alPonerSemana ? { alPonerSemana } : {}),
     ...(alRenombrar ? { alRenombrar } : {}),
     ...(alQuitar ? { alQuitar } : {}),
     ...(alCrearCategoria ? { alCrearCategoria } : {}),

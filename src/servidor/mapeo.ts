@@ -248,10 +248,12 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     return semanaDeDia(Number(f.slice(8, 10)))
   }
 
+  const lineaPorId = new Map(filas.lineas.map((l) => [l.id, l]))
   const planSemanal: AsignacionDeSemana[] = filas.asignaciones_semana
     .filter((a) => a.semana >= 1 && a.semana <= totalSemanas)
     .map((a) => ({
       lineaId: a.linea_presupuesto_id,
+      categoriaId: lineaPorId.get(a.linea_presupuesto_id)?.categoria_id ?? null,
       semana: a.semana,
       montoCents: centavos(a.monto_cents),
     }))
@@ -344,6 +346,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
   const libreporPeriodoCents = periodosOrdenados.map((p, i) =>
     libreDelPeriodo(p, cubreCents[i] ?? 0),
   )
+  const cubrePorPeriodoCents = cubreCents.map(centavos)
 
   // ---- Pagos de la semana en curso ---------------------------------------
   // Lo fijo y las deudas que vencen en sus días, con su monto mensual entero:
@@ -487,6 +490,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     periodoActivoId: enCurso?.id ?? null,
     ingresoPorChequeCents: enCurso ? ingresoDe(enCurso) : centavos(0),
     libreporPeriodoCents,
+    cubrePorPeriodoCents,
 
     entraCents,
     saleCents,

@@ -364,14 +364,21 @@ await p.route('**/*', async (r) => {
     }
     if (t === 'lineas_presupuesto') {
       const cuales = deQueMeses()
-      return json(cuales ? lineas.filter((x) => cuales.includes(x.mes_id)) : lineas)
+      let filasLineas = cuales ? lineas.filter((x) => cuales.includes(x.mes_id)) : lineas
+      // `ponerMontoDeSemana` busca la línea de una categoría con `.maybeSingle()`.
+      const cat = url.searchParams.get('categoria_id')
+      if (cat) filasLineas = filasLineas.filter((x) => x.categoria_id === cat.replace('eq.', ''))
+      return json(pideUno ? (filasLineas[0] ?? null) : filasLineas)
     }
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
     if (t === 'asignaciones_semana') {
       const cuales = deQueMeses()
-      const filasSemana = cuales
+      let filasSemana = cuales
         ? asignaciones_semana.filter((x) => cuales.includes(x.mes_id))
         : asignaciones_semana
+      const linea = url.searchParams.get('linea_presupuesto_id')
+      if (linea)
+        filasSemana = filasSemana.filter((x) => x.linea_presupuesto_id === linea.replace('eq.', ''))
       return json(filasSemana.map((a, i) => ({ id: `as${i}`, ...a })))
     }
     if (t === 'transacciones') return json(transacciones)
@@ -393,6 +400,12 @@ await p.waitForTimeout(1500)
 
 await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
 await p.waitForTimeout(800)
+// El mes abre en el eje nuevo: las semanas. Este tramo del camino ejercita el
+// árbol de categorías, así que se cambia el lente — y la elección se recuerda.
+ok((await p.locator('body').innerText()).includes('Semanas de agosto'),
+   'El mes abre en la vista de semanas: el eje nuevo')
+await p.getByRole('button', { name: 'Mes', exact: true }).first().click()
+await p.waitForTimeout(300)
 ok(await p.getByText('Sobres variables').first().isVisible(), 'El mes enseña los sobres variables, que es donde se reparte el resto')
 // Los cuatro grupos, con la deuda incluida: sin ella los montos de la pantalla
 // no llegaban a lo que dice "Sale este mes".
@@ -458,6 +471,61 @@ await p.waitForTimeout(500)
 const pantalla = await p.locator('body').innerText()
 ok(pantalla.includes('$600'), 'y la pantalla ya enseña el monto nuevo')
 await p.screenshot({ path: RAIZ + 'capturas/app-mes-repartido.png' })
+
+// ---- La vista Semanas: presupuestar un sobre en una semana ----------------
+await p.getByRole('button', { name: 'Semanas', exact: true }).first().click()
+await p.waitForTimeout(400)
+ok((await p.locator('body').innerText()).includes('Semanas de agosto'),
+   'el segmentado cambia al eje de semanas')
+// La semana en curso (la 1, con el reloj clavado el 5) nace abierta: adentro
+// están los sobres editables y el fijo que le cae por fecha, en solo lectura.
+ok(await p.getByRole('button', { name: 'Poner Comida en la semana 1' }).first().isVisible(),
+   'la semana en curso nace abierta con sus sobres editables')
+ok(await p.getByText('Renta').first().isVisible(),
+   'el fijo que vence en sus días también está')
+ok(!(await p.getByRole('button', { name: /Poner Renta en la semana/ }).first().isVisible()),
+   'pero no se presupuesta a mano: cae solo por su fecha')
+await p.screenshot({ path: RAIZ + 'capturas/app-mes-semanas.png' })
+
+await p.getByRole('button', { name: 'Abrir la semana 2' }).first().click()
+await p.getByRole('button', { name: 'Poner Comida en la semana 2' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Monto de Comida en la semana 2').first().fill('110')
+await p.waitForTimeout(300)
+ok((await p.getByRole('dialog').first().innerText()).includes('$574.52'),
+   'la hoja avisa en cuánto queda el mes: la suma de sus semanas')
+await p.screenshot({ path: RAIZ + 'capturas/app-poner-semana.png' })
+await p.getByRole('button', { name: 'Guardar' }).first().click()
+await p.waitForTimeout(1500)
+
+const lineaComida = lineas.find((l) => l.categoria_id === 'c-comida')
+ok(lineaComida?.monto_mensual_cents === 57452,
+   `el monto del mes pasó a ser la suma de las semanas: ${lineaComida?.monto_mensual_cents}`)
+ok(asignaciones_semana.find(
+     (a) => a.linea_presupuesto_id === lineaComida?.id && a.semana === 2,
+   )?.monto_cents === 11000,
+   'y la semana 2 quedó con sus $110')
+
+// Se deja como estaba, para que el resto del camino siga viendo los $600.
+const abrirS2 = p.getByRole('button', { name: 'Abrir la semana 2' }).first()
+if (await abrirS2.isVisible()) await abrirS2.click()
+await p.getByRole('button', { name: 'Poner Comida en la semana 2' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Monto de Comida en la semana 2').first().fill('135.48')
+await p.getByRole('button', { name: 'Guardar' }).first().click()
+await p.waitForTimeout(1500)
+ok(lineas.find((l) => l.categoria_id === 'c-comida')?.monto_mensual_cents === 60000,
+   'editar la semana de vuelta deja el mes de vuelta en $600')
+
+// ---- La vista Cheques: derivada, se mira y no se toca ---------------------
+await p.getByRole('button', { name: 'Cheques', exact: true }).first().click()
+await p.waitForTimeout(300)
+const vistaCheques = await p.locator('body').innerText()
+ok(vistaCheques.includes('Cheque 1') && vistaCheques.toLowerCase().includes('cubre'),
+   'la vista Cheques dice qué cubre cada uno, derivado de las fechas')
+await p.screenshot({ path: RAIZ + 'capturas/app-mes-cheques.png' })
+await p.getByRole('button', { name: 'Mes', exact: true }).first().click()
+await p.waitForTimeout(300)
 
 // ---- Anotar un gasto ------------------------------------------------------
 await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })

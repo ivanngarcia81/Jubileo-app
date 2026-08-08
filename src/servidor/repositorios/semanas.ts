@@ -84,6 +84,56 @@ export async function guardarPlanSemanal(
 }
 
 /**
+ * Pone cuánto va de un sobre en una semana. Es la edición fina de la vista de
+ * semanas: el monto mensual de la línea pasa a ser la suma de sus semanas —
+ * presupuestar por semana ES decidir el mes, no repartir un mes ya decidido.
+ */
+export async function ponerMontoDeSemana(
+  mesId: string,
+  categoriaId: string,
+  semana: number,
+  montoCents: Centavos,
+): Promise<void> {
+  const db = cliente()
+
+  // La línea puede no existir todavía: un sobre en cero no tiene fila.
+  const { data: existente, error: errorLeer } = await db
+    .from('lineas_presupuesto')
+    .select('id')
+    .eq('mes_id', mesId)
+    .eq('categoria_id', categoriaId)
+    .maybeSingle<{ id: string }>()
+  reventar('No se pudo leer la línea', errorLeer)
+
+  let lineaId = existente?.id ?? null
+  if (lineaId === null) {
+    const { data: creada, error: errorCrear } = await db
+      .from('lineas_presupuesto')
+      .insert({ mes_id: mesId, categoria_id: categoriaId, monto_mensual_cents: 0 })
+      .select('id')
+      .single<{ id: string }>()
+    reventar('No se pudo crear la línea', errorCrear)
+    if (!creada) throw new Error('No se pudo crear la línea')
+    lineaId = creada.id
+  }
+
+  const { data: filas, error: errorPlan } = await db
+    .from('asignaciones_semana')
+    .select('semana, monto_cents')
+    .eq('mes_id', mesId)
+    .eq('linea_presupuesto_id', lineaId)
+    .returns<{ semana: number; monto_cents: number }[]>()
+  reventar('No se pudo leer el plan semanal', errorPlan)
+
+  const plan: SemanaDelPlan[] = (filas ?? [])
+    .filter((f) => f.semana !== semana)
+    .map((f) => ({ semana: f.semana, montoCents: centavos(f.monto_cents) }))
+    .concat([{ semana, montoCents }])
+
+  await guardarPlanSemanal(mesId, lineaId, plan)
+}
+
+/**
  * Siembra el plan proporcional de **todas** las líneas repartibles del mes.
  * Es lo que deja un mes recién abierto cuadrado en el eje semanal sin esperar
  * al puente del esquema — que existe para los clientes viejos y un día se va.

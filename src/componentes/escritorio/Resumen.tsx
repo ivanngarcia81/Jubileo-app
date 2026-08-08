@@ -24,50 +24,101 @@ import { TarjetaEscritorio } from './Panel'
 
 const VISTAS = ['Semana', 'Cheque', 'Mes'] as const
 
-// Las alturas de la gráfica vienen del mockup: son datos de ejemplo, no una
-// escala calculada. Las dos últimas semanas están por venir.
-const SEMANAS = [
-  { etiqueta: 'Sem 1', planeado: 34, gastado: 30, porVenir: false },
-  { etiqueta: 'Sem 2', planeado: 30, gastado: 34, porVenir: false },
-  { etiqueta: 'Sem 3', planeado: 26, gastado: 44, porVenir: false, activa: true },
-  { etiqueta: 'Sem 4', planeado: 58, gastado: 0, porVenir: true },
-  { etiqueta: 'Sem 5', planeado: 34, gastado: 0, porVenir: true },
-]
+interface BarraDeReparto {
+  etiqueta: string
+  planeadoCents: number
+  gastadoCents: number
+  porVenir: boolean
+  activa: boolean
+}
 
-function Grafica() {
+/**
+ * Las barras del reparto, con números de verdad y en el lente que se pida:
+ * por semana (el eje del presupuesto), por cheque (el lente derivado: lo que
+ * cada uno cubre) o el mes entero. Antes eran cinco alturas copiadas del
+ * mockup.
+ */
+function barrasDeReparto(presupuesto: Presupuesto, vista: string): BarraDeReparto[] {
+  if (vista === 'Semana') {
+    return presupuesto.semanas.map((s, i) => ({
+      etiqueta: `Sem ${s.numero}`,
+      planeadoCents: s.totalCents,
+      gastadoCents: s.gastadoCents,
+      porVenir: i > presupuesto.semanaActiva,
+      activa: i === presupuesto.semanaActiva,
+    }))
+  }
+  if (vista === 'Cheque') {
+    return presupuesto.periodos.map((p, i) => ({
+      etiqueta: `Ch ${p.numero}`,
+      planeadoCents: presupuesto.cubrePorPeriodoCents[i] ?? 0,
+      gastadoCents: suma(
+        presupuesto.movimientos
+          .filter((m) => m.tipo === 'gasto' && m.cheque === p.numero)
+          .map((m) => m.montoCents),
+      ),
+      porVenir: i > presupuesto.periodoActivo,
+      activa: i === presupuesto.periodoActivo,
+    }))
+  }
+  return [
+    {
+      etiqueta: nombreDeMes(presupuesto.mes.mes),
+      planeadoCents: presupuesto.saleCents,
+      gastadoCents: suma(
+        presupuesto.movimientos.filter((m) => m.tipo === 'gasto').map((m) => m.montoCents),
+      ),
+      porVenir: false,
+      activa: true,
+    },
+  ]
+}
+
+const ROTULO_DE_VISTA: Record<string, string> = {
+  Semana: 'por semana',
+  Cheque: 'por cheque',
+  Mes: 'del mes',
+}
+
+function Grafica({ barras, vista }: { barras: BarraDeReparto[]; vista: string }) {
+  // La escala sale del dato más alto de lo que se está mirando: comparar es
+  // el punto de la gráfica, y una escala fija mentiría en meses chicos.
+  const tope = Math.max(1, ...barras.map((b) => Math.max(b.planeadoCents, b.gastadoCents)))
+  const alto = (cents: number) => Math.round((Math.max(0, cents) / tope) * 100)
   return (
     <>
       <div className="text-texto-2 mt-[2px] mb-[11px] flex items-center gap-[7px] text-rotulo font-semibold tracking-[.11em] uppercase">
         <span className="bg-teal size-[6px] rounded-full" />
-        Planeado vs. gastado por semana
+        Planeado vs. gastado {ROTULO_DE_VISTA[vista] ?? ''}
       </div>
 
       <div className="flex h-[158px] items-end gap-[14px]">
-        {SEMANAS.map((semana) => (
+        {barras.map((barra) => (
           <div
-            key={semana.etiqueta}
+            key={barra.etiqueta}
             className="flex h-full flex-1 flex-col items-center justify-end gap-2"
           >
             <div className="flex h-full w-full max-w-[52px] flex-col justify-end gap-[2px]">
-              {semana.porVenir ? (
+              {barra.porVenir ? (
                 <div
                   className="bg-gris border-linea rounded-[6px] border border-dashed"
-                  style={{ height: `${semana.planeado}%` }}
+                  style={{ height: `${alto(barra.planeadoCents)}%` }}
                 />
               ) : (
                 <>
                   <div
                     className="bg-carbon-3 rounded-[6px]"
-                    style={{ height: `${semana.planeado}%` }}
+                    style={{ height: `${alto(barra.planeadoCents)}%` }}
                   />
-                  <div className="bg-teal rounded-[6px]" style={{ height: `${semana.gastado}%` }} />
+                  <div
+                    className="bg-teal rounded-[6px]"
+                    style={{ height: `${alto(barra.gastadoCents)}%` }}
+                  />
                 </>
               )}
             </div>
-            <div
-              className={`text-menor ${semana.activa ? 'text-texto font-bold' : 'text-texto-2'}`}
-            >
-              {semana.etiqueta}
+            <div className={`text-menor ${barra.activa ? 'text-texto font-bold' : 'text-texto-2'}`}>
+              {barra.etiqueta}
             </div>
           </div>
         ))}
@@ -96,7 +147,8 @@ export function Resumen({
   presupuesto: Presupuesto
   alVerMovimientos?: () => void
 }) {
-  const [vista, setVista] = useState<string>('Cheque')
+  // La semana es el eje: es lo primero que se enseña. El cheque queda de lente.
+  const [vista, setVista] = useState<string>('Semana')
 
   const extraActual = centavos(
     suma(presupuesto.deudas.map((d) => d.pagoActualCents)) -
@@ -121,7 +173,7 @@ export function Resumen({
           titulo="Cómo va el reparto"
           derecha={<Segmentado opciones={VISTAS} activa={vista} alElegir={setVista} />}
         >
-          <Grafica />
+          <Grafica barras={barrasDeReparto(presupuesto, vista)} vista={vista} />
         </TarjetaEscritorio>
 
         <TarjetaEscritorio

@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
-import type { LineaMes, Presupuesto } from '../../datos/tipos'
+import type { LineaMes, Presupuesto, SemanaDelPresupuesto } from '../../datos/tipos'
 import { type Centavos, centavos, formatearRedondo, suma } from '../../lib/dinero'
+import { diaDe } from '../../lib/fecha'
 import { alturas } from '../../lib/mes/barras'
 import {
   ABIERTOS_POR_OMISION,
@@ -9,10 +10,13 @@ import {
   leerAbiertos,
   type ClaveGrupo,
 } from '../../lib/mes/grupos'
+import { semanaDeFijo } from '../../lib/semanas'
 import { nombreDeMes } from '../textos'
 import {
+  CeldaCifra,
   CeldaNombre,
   CeldasDeAvance,
+  ChipCategoria,
   Fila,
   FilaAgregar,
   FilaFondo,
@@ -25,13 +29,16 @@ import { IconoAbrir, IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
+import { PonerSemana } from './PonerSemana'
 
 /**
- * El mes — presupuesto base cero.
+ * El mes — presupuesto base cero, con la semana como eje.
  *
- * Primero mayordomía, luego los fijos con su día de vencimiento y el cheque
- * que les toca, y al final los fondos de reserva. Arriba, el selector de mes
- * con barras y el control segmentado de entra / sale / sobró.
+ * El control Semanas · Cheques · Mes elige el lente. En Semanas, las 4–5 del
+ * calendario con su monto: adentro los fijos que caen por fecha (solo lectura)
+ * y los sobres repartibles editables por semana. En Cheques, la vista derivada:
+ * qué cubre cada uno, sin asignarse aparte. En Mes, el árbol de categorías de
+ * siempre. Arriba, el selector de mes con barras y entra / sale / sobró.
  */
 
 const VISTAS = ['Entra', 'Sale', 'Sobró'] as const
@@ -151,6 +158,39 @@ const HILO =
   " after:absolute after:left-[5px] after:top-1/2 after:h-px after:w-[6px] after:bg-linea after:content-['']" +
   ' panel:before:left-[11px] panel:after:left-[11px] panel:after:w-[9px]'
 
+/** Las dos columnas de las vistas por semana y por cheque: nombre y cifra. */
+const DOS_COLUMNAS = {
+  columnas: 'minmax(0,1fr) 104px',
+  columnasPanel: 'minmax(150px,1fr) 150px',
+}
+
+/** El eje que se está mirando, recordado entre visitas. */
+const EJES = ['Semanas', 'Cheques', 'Mes'] as const
+type Eje = (typeof EJES)[number]
+const LLAVE_EJE = 'jubileo:eje-de-el-mes'
+
+function useEje(): [Eje, (nuevo: Eje) => void] {
+  const [eje, setEje] = useState<Eje>(() => {
+    try {
+      const guardado = localStorage.getItem(LLAVE_EJE)
+      return (EJES as readonly string[]).includes(guardado ?? '') ? (guardado as Eje) : 'Semanas'
+    } catch {
+      return 'Semanas'
+    }
+  })
+  return [
+    eje,
+    (nuevo) => {
+      setEje(nuevo)
+      try {
+        localStorage.setItem(LLAVE_EJE, nuevo)
+      } catch {
+        // Se queda en esta visita y ya.
+      }
+    },
+  ]
+}
+
 /** Qué grupos están abiertos, recordado entre visitas. */
 const LLAVE = 'jubileo:grupos-de-el-mes'
 
@@ -182,6 +222,7 @@ function useAbiertos(): [ClaveGrupo[], (nuevos: ClaveGrupo[]) => void] {
 export function ElMes({
   presupuesto,
   alPonerMonto,
+  alPonerSemana,
   alRenombrar,
   alQuitar,
   alCrearCategoria,
@@ -191,6 +232,7 @@ export function ElMes({
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
   alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
+  alPonerSemana?: (categoriaId: string, semana: number, montoCents: Centavos) => Promise<void>
   alRenombrar?: (categoriaId: string, nombre: string) => Promise<void>
   alQuitar?: (categoriaId: string) => Promise<void>
   alCrearCategoria?: (
@@ -202,11 +244,33 @@ export function ElMes({
   alVerMes?: (anio: number, mes: number) => void
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
+  const [editandoSemana, setEditandoSemana] = useState<{
+    sobre: LineaMes
+    semana: SemanaDelPresupuesto
+  } | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
   const [abiertos, setAbiertos] = useAbiertos()
+  const [eje, setEje] = useEje()
+  // La semana en curso nace abierta: es a la que se viene.
+  const [semanasAbiertas, setSemanasAbiertas] = useState<number[]>(() => [
+    presupuesto.semanas[presupuesto.semanaActiva]?.numero ?? 1,
+  ])
   const editable = Boolean(alPonerMonto && presupuesto.mesId)
   // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
   const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
+
+  // Lo que se reparte por semana: la mayordomía y los sobres variables. Los
+  // fijos y las deudas no — caen solos en la semana de su vencimiento.
+  const repartibles = [presupuesto.mayordomia, ...presupuesto.variables]
+  const fijosYDeudas = [...presupuesto.fijos, ...presupuesto.lineasDeuda]
+  const asignadoEn = (categoriaId: string, semana: number): Centavos =>
+    centavos(
+      suma(
+        presupuesto.planSemanal
+          .filter((a) => a.categoriaId === categoriaId && a.semana === semana)
+          .map((a) => a.montoCents),
+      ),
+    )
 
   // La fila entera es el botón, como en el mockup: no hay controles sueltos
   // dentro del renglón. Antes el monto era un botón con borde de 44px de alto
@@ -268,10 +332,157 @@ export function ElMes({
   ]
   const cuantasCategorias = grupos.reduce((n, g) => n + g.lineas.length, 0)
 
+  const nombreDelMes = nombreDeMes(presupuesto.mes.mes).toLowerCase()
+
   return (
     <div className="flex flex-col gap-3">
       <SelectorDeMes presupuesto={presupuesto} {...(alVerMes ? { alVerMes } : {})} />
 
+      <Segmentado opciones={EJES} activa={eje} alElegir={(v) => setEje(v as Eje)} />
+
+      {eje === 'Semanas' && (
+        <ListaSeccion
+          titulo={`Semanas de ${nombreDelMes}`}
+          icono={<IconoDinero tam={15} />}
+          dato={`${presupuesto.semanas.length} semanas`}
+          encabezados={['Semana', 'Monto']}
+          {...DOS_COLUMNAS}
+        >
+          {presupuesto.semanas.map((semana) => {
+            const abierta = semanasAbiertas.includes(semana.numero)
+            const fijosDeLaSemana = fijosYDeudas.filter(
+              (l) => semanaDeFijo(l.diaVencimiento, presupuesto.semanas) === semana.numero,
+            )
+            return (
+              <Fragment key={semana.numero}>
+                <Fila
+                  abierta={abierta}
+                  alTocar={() =>
+                    setSemanasAbiertas(
+                      abierta
+                        ? semanasAbiertas.filter((n) => n !== semana.numero)
+                        : [...semanasAbiertas, semana.numero],
+                    )
+                  }
+                  etiqueta={`${abierta ? 'Cerrar' : 'Abrir'} la semana ${semana.numero}`}
+                  className="bg-[#FBFCFB]"
+                >
+                  <div className="flex min-w-0 items-center gap-[9px]">
+                    <IconoAbrir
+                      tam={14}
+                      className={`text-texto-2 shrink-0 ${abierta ? 'rotate-90' : ''}`}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-cuerpo font-semibold">
+                          Semana {semana.numero}
+                        </span>
+                        {/* Hasta aquí se vence más de lo que ha llegado. Informa, no bloquea. */}
+                        {semana.apretada && <ChipCategoria tono="ambar">Apretada</ChipCategoria>}
+                      </div>
+                      <div className="text-texto-2 mt-[1px] text-rotulo">
+                        Del {diaDe(semana.fechaInicio)} al {diaDe(semana.fechaFin)}
+                      </div>
+                    </div>
+                  </div>
+                  <CeldaCifra>
+                    <Moneda centavos={semana.totalCents} />
+                    <div className="text-texto-2 text-rotulo font-normal">
+                      gastado <Moneda centavos={semana.gastadoCents} />
+                    </div>
+                  </CeldaCifra>
+                </Fila>
+
+                {/* Lo fijo cae por fecha: se ve, no se toca. */}
+                {abierta &&
+                  fijosDeLaSemana.map((linea) => (
+                    <Fila key={`f-${linea.id}`}>
+                      <CeldaNombre
+                        className={HILO}
+                        icono={<IconoDeClave clave={linea.icono} tam={13} />}
+                        {...(linea.detalle ? { detalle: linea.detalle } : {})}
+                      >
+                        {linea.nombre}
+                      </CeldaNombre>
+                      <CeldaCifra apagada>
+                        <Moneda centavos={linea.montoMensualCents} />
+                      </CeldaCifra>
+                    </Fila>
+                  ))}
+
+                {/* Los sobres sí se presupuestan por semana: aquí se decide. */}
+                {abierta &&
+                  repartibles.map((sobre) => {
+                    const asignado = asignadoEn(sobre.id, semana.numero)
+                    const sePuede = Boolean(alPonerSemana && presupuesto.mesId)
+                    return (
+                      <Fila
+                        key={`s-${sobre.id}`}
+                        {...(sePuede
+                          ? {
+                              alTocar: () => setEditandoSemana({ sobre, semana }),
+                              etiqueta: `Poner ${sobre.nombre} en la semana ${semana.numero}`,
+                            }
+                          : {})}
+                      >
+                        <CeldaNombre
+                          className={HILO}
+                          icono={<IconoDeClave clave={sobre.icono} tam={13} />}
+                          detalle={`de ${formatearRedondo(sobre.montoMensualCents)} al mes`}
+                        >
+                          {sobre.nombre}
+                        </CeldaNombre>
+                        <CeldaCifra>
+                          <Moneda centavos={asignado} />
+                        </CeldaCifra>
+                      </Fila>
+                    )
+                  })}
+              </Fragment>
+            )
+          })}
+        </ListaSeccion>
+      )}
+
+      {eje === 'Cheques' && (
+        <ListaSeccion
+          titulo={`Cheques de ${nombreDelMes}`}
+          icono={<IconoDinero tam={15} />}
+          dato={`${presupuesto.periodos.length} cheques`}
+          encabezados={['Cheque', 'Le queda']}
+          {...DOS_COLUMNAS}
+        >
+          {presupuesto.periodos.map((periodo, i) => (
+            <Fila key={periodo.numero}>
+              <div className="flex min-w-0 items-center gap-2 py-[7px]">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-cuerpo font-medium">
+                      Cheque {periodo.numero}
+                    </span>
+                    {periodo.esExtra && <ChipCategoria tono="teal">Extra</ChipCategoria>}
+                  </div>
+                  <div className="text-texto-2 mt-[1px] truncate text-rotulo">
+                    Llega el {diaDe(periodo.fechaPago)} · cubre{' '}
+                    {formatearRedondo(presupuesto.cubrePorPeriodoCents[i] ?? centavos(0))}
+                  </div>
+                </div>
+              </div>
+              <CeldaCifra
+                className={(presupuesto.libreporPeriodoCents[i] ?? 0) < 0 ? 'text-rojo' : ''}
+              >
+                <Moneda centavos={presupuesto.libreporPeriodoCents[i] ?? centavos(0)} />
+              </CeldaCifra>
+            </Fila>
+          ))}
+          <Vacio>
+            Esta vista se deriva sola de las fechas: cada cheque cubre lo que se vence hasta que
+            llega el siguiente, y el extra llega entero. Lo que se presupuesta son las semanas.
+          </Vacio>
+        </ListaSeccion>
+      )}
+
+      {eje === 'Mes' && (
       <ListaSeccion
         titulo={`Categorías de ${nombreDeMes(presupuesto.mes.mes).toLowerCase()}`}
         icono={<IconoDinero tam={15} />}
@@ -317,6 +528,19 @@ export function ElMes({
           )
         })}
       </ListaSeccion>
+      )}
+
+      {editandoSemana && alPonerSemana && (
+        <PonerSemana
+          sobre={editandoSemana.sobre}
+          semana={editandoSemana.semana}
+          asignadoCents={asignadoEn(editandoSemana.sobre.id, editandoSemana.semana.numero)}
+          alGuardar={(monto) =>
+            alPonerSemana(editandoSemana.sobre.id, editandoSemana.semana.numero, monto)
+          }
+          alCerrar={() => setEditandoSemana(null)}
+        />
+      )}
 
       {editando && alPonerMonto && (
         <PonerMonto

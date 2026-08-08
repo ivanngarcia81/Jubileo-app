@@ -53,6 +53,8 @@ export interface SemanaDelPresupuesto {
 /** Una fila del plan semanal de una línea repartible. */
 export interface AsignacionDeSemana {
   lineaId: string
+  /** La categoría de la línea: es como la vista encuentra el sobre. */
+  categoriaId: string | null
   semana: number
   montoCents: Centavos
 }
@@ -163,6 +165,12 @@ export interface Presupuesto {
   ingresoPorChequeCents: Centavos
   /** Lo que queda libre en cada periodo, en el mismo orden que `periodos`. */
   libreporPeriodoCents: Centavos[]
+  /**
+   * Lo que cada cheque cubre: los fijos que vencen y las semanas del plan que
+   * arrancan antes de que llegue el siguiente. Derivado de las fechas — el
+   * cheque es el lente, no el eje — y el extra no cubre nada.
+   */
+  cubrePorPeriodoCents: Centavos[]
 
   entraCents: Centavos
   saleCents: Centavos

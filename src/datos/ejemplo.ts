@@ -42,8 +42,9 @@ const PERIODOS = generarPeriodos(CONFIG, { anio: 2026, mes: 8 }, { anulaciones: 
 const SEMANAS_CALENDARIO = semanasDelMes(2026, 8)
 
 function planDe(lineaId: string, totalCents: number): AsignacionDeSemana[] {
+  // En la demostración la línea y la categoría comparten llave.
   return repartir(centavos(totalCents), SEMANAS_CALENDARIO.map((s) => s.dias)).map(
-    (montoCents, i) => ({ lineaId, semana: i + 1, montoCents }),
+    (montoCents, i) => ({ lineaId, categoriaId: lineaId, semana: i + 1, montoCents }),
   )
 }
 
@@ -143,6 +144,8 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   periodoActivoId: null,
   ingresoPorChequeCents: centavos(124000),
   libreporPeriodoCents: [centavos(0), centavos(6500), centavos(120000)],
+  // Lo que entra en cada cheque menos lo que le queda libre.
+  cubrePorPeriodoCents: [centavos(124000), centavos(117500), centavos(0)],
 
   entraCents: centavos(368000),
   saleCents: centavos(368000),
