@@ -85,3 +85,15 @@ describe('formato', () => {
     expect(formatearRedondo(centavos(6500))).toBe('$65')
   })
 })
+
+describe('el espejo del reparto semanal', () => {
+  // Los mismos números están fijados en supabase/pruebas/06-semanas.sql: el
+  // reparto vive en dos lados —el cliente no puede correr durante una
+  // migración— y si un lado cambia de método, el otro lo delata. Los pesos
+  // son los días de las semanas del mes: agosto [7,7,7,7,3], febrero de 28
+  // [7,7,7,7].
+  it('da lo mismo que reparto_semanal en SQL, centavo por centavo', () => {
+    expect(repartir(centavos(100003), [7, 7, 7, 7, 3])).toEqual([22582, 22581, 22581, 22581, 9678])
+    expect(repartir(centavos(100003), [7, 7, 7, 7])).toEqual([25001, 25001, 25001, 25000])
+  })
+})

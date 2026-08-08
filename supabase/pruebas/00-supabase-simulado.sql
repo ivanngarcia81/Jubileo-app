@@ -54,3 +54,10 @@ grant usage on schema public, auth to authenticated, anon, service_role;
 -- las pruebas locales pasaban en verde.
 alter default privileges in schema public
   grant execute on functions to anon, authenticated, service_role;
+
+-- Y lo mismo con las tablas: en Supabase los tres roles nacen con permisos
+-- sobre cada tabla nueva y es el RLS quien cuida la puerta. Sin esta línea,
+-- una tabla creada en una migración queda sin permisos aquí y con ellos en
+-- producción — y las pruebas de RLS fallarían por la razón equivocada.
+alter default privileges in schema public
+  grant all on tables to anon, authenticated, service_role;

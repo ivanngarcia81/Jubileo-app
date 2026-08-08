@@ -96,7 +96,15 @@ insert into asignaciones (mes_id, linea_presupuesto_id, periodo_id, monto_cents)
     from periodos p
    where p.mes_id = '77777777-0000-0000-0000-000000000001' and not p.es_extra;
 
-\echo '--- la invariante sobre los cheques de los dos ---'
+-- Y el plan semanal del eje nuevo (0005): la comida se presupuesta por semana
+-- del mes; la renta no — es fija y su semana la decide su vencimiento. Las
+-- filas por cheque de arriba se quedan como el legado que son: prueban que
+-- las llaves compuestas aguantan el modo pareja, aunque ya no cuadren nada.
+insert into asignaciones_semana (mes_id, linea_presupuesto_id, semana, monto_cents)
+  select '77777777-0000-0000-0000-000000000001', '99999999-0000-0000-0000-000000000002', semana, monto_cents
+    from reparto_semanal(60001, 2026, 8) where monto_cents > 0;
+
+\echo '--- la invariante sobre el hogar entero ---'
 select case when count(*) = 4 then '  ok     la comida se repartió en los 4 cheques que sí se reparten'
             else '  FALLA  asignaciones de comida: ' || count(*) end
   from asignaciones where linea_presupuesto_id = '99999999-0000-0000-0000-000000000002';
@@ -104,6 +112,12 @@ select case when count(*) = 4 then '  ok     la comida se repartió en los 4 che
 select case when count(*) = 0 then '  ok     ninguna línea quedó descuadrada'
             else '  FALLA  descuadradas: ' || string_agg(categoria, ', ') end
   from lineas_descuadradas('77777777-0000-0000-0000-000000000001');
+
+-- El guardia ve el ingreso del hogar entero: los cheques de Rosa (día 1 y 15)
+-- y los de Iván (3 y 17) fondean juntos las semanas de los dos.
+select case when count(*) = 0 then '  ok     el guardia suma los cheques de los dos'
+            else '  FALLA  sobregiradas: ' || string_agg(semana::text, ', ') end
+  from semanas_sobregiradas('77777777-0000-0000-0000-000000000001');
 
 \o /dev/null
 create or replace function probar_cierre(etiqueta text, objetivo uuid, espera text) returns text
@@ -125,14 +139,22 @@ select case when estado = 'cerrado' and cerrado_en is not null
             else '  FALLA  estado ' || estado end
   from meses where id = '77777777-0000-0000-0000-000000000001';
 
--- Se descuadra a propósito: se le quita un centavo a la comida.
+-- Se descuadra a propósito: se le quita un centavo a una SEMANA de la comida.
 update meses set estado = 'activo', cerrado_en = null, cerrado_por = null
   where id = '77777777-0000-0000-0000-000000000001';
+update asignaciones_semana set monto_cents = monto_cents - 1
+  where linea_presupuesto_id = '99999999-0000-0000-0000-000000000002'
+    and semana = 1;
+
+select case when count(*) = 1 then '  ok     un centavo de menos ya descuadra la línea'
+            else '  FALLA  descuadradas: ' || count(*) end
+  from lineas_descuadradas('77777777-0000-0000-0000-000000000001');
+
+-- Y tocar el legado por cheque ya no descuadra nada: el eje es la semana.
 update asignaciones set monto_cents = monto_cents - 1
   where linea_presupuesto_id = '99999999-0000-0000-0000-000000000002'
     and monto_cents = 15001;
-
-select case when count(*) = 1 then '  ok     un centavo de menos ya descuadra la línea'
+select case when count(*) = 1 then '  ok     el legado por cheque ya no manda: sigue una sola descuadrada'
             else '  FALLA  descuadradas: ' || count(*) end
   from lineas_descuadradas('77777777-0000-0000-0000-000000000001');
 

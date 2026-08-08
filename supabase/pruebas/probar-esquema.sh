@@ -41,7 +41,7 @@ for migracion in "$raiz"/supabase/migraciones/[0-9]*.sql; do
 done
 
 salida=""
-for prueba in 01-restricciones 02-modo-pareja 03-rls 04-reglas-del-esquema 05-cortesia; do
+for prueba in 01-restricciones 02-modo-pareja 03-rls 04-reglas-del-esquema 05-cortesia 06-semanas; do
   echo
   echo "=== $prueba ==="
   parcial=$(psql -h "$socket" -p "$puerto" -U postgres -d jubileo \

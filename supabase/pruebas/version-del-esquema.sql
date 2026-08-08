@@ -30,9 +30,14 @@ from (values
    exists(select 1 from pg_trigger where tgname='al_crear_perfil')),
   ('función cerrar_mes',            exists(select 1 from pg_proc where proname='cerrar_mes')),
   ('función lineas_descuadradas',   exists(select 1 from pg_proc where proname='lineas_descuadradas')),
-  ('las 14 tablas',
+  ('asignaciones_semana — el eje semanal (0005)',
+   exists(select 1 from information_schema.tables where table_name='asignaciones_semana')),
+  ('semanas_sobregiradas — el guardia del fondeo (0005)',
+   exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+           where n.nspname='public' and p.proname='semanas_sobregiradas')),
+  ('las 15 tablas',
    (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
-     where n.nspname='public' and c.relkind='r') = 14),
+     where n.nspname='public' and c.relkind='r') = 15),
   ('todas con RLS activado',
    not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
                where n.nspname='public' and c.relkind='r' and not c.relrowsecurity))
