@@ -264,6 +264,19 @@ describe('el mes armado desde la base', () => {
     expect(p.variables.map((v) => v.nombre)).toEqual(['Comida'])
   })
 
+  it('cada línea sabe cuánto se le lleva gastado en el mes', () => {
+    // Lo gastado del mes no es lo del cheque en curso: `sobres` contesta la
+    // otra pregunta. Aquí Luz lleva 8500 de los 13000 del mes y Comida 6200 de
+    // 60000; la renta todavía no tiene nada.
+    expect(p.fijos.map((f) => [f.nombre, f.gastadoCents])).toEqual([
+      ['Renta', 0],
+      ['Luz y agua', 8500],
+    ])
+    expect(p.variables.map((v) => v.gastadoCents)).toEqual([6200])
+    // El gasto sin categoría no se le achaca a nadie.
+    expect(p.mayordomia.gastadoCents).toBe(0)
+  })
+
   it('las deudas también son líneas del mes, y suman lo que va a la deuda', () => {
     // Sin esto El mes enseñaba cuatro grupos cuyos montos no llegaban a lo que
     // decía "Sale este mes": el renglón de la deuda existía en la base y no en

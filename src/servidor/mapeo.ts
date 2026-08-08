@@ -213,6 +213,21 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     return i === -1 ? null : i + 1
   }
 
+  /**
+   * Lo gastado en el mes por categoría. `filas.transacciones` ya viene acotada
+   * a los cheques de este mes —se pide con `in(periodo_id, …)`— así que aquí no
+   * hay que volver a filtrar por fecha: hacerlo dejaría fuera lo que se gasta
+   * en los días del último cheque que caen en el mes siguiente.
+   */
+  const gastadoPorCategoria = new Map<string, number>()
+  for (const t of filas.transacciones) {
+    if (t.tipo !== 'gasto' || t.categoria_id === null) continue
+    gastadoPorCategoria.set(
+      t.categoria_id,
+      (gastadoPorCategoria.get(t.categoria_id) ?? 0) + t.monto_cents,
+    )
+  }
+
   const aLineaMes = (c: (typeof filas.categorias)[number], icono: ClaveIcono): LineaMes => {
     const cheque = c.dia_vencimiento === null ? null : chequeQuePaga(c.dia_vencimiento)
     return {
@@ -223,6 +238,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
         ? `Vence el ${c.dia_vencimiento}${cheque ? ` · Cheque ${cheque}` : ''}`
         : '',
       montoMensualCents: centavos(lineaPorCategoria.get(c.id)?.monto_mensual_cents ?? 0),
+      gastadoCents: centavos(gastadoPorCategoria.get(c.id) ?? 0),
     }
   }
 
@@ -364,7 +380,14 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     sobres,
     mayordomia: mayordomia
       ? aLineaMes(mayordomia, 'mayordomia')
-      : { id: 'mayordomia', nombre: 'Mayordomía', icono: 'mayordomia', detalle: '', montoMensualCents: centavos(0) },
+      : {
+          id: 'mayordomia',
+          nombre: 'Mayordomía',
+          icono: 'mayordomia',
+          detalle: '',
+          montoMensualCents: centavos(0),
+          gastadoCents: centavos(0),
+        },
     fijos: enCategoria('fijo').map((c) => aLineaMes(c, 'fijo')),
     variables: enCategoria('variable').map((c) => aLineaMes(c, 'variable')),
     lineasDeuda: enCategoria('deuda').map((c) => aLineaMes(c, 'deuda')),

@@ -120,11 +120,15 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   ],
 
   // Los mismos sobres de arriba, pero con su monto del mes entero: es lo que
-  // se reparte entre los cheques.
+  // se reparte entre los cheques. `gastadoCents` aquí es del mes; el de
+  // `sobres` es del cheque en curso, y por eso es más chico.
+  //
+  // Los tres traen a propósito un avance distinto —63%, 88% y pasado— para que
+  // la demostración enseñe los tres colores de la regla 4 de los tokens.
   variables: [
-    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', montoMensualCents: centavos(45000) },
-    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', montoMensualCents: centavos(18000) },
-    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', montoMensualCents: centavos(12000) },
+    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
+    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
+    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
   ],
 
   mayordomia: {
@@ -133,6 +137,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
     icono: 'mayordomia',
     detalle: '10% · en los 2 cheques',
     montoMensualCents: centavos(36800),
+    gastadoCents: centavos(36800),
   },
 
   fijos: [
@@ -142,6 +147,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'casa',
       detalle: 'Vence el 3 · Cheque 1',
       montoMensualCents: centavos(90000),
+      gastadoCents: centavos(90000),
     },
     {
       id: 'servicios',
@@ -149,6 +155,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'servicios',
       detalle: 'Vence el 4 · Cheque 1',
       montoMensualCents: centavos(13000),
+      gastadoCents: centavos(8500),
     },
     {
       id: 'seguro',
@@ -156,6 +163,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'seguro',
       detalle: 'Vence el 18 · Cheque 2',
       montoMensualCents: centavos(14200),
+      gastadoCents: centavos(0),
     },
   ],
 
@@ -166,6 +174,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'deuda',
       detalle: 'Vence el 9 · Cheque 2',
       montoMensualCents: centavos(15000),
+      gastadoCents: centavos(0),
     },
     {
       id: 'c-estudiantil',
@@ -173,6 +182,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'deuda',
       detalle: 'Vence el 21 · Cheque 2',
       montoMensualCents: centavos(9500),
+      gastadoCents: centavos(9500),
     },
     {
       id: 'c-carro',
@@ -180,6 +190,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
       icono: 'deuda',
       detalle: 'Vence el 15 · Cheque 2',
       montoMensualCents: centavos(31000),
+      gastadoCents: centavos(31000),
     },
   ],
 

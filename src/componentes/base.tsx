@@ -52,10 +52,13 @@ export function Seccion({ children, dato }: { children: ReactNode; dato?: ReactN
   )
 }
 
-/** Barra de progreso. El color lo decide quien la usa. */
+/**
+ * Barra de progreso. Va en su propia columna de la lista, con el mismo carril
+ * en todas las filas: sin eso no se puede comparar un renglón con otro.
+ */
 export function Barra({ porcentaje, color }: { porcentaje: number; color: string }) {
   return (
-    <div className="bg-gris h-[6px] overflow-hidden rounded-full">
+    <div className="bg-gris h-[5px] overflow-hidden rounded-full">
       <div
         className="h-full rounded-full"
         style={{ width: `${Math.min(100, Math.max(0, porcentaje))}%`, background: color }}
@@ -67,14 +70,24 @@ export function Barra({ porcentaje, color }: { porcentaje: number; color: string
 /**
  * El color de un sobre según lo gastado.
  *
- * Regla 4 de los tokens: el rojo aparece solo cuando el usuario ya se pasó,
+ * Regla 4 de los tokens: el rojo aparece solo cuando el usuario **ya se pasó**,
  * nunca como advertencia preventiva. Para "cuidado" va el ámbar.
+ *
+ * Los tres estados, tal como los dibuja `design/listas.html`:
+ *
+ * - **teal** — vas bien, o cuadraste. La renta pagada completa llega al 100% y
+ *   sale teal en el mockup, no en rojo: gastar exactamente lo presupuestado no
+ *   es pasarse, es acertar. Ponerlo en rojo convertiría el rojo en una alarma
+ *   que suena todos los meses y no significa nada, que es justo lo que la regla
+ *   4 prohíbe.
+ * - **ámbar** — del 80% para arriba y todavía sin llegar: ahí sí hay que cuidar.
+ * - **rojo** — pasado el 100%. Solo ahí.
  */
 export function colorDeSobre(gastado: Centavos, presupuesto: Centavos): string {
   if (presupuesto <= 0) return 'var(--teal)'
   const parte = gastado / presupuesto
-  if (parte >= 1) return 'var(--rojo)'
-  if (parte >= 0.8) return 'var(--ambar)'
+  if (parte > 1) return 'var(--rojo)'
+  if (parte >= 0.8 && parte < 1) return 'var(--ambar)'
   return 'var(--teal)'
 }
 
@@ -189,8 +202,40 @@ function estiloDeColumnas(columnas: string, columnasPanel: string | undefined) {
   } as CSSProperties
 }
 
-/** El alto mínimo de una fila. 44px es el objetivo táctil de un dedo. */
-const FILA = 'grid min-h-11 items-center gap-x-3 px-[14px] panel:gap-x-[14px] panel:px-[18px]'
+/**
+ * El alto mínimo de una fila. 44px es el objetivo táctil de un dedo.
+ *
+ * Sin el `display`: quien la usa pone `grid` o el par `hidden panel:grid`, y
+ * así el que sí está en una media query siempre le gana al que no. Con `grid`
+ * aquí adentro, `hidden` y `grid` quedarían los dos sin variante y quién gana
+ * dependería del orden en que Tailwind los escribe, no del código.
+ */
+const FILA = 'min-h-11 items-center gap-x-[10px] px-[12px] panel:gap-x-[14px] panel:px-[18px]'
+const COLUMNAS = 'grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)]'
+
+function Encabezados({
+  rotulos,
+  className,
+}: {
+  rotulos: readonly (string | null)[]
+  className: string
+}) {
+  // El primer rótulo que existe va a la izquierda —es el de la columna del
+  // nombre, aunque antes venga una casilla sin rótulo— y los demás a la
+  // derecha, encima de sus cifras.
+  const primero = rotulos.findIndex((r) => r !== null)
+  return (
+    <div
+      className={`${className} ${FILA} ${COLUMNAS} border-linea text-texto-2 min-h-0 border-b pb-2 text-[10px] font-semibold tracking-[.12em] uppercase`}
+    >
+      {rotulos.map((rotulo, i) => (
+        <span key={i} className={i === primero ? '' : 'text-right'}>
+          {rotulo}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export function ListaSeccion({
   titulo,
@@ -199,6 +244,7 @@ export function ListaSeccion({
   columnas,
   columnasPanel,
   encabezados,
+  encabezadosPanel,
   children,
   className = '',
 }: {
@@ -213,6 +259,8 @@ export function ListaSeccion({
   columnasPanel?: string
   /** Rótulos de columna. El primero a la izquierda, los demás a la derecha. */
   encabezados?: readonly (string | null)[]
+  /** Y los del escritorio, cuando las columnas no son las mismas. */
+  encabezadosPanel?: readonly (string | null)[]
   children: ReactNode
   className?: string
 }) {
@@ -233,21 +281,13 @@ export function ListaSeccion({
         </div>
       )}
       {encabezados !== undefined && (
-        <div
-          className={`${FILA} border-linea text-texto-2 min-h-0 border-b pb-2 text-[10px] font-semibold tracking-[.12em] uppercase grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)]`}
-        >
-          {encabezados.map((rotulo, i) => (
-            // El primer rótulo que existe va a la izquierda —es el de la
-            // columna del nombre, aunque antes venga una casilla sin rótulo— y
-            // los demás a la derecha, encima de sus cifras.
-            <span
-              key={i}
-              className={i === encabezados.findIndex((r) => r !== null) ? '' : 'text-right'}
-            >
-              {rotulo}
-            </span>
-          ))}
-        </div>
+        <Encabezados
+          rotulos={encabezados}
+          className={encabezadosPanel ? 'grid panel:hidden' : 'grid'}
+        />
+      )}
+      {encabezadosPanel !== undefined && (
+        <Encabezados rotulos={encabezadosPanel} className="hidden panel:grid" />
       )}
       {children}
     </section>
@@ -277,7 +317,7 @@ export function Fila({
   abierta?: boolean
   className?: string
 }) {
-  const comun = `${FILA} border-linea w-full border-b text-left last:border-b-0 grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)] ${className}`
+  const comun = `grid ${FILA} ${COLUMNAS} border-linea w-full border-b text-left last:border-b-0 ${className}`
   if (etiqueta === undefined) return <div className={comun}>{children}</div>
   return (
     <button
@@ -358,6 +398,46 @@ export function CeldaCifra({
     >
       {children}
     </div>
+  )
+}
+
+/**
+ * Las tres celdas de la derecha de una fila de presupuesto: lo gastado, la
+ * barra en su carril, y el monto del mes.
+ *
+ * `design/listas.html` es un documento de 1420px y les da una columna a cada
+ * una. En un teléfono de 320 no caben: al nombre le quedarían cuarenta píxeles.
+ * Ahí la columna de "gastado" desaparece y las dos cifras se apilan en una
+ * sola. No son dos filas distintas —eso se despareja en tres meses— son las
+ * mismas celdas, y las que sobran salen con `display:none`, que además las
+ * saca de la rejilla. Por eso el orden en el código es el del escritorio.
+ */
+export function CeldasDeAvance({
+  gastadoCents,
+  delMesCents,
+}: {
+  gastadoCents: Centavos
+  delMesCents: Centavos
+}) {
+  const avance = porcentaje(gastadoCents, delMesCents)
+  const color = colorDeSobre(gastadoCents, delMesCents)
+  const pasado = gastadoCents > delMesCents
+  return (
+    <>
+      <CeldaCifra className={`hidden panel:block ${pasado ? 'text-rojo' : ''}`}>
+        <Moneda centavos={gastadoCents} />
+      </CeldaCifra>
+      <Barra porcentaje={avance} color={color} />
+      <CeldaCifra apagada className="hidden panel:block">
+        <Moneda centavos={delMesCents} />
+      </CeldaCifra>
+      <CeldaCifra className={`panel:hidden ${pasado ? 'text-rojo' : ''}`}>
+        <Moneda centavos={gastadoCents} />
+        <div className="text-texto-2 text-[11px] font-normal">
+          de <Moneda centavos={delMesCents} />
+        </div>
+      </CeldaCifra>
+    </>
   )
 }
 

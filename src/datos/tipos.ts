@@ -46,6 +46,12 @@ export interface LineaMes {
   icono: ClaveIcono
   detalle: string
   montoMensualCents: Centavos
+  /**
+   * Lo gastado contra esta línea en el mes entero. `Sobre.gastadoCents` es lo
+   * mismo pero del cheque en curso: son dos preguntas distintas y hay que poder
+   * contestar las dos sin confundirlas.
+   */
+  gastadoCents: Centavos
 }
 
 export interface Movimiento {

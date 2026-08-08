@@ -17,7 +17,7 @@ import { EditarFondo } from './EditarFondo'
  */
 
 const FONDOS = {
-  columnas: 'minmax(0,1fr) 44px 84px',
+  columnas: 'minmax(0,1fr) 36px 84px',
   columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
 }
 
@@ -80,7 +80,7 @@ export function Metas({
             {...(editable ? { alTocar: () => setEditando(null) } : {})}
           />
         ) : (
-          <p className="text-texto-2 px-[14px] py-3 text-[12.5px] leading-[1.55] panel:px-[18px]">
+          <p className="text-texto-2 px-[12px] py-3 text-[12.5px] leading-[1.55] panel:px-[18px]">
             El nivel gratis lleva {FONDOS_GRATIS} fondos. Con Premium no hay tope — y los que ya
             tienes se quedan como están.
           </p>

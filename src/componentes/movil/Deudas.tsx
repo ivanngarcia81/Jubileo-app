@@ -32,7 +32,7 @@ const PASO = 1000
 
 /** Las columnas de la lista de deudas. Ver el comentario de `ListaSeccion`. */
 const DEUDAS = {
-  columnas: 'minmax(0,1fr) 44px 84px',
+  columnas: 'minmax(0,1fr) 36px 84px',
   columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
 }
 

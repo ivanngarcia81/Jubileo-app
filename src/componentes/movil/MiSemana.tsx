@@ -4,16 +4,14 @@ import type { Pago, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
 import {
-  Barra,
   CeldaCifra,
   CeldaNombre,
+  CeldasDeAvance,
   Casilla,
   Etiqueta,
   Fila,
   ListaSeccion,
   Moneda,
-  colorDeSobre,
-  porcentaje,
 } from '../base'
 import { Anotar } from './Anotar'
 import { CerrarSemana, type RespuestaCierre } from './CerrarSemana'
@@ -90,8 +88,8 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
 /** Las columnas de las dos listas. Ver el comentario de `ListaSeccion`. */
 const PAGOS = { columnas: '21px minmax(0,1fr) 84px', columnasPanel: '21px minmax(150px,1fr) 120px' }
 const SOBRES = {
-  columnas: 'minmax(0,1fr) 44px 84px',
-  columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
+  columnas: 'minmax(0,1fr) 36px 84px',
+  columnasPanel: 'minmax(150px,1fr) 88px minmax(90px,300px) 88px',
 }
 
 const CHIPS = [
@@ -205,6 +203,7 @@ export function MiSemana({
         titulo="Sobres de la semana"
         icono={<IconoDinero tam={15} />}
         encabezados={['Sobre', null, 'Gastado']}
+        encabezadosPanel={['Sobre', 'Gastado', null, 'Del cheque']}
         className="mt-3"
         {...SOBRES}
       >
@@ -243,16 +242,7 @@ function Sobre({
   return (
     <Fila>
       <CeldaNombre>{nombre}</CeldaNombre>
-      <Barra
-        porcentaje={porcentaje(gastadoCents, presupuestoCents)}
-        color={colorDeSobre(gastadoCents, presupuestoCents)}
-      />
-      <CeldaCifra>
-        <Moneda centavos={gastadoCents} />
-        <div className="text-texto-2 text-[11px] font-normal">
-          de <Moneda centavos={presupuestoCents} />
-        </div>
-      </CeldaCifra>
+      <CeldasDeAvance gastadoCents={gastadoCents} delMesCents={presupuestoCents} />
     </Fila>
   )
 }

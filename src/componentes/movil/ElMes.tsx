@@ -11,8 +11,8 @@ import {
 } from '../../lib/mes/grupos'
 import { nombreDeMes } from '../textos'
 import {
-  CeldaCifra,
   CeldaNombre,
+  CeldasDeAvance,
   Fila,
   FilaAgregar,
   FilaFondo,
@@ -130,9 +130,12 @@ function SelectorDeMes({
  * cada fila: es lo que hace que los montos de todas las categorías caigan en la
  * misma vertical y se puedan comparar de un vistazo.
  */
-const CATEGORIAS = { columnas: 'minmax(0,1fr) 84px', columnasPanel: 'minmax(150px,1fr) 120px' }
+const CATEGORIAS = {
+  columnas: 'minmax(0,1fr) 36px 84px',
+  columnasPanel: 'minmax(150px,1fr) 88px minmax(90px,300px) 88px',
+}
 const FONDOS = {
-  columnas: 'minmax(0,1fr) 44px 84px',
+  columnas: 'minmax(0,1fr) 36px 84px',
   columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
 }
 
@@ -142,9 +145,9 @@ const FONDOS = {
  * icono. Sin el hilo, una fila sangrada se lee como una fila mal alineada.
  */
 const HILO =
-  'relative pl-[18px] panel:pl-[27px]' +
-  " before:absolute before:left-[7px] before:top-[-50%] before:bottom-1/2 before:w-px before:bg-linea before:content-['']" +
-  " after:absolute after:left-[7px] after:top-1/2 after:h-px after:w-[8px] after:bg-linea after:content-['']" +
+  'relative pl-[14px] panel:pl-[27px]' +
+  " before:absolute before:left-[5px] before:top-[-50%] before:bottom-1/2 before:w-px before:bg-linea before:content-['']" +
+  " after:absolute after:left-[5px] after:top-1/2 after:h-px after:w-[6px] after:bg-linea after:content-['']" +
   ' panel:before:left-[11px] panel:after:left-[11px] panel:after:w-[9px]'
 
 /** Qué grupos están abiertos, recordado entre visitas. */
@@ -221,9 +224,10 @@ export function ElMes({
       >
         {linea.nombre}
       </CeldaNombre>
-      <CeldaCifra>
-        <Moneda centavos={linea.montoMensualCents} />
-      </CeldaCifra>
+      <CeldasDeAvance
+        gastadoCents={linea.gastadoCents}
+        delMesCents={linea.montoMensualCents}
+      />
     </Fila>
   )
 
@@ -259,12 +263,14 @@ export function ElMes({
         titulo={`Categorías de ${nombreDeMes(presupuesto.mes.mes).toLowerCase()}`}
         icono={<IconoDinero tam={15} />}
         dato={`${cuantasCategorias} categorías`}
-        encabezados={['Categoría', 'Del mes']}
+        encabezados={['Categoría', null, 'Gastado']}
+        encabezadosPanel={['Categoría', 'Gastado', null, 'Del mes']}
         {...CATEGORIAS}
       >
         {grupos.map((grupo) => {
           const abierto = abiertos.includes(grupo.clave)
           const total = centavos(suma(grupo.lineas.map((l) => l.montoMensualCents)))
+          const gastado = centavos(suma(grupo.lineas.map((l) => l.gastadoCents)))
           const puedeEditar = editable && grupo.clave !== 'deuda'
           return (
             <Fragment key={grupo.clave}>
@@ -284,9 +290,7 @@ export function ElMes({
                   </span>
                   <span className="truncate text-[14px] font-semibold">{grupo.titulo}</span>
                 </div>
-                <CeldaCifra>
-                  <Moneda centavos={total} />
-                </CeldaCifra>
+                <CeldasDeAvance gastadoCents={gastado} delMesCents={total} />
               </Fila>
               {abierto && grupo.lineas.map((l) => filaHija(l, puedeEditar))}
               {abierto && grupo.agregar && alCrearCategoria && (
