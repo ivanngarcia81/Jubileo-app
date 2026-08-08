@@ -1,5 +1,6 @@
 import { hoy } from '../../datos/fuente'
 import type { Presupuesto } from '../../datos/tipos'
+import { centavos } from '../../lib/dinero'
 import type { MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type {
@@ -125,5 +126,68 @@ export async function cargarPresupuestoDelMes(
   }
 
   // El día de hoy entra desde afuera: `mapeo` es puro y no pregunta la hora.
-  return aPresupuesto(filas, { hoy: hoy() })
+  return aPresupuesto(filas, { hoy: hoy(), mesesPasados: await resumenDeLosMeses() })
+}
+
+const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+
+/**
+ * Los últimos meses del hogar, con lo que entró y lo que salió en cada uno.
+ *
+ * Es lo que dibuja el selector de barras y lo que deja volver a un mes
+ * cerrado. Hasta hoy la franja salía vacía —`mesesPasados` nunca se llenaba— y
+ * las alturas que se veían en las capturas eran seis números del mockup.
+ *
+ * Se traen los cheques y las líneas de todos esos meses en dos consultas, no
+ * en dos por mes: son seis barras, no vale abrir doce viajes a la red para
+ * pintarlas.
+ */
+async function resumenDeLosMeses(): Promise<Presupuesto['mesesPasados']> {
+  const db = cliente()
+
+  const { data: meses, error } = await db
+    .from('meses')
+    .select('id, hogar_id, anio, mes, estado, cerrado_en')
+    .order('anio', { ascending: false })
+    .order('mes', { ascending: false })
+    .limit(6)
+    .returns<FilaMes[]>()
+  // Un fallo aquí no tumba el mes: se queda sin barras, que es un adorno
+  // comparado con no poder ver tu presupuesto.
+  if (error || !meses || meses.length === 0) return []
+
+  const ids = meses.map((m) => m.id)
+  const [periodos, lineas] = await Promise.all([
+    db
+      .from('periodos')
+      .select('mes_id, ingreso_esperado_cents, ingreso_real_cents')
+      .in('mes_id', ids)
+      .returns<Pick<FilaPeriodo, 'mes_id' | 'ingreso_esperado_cents' | 'ingreso_real_cents'>[]>(),
+    db
+      .from('lineas_presupuesto')
+      .select('mes_id, monto_mensual_cents')
+      .in('mes_id', ids)
+      .returns<Pick<FilaLinea, 'mes_id' | 'monto_mensual_cents'>[]>(),
+  ])
+  if (periodos.error || lineas.error) return []
+
+  // Del más viejo al más nuevo: las barras se leen de izquierda a derecha.
+  return [...meses].reverse().map((m) => {
+    const entra = (periodos.data ?? [])
+      .filter((p) => p.mes_id === m.id)
+      .reduce((s, p) => s + (p.ingreso_real_cents ?? p.ingreso_esperado_cents ?? 0), 0)
+    const sale = (lineas.data ?? [])
+      .filter((l) => l.mes_id === m.id)
+      .reduce((s, l) => s + l.monto_mensual_cents, 0)
+    return {
+      anio: m.anio,
+      mes: m.mes,
+      etiqueta: MESES_CORTOS[m.mes - 1] ?? '',
+      entraCents: centavos(entra),
+      saleCents: centavos(sale),
+      sobroCents: centavos(entra - sale),
+      // Lo decide `mapeo`, que es donde se sabe el nivel vigente.
+      alcanzable: false,
+    }
+  })
 }

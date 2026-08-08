@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ALTURAS_MESES } from '../../datos/ejemplo'
 import type { LineaMes, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
+import { alturas } from '../../lib/mes/barras'
 import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
@@ -17,8 +17,21 @@ import { PonerMonto } from './PonerMonto'
 
 const VISTAS = ['Entra', 'Sale', 'Sobró'] as const
 
-function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
+function SelectorDeMes({
+  presupuesto,
+  alVerMes,
+}: {
+  presupuesto: Presupuesto
+  alVerMes?: (anio: number, mes: number) => void
+}) {
   const [vista, setVista] = useState<string>('Sale')
+
+  // Las barras enseñan lo mismo que el número de arriba. Cambiar de vista
+  // cambia la escala, y así se compara lo que se está mirando y no otra cosa.
+  const deCadaMes = presupuesto.mesesPasados.map((m) =>
+    vista === 'Entra' ? m.entraCents : vista === 'Sale' ? m.saleCents : m.sobroCents,
+  )
+  const altos = alturas(deCadaMes)
 
   const sobra = presupuesto.sinRepartirCents
   const cifra =
@@ -49,21 +62,42 @@ function SelectorDeMes({ presupuesto }: { presupuesto: Presupuesto }) {
 
       <div className="flex h-[112px] items-end gap-2">
         {presupuesto.mesesPasados.map((m, i) => {
-          const activo = i === presupuesto.mesesPasados.length - 1
+          const activo = m.anio === presupuesto.mes.anio && m.mes === presupuesto.mes.mes
+          const sePuedeAbrir = Boolean(alVerMes) && !activo && m.alcanzable
           return (
-            <div key={m.etiqueta} className="flex h-full flex-1 flex-col items-center justify-end gap-[7px]">
+            <button
+              key={`${m.anio}-${m.mes}`}
+              type="button"
+              disabled={!sePuedeAbrir}
+              onClick={() => alVerMes?.(m.anio, m.mes)}
+              // El mes que no se alcanza sí se dibuja: enseña que hubo historia
+              // y que hace falta premium para entrar, en vez de esconderla.
+              aria-label={
+                activo
+                  ? `${m.etiqueta}, el que estás viendo`
+                  : m.alcanzable
+                    ? `Ver ${m.etiqueta}`
+                    : `${m.etiqueta} — solo en premium`
+              }
+              aria-current={activo ? 'true' : undefined}
+              className="flex h-full flex-1 flex-col items-center justify-end gap-[7px]"
+            >
               <div className="bg-gris relative h-full w-full max-w-[24px] rounded-[7px]">
                 <div
                   className={`absolute bottom-0 left-0 w-full rounded-[7px] ${
-                    activo ? 'bg-[linear-gradient(180deg,#0ABBB4,#0A847F)]' : 'bg-linea'
+                    activo
+                      ? 'bg-[linear-gradient(180deg,#0ABBB4,#0A847F)]'
+                      : m.alcanzable
+                        ? 'bg-[#B9C2BF]'
+                        : 'bg-linea'
                   }`}
-                  style={{ height: `${ALTURAS_MESES[i] ?? 0}%` }}
+                  style={{ height: `${altos[i] ?? 0}%` }}
                 />
               </div>
               <div className={`text-[10.5px] ${activo ? 'text-texto font-bold' : 'text-texto-2'}`}>
                 {m.etiqueta}
               </div>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -94,6 +128,7 @@ export function ElMes({
   alQuitar,
   alCrearCategoria,
   alCerrarMes,
+  alVerMes,
 }: {
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
@@ -106,6 +141,7 @@ export function ElMes({
     diaVencimiento: number | undefined,
   ) => Promise<void>
   alCerrarMes?: () => Promise<void>
+  alVerMes?: (anio: number, mes: number) => void
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
@@ -139,7 +175,7 @@ export function ElMes({
 
   return (
     <>
-      <SelectorDeMes presupuesto={presupuesto} />
+      <SelectorDeMes presupuesto={presupuesto} {...(alVerMes ? { alVerMes } : {})} />
 
       <Seccion>Primero</Seccion>
       {filaEditable(presupuesto.mayordomia)}

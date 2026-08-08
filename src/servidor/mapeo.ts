@@ -1,6 +1,7 @@
 import type { Fondo, LineaMes, Movimiento, Pago, Presupuesto, Sobre } from '../datos/tipos'
 import { type Centavos, centavos, suma } from '../lib/dinero'
 import { type FechaCivil, anioDe, diaDelMesRecortado, fecha, mesDe } from '../lib/fecha'
+import { alcanzables } from '../lib/mes/barras'
 import { nivelVigente } from '../lib/membresia'
 import type { Periodo } from '../lib/periodos'
 import type { FilasDelMes, FilaPeriodo } from './esquema'
@@ -314,17 +315,20 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       tipo: t.tipo,
     }))
 
+  // Una sola vez: lo usa el perfil y lo usa el alcance del historial.
+  const nivelDeHoy = nivelVigente(
+    yo.nivel,
+    yo.nivel_vence_en ? Date.parse(yo.nivel_vence_en) : null,
+    opciones.hoy ? Date.parse(`${opciones.hoy}T00:00:00Z`) : 0,
+  )
+
   return {
     usuario: {
       nombre: (yo.nombre ?? yo.correo.split('@')[0] ?? '').split(/\s+/)[0] ?? '',
       iniciales: iniciales(yo.nombre, yo.correo),
       // El nivel se corrige al leer: si el webhook del vencimiento se perdió,
       // la base seguiría diciendo premium. Bajar a gratis no borra nada.
-      nivel: nivelVigente(
-        yo.nivel,
-        yo.nivel_vence_en ? Date.parse(yo.nivel_vence_en) : null,
-        opciones.hoy ? Date.parse(`${opciones.hoy}T00:00:00Z`) : 0,
-      ),
+      nivel: nivelDeHoy,
       nivelVenceEn: yo.nivel_vence_en ? enPalabrasCortas(yo.nivel_vence_en) : null,
       onboardingTerminado: yo.onboarding_terminado_en !== null,
       frecuencia: yo.frecuencia_pago ? (ETIQUETAS_FRECUENCIA[yo.frecuencia_pago] ?? '') : '',
@@ -381,7 +385,18 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       })),
 
     movimientos,
-    mesesPasados: opciones.mesesPasados ?? [],
+    // El alcance no lo decide quien trae las filas: depende del nivel, y el
+    // nivel se corrige aquí al leer. Se aplica en un solo lugar.
+    mesesPasados: (() => {
+      const lista = opciones.mesesPasados ?? []
+      const puedeTodos = nivelDeHoy === 'premium'
+      const alcance = alcanzables(
+        lista,
+        (m) => m.anio === filas.mes.anio && m.mes === filas.mes.mes,
+        puedeTodos,
+      )
+      return lista.map((m, i) => ({ ...m, alcanzable: alcance[i] ?? false }))
+    })(),
     inicioDeudas: primerDiaDelMes,
   }
 }

@@ -268,12 +268,12 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   ],
 
   mesesPasados: [
-    { etiqueta: 'Mar', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
-    { etiqueta: 'Abr', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
-    { etiqueta: 'May', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
-    { etiqueta: 'Jun', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
-    { etiqueta: 'Jul', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
-    { etiqueta: 'Ago', entraCents: centavos(0), saleCents: centavos(0), sobroCents: centavos(0) },
+    { anio: 2026, mes: 3, etiqueta: 'Mar', entraCents: centavos(612000), saleCents: centavos(598000), sobroCents: centavos(14000), alcanzable: true },
+    { anio: 2026, mes: 4, etiqueta: 'Abr', entraCents: centavos(684000), saleCents: centavos(661000), sobroCents: centavos(23000), alcanzable: true },
+    { anio: 2026, mes: 5, etiqueta: 'May', entraCents: centavos(646000), saleCents: centavos(646000), sobroCents: centavos(0), alcanzable: true },
+    { anio: 2026, mes: 6, etiqueta: 'Jun', entraCents: centavos(684000), saleCents: centavos(657000), sobroCents: centavos(27000), alcanzable: true },
+    { anio: 2026, mes: 7, etiqueta: 'Jul', entraCents: centavos(684000), saleCents: centavos(659000), sobroCents: centavos(25000), alcanzable: true },
+    { anio: 2026, mes: 8, etiqueta: 'Ago', entraCents: centavos(684000), saleCents: centavos(684000), sobroCents: centavos(0), alcanzable: true },
   ],
 
   inicioDeudas: fecha('2026-08-01'),
@@ -291,6 +291,3 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   },
 }
 
-// Las alturas de las barras del selector de mes vienen del mockup. Se guardan
-// aparte porque son datos de ejemplo, no una escala calculada.
-export const ALTURAS_MESES = [28, 44, 39, 52, 48, 86]

@@ -105,6 +105,7 @@ interface Acciones {
   alMarcarPago?: (pago: Pago) => Promise<void>
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>
   alCerrarMes?: () => Promise<void>
+  alVerMes?: (anio: number, mes: number) => void
   alCrearDeuda?: (
     nombre: string,
     saldoCents: Centavos,
@@ -146,6 +147,7 @@ function Contenido({
     alMarcarPago,
     alCerrarSemana,
     alCerrarMes,
+    alVerMes,
     alCrearDeuda,
     alGuardarSaldo,
     alEnfocar,
@@ -164,6 +166,7 @@ function Contenido({
           {...(alQuitar ? { alQuitar } : {})}
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
           {...(alCerrarMes ? { alCerrarMes } : {})}
+          {...(alVerMes ? { alVerMes } : {})}
         />
       )
     case 'deudas':
@@ -322,8 +325,10 @@ export function App() {
   const [ruta, ir] = useRuta()
 
   // Sin servidor, la app enseña el mes del ejemplo. Con servidor, el mes en el
-  // que está parado el usuario.
-  const mes = useMemo(() => (usaServidor() ? mesActual() : MES_DEL_EJEMPLO), [])
+  // que está parado el usuario — que ahora puede moverse: desde que los meses
+  // se acumulan, el selector de barras deja volver a uno cerrado.
+  const inicial = useMemo(() => (usaServidor() ? mesActual() : MES_DEL_EJEMPLO), [])
+  const [mes, verMes] = useState<MesObjetivo>(inicial)
   const usuarioId = sesion.estado === 'dentro' ? sesion.usuarioId : null
   const fuente = usarPresupuesto(mes, usuarioId)
 
@@ -411,6 +416,9 @@ export function App() {
         fuente.recargar()
       }
     : undefined
+
+  // Volver a un mes cerrado. No escribe nada: solo cambia lo que se mira.
+  const alVerMes = (anio: number, m: number) => verMes({ anio, mes: m })
 
   const alQuitar = mesId
     ? async (categoriaId: string) => {
@@ -588,6 +596,7 @@ export function App() {
     ...(alMarcarPago ? { alMarcarPago } : {}),
     ...(alCerrarSemana ? { alCerrarSemana } : {}),
     ...(alCerrarMes ? { alCerrarMes } : {}),
+    ...(usaServidor() ? { alVerMes } : {}),
   }
 
   // El onboarding quedó a medias: se vuelve a donde se quedó en vez de caer a

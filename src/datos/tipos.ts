@@ -58,10 +58,15 @@ export interface Movimiento {
 }
 
 export interface ResumenMesPasado {
+  /** Para poder abrirlo al tocarlo: sin esto la barra es un adorno. */
+  anio: number
+  mes: number
   etiqueta: string
   entraCents: Centavos
   saleCents: Centavos
   sobroCents: Centavos
+  /** Si el nivel del usuario le deja abrirlo. Gratis: el actual y el anterior. */
+  alcanzable: boolean
 }
 
 export interface Presupuesto {

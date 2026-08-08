@@ -255,6 +255,13 @@ await p.route('**/*', async (r) => {
       }
       return json([])
     }
+    // `mes_id=eq.x` o `mes_id=in.(x,y)`: las dos formas se usan.
+    const deQueMeses = () => {
+      const q = url.searchParams.get('mes_id')
+      if (!q) return null
+      if (q.startsWith('in.')) return q.replace(/^in\.|[()"]/g, '').split(',').filter(Boolean)
+      return [q.replace('eq.', '')]
+    }
     if (t === 'meses') {
       const anio = url.searchParams.get('anio'), mesQ = url.searchParams.get('mes')
       const o = url.searchParams.get('or')
@@ -268,19 +275,23 @@ await p.route('**/*', async (r) => {
         filas = filas.filter((x) => x.anio < a || (x.anio === a && x.mes < mm))
                      .sort((x, y) => y.anio - x.anio || y.mes - x.mes)
       }
+      // El resumen del historial pide los últimos seis, del más nuevo al más
+      // viejo. Sin respetar el orden, las barras salen al revés.
+      if ((url.searchParams.get('order') ?? '').includes('anio.desc'))
+        filas = [...filas].sort((x, y) => y.anio - x.anio || y.mes - x.mes)
       const tope = Number(url.searchParams.get('limit') ?? 0)
       return json(tope ? filas.slice(0, tope) : filas)
     }
     if (t === 'miembros_hogar') return json([{ hogar_id: H, usuario_id: U }])
     if (t === 'usuarios') return json((pideUno ? (x) => x[0] : (x) => x)([{ ...perfil, nivel: nivelUsuario, nivel_vence_en: venceEn, onboarding_terminado_en: onboardingListo }]))
     if (t === 'periodos') {
-      const mid = (url.searchParams.get('mes_id') ?? '').replace('eq.', '')
-      return json(mid ? periodos.filter((x) => x.mes_id === mid) : periodos)
+      const cuales = deQueMeses()
+      return json(cuales ? periodos.filter((x) => cuales.includes(x.mes_id)) : periodos)
     }
     if (t === 'categorias') return json(categorias.filter((c) => c.activa !== false))
     if (t === 'lineas_presupuesto') {
-      const mid = (url.searchParams.get('mes_id') ?? '').replace('eq.', '')
-      return json(mid ? lineas.filter((x) => x.mes_id === mid) : lineas)
+      const cuales = deQueMeses()
+      return json(cuales ? lineas.filter((x) => cuales.includes(x.mes_id)) : lineas)
     }
     if (t === 'asignaciones') return json(asignaciones.map((a, i) => ({ id: `a${i}`, ...a })))
     if (t === 'transacciones') return json(transacciones)
@@ -872,6 +883,38 @@ ok(asigSept.length === conReparto.length,
 ok(extras.length === 0 || !asigSept.some((a) => extras.some((e) => e.id === a.periodo_id)),
    `y el cheque extra de septiembre no recibe nada: ${extras.length} extra(s)`)
 
+
+// ---- El historial: volver al mes que cerraste ----------------------------
+// Sin esto, cerrar agosto era despedirse de agosto. Y la franja de barras de
+// arriba de El mes salía vacía: `mesesPasados` nunca se llenaba y las alturas
+// que se veían en las capturas eran seis números copiados del mockup.
+await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
+await p.reload({ waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+
+const conBarras = await p.locator('body').innerText()
+ok(conBarras.includes('Sep') && conBarras.includes('Ago'),
+   'el selector dibuja los meses que existen, no seis del mockup')
+
+const barraAgosto = p.getByRole('button', { name: /Ver Ago/ }).first()
+ok(await barraAgosto.isVisible(), 'y la barra de agosto se puede tocar')
+ok(await p.getByRole('button', { name: /Sep, el que estás viendo/ }).first().isDisabled(),
+   'la del mes que ya estás viendo no lleva a ningún lado')
+
+const altoAgosto = await p.evaluate(() => {
+  const b = [...document.querySelectorAll('button')].find((x) => /Ver Ago/.test(x.getAttribute('aria-label') ?? ''))
+  return b?.querySelector('div > div')?.style.height ?? ''
+})
+ok(altoAgosto !== '' && altoAgosto !== '0%',
+   `la altura sale del dinero de ese mes, no de una constante: ${altoAgosto}`)
+await p.screenshot({ path: RAIZ + 'capturas/app-historial.png' })
+
+await barraAgosto.click()
+ok(await esperarA(async () => (await p.locator('body').innerText()).includes('Agosto 2026')),
+   'tocarla abre agosto: el mes cerrado sigue siendo tuyo')
+
+const enAgosto = await p.locator('body').innerText()
+ok(enAgosto.includes('Mes cerrado'), 'y se ve como lo dejaste, cerrado')
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })
