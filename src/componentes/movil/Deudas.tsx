@@ -3,7 +3,20 @@ import type { Presupuesto } from '../../datos/tipos'
 import { EditarDeuda, type DeudaDelPresupuesto } from './EditarDeuda'
 import { simular } from '../../lib/deudas'
 import { type Centavos, centavos, formatearRedondo, suma } from '../../lib/dinero'
-import { Barra, Etiqueta, Fila, Moneda, Seccion, Tarjeta, porcentaje } from '../base'
+import {
+  Barra,
+  CeldaCifra,
+  CeldaNombre,
+  Etiqueta,
+  Fila,
+  FilaAgregar,
+  ListaSeccion,
+  Moneda,
+  Seccion,
+  Tarjeta,
+  porcentaje,
+} from '../base'
+import { IconoDeudas } from '../iconos'
 import { mesYAnio, mesYAnioEnFrase, meses } from '../textos'
 
 /**
@@ -16,6 +29,12 @@ import { mesYAnio, mesYAnioEnFrase, meses } from '../textos'
 
 const EXTRA_MAXIMO = 35000
 const PASO = 1000
+
+/** Las columnas de la lista de deudas. Ver el comentario de `ListaSeccion`. */
+const DEUDAS = {
+  columnas: 'minmax(0,1fr) 44px 84px',
+  columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
+}
 
 export function Deudas({
   presupuesto,
@@ -139,67 +158,54 @@ export function Deudas({
         )}
       </Tarjeta>
 
-      <Seccion dato="menor primero">En orden de saldo</Seccion>
-      <div className="flex flex-col gap-2">
+      <ListaSeccion
+        titulo="En orden de saldo"
+        icono={<IconoDeudas tam={15} />}
+        dato="menor primero"
+        encabezados={['Deuda', 'Pagado', 'Saldo']}
+        className="mt-3"
+        {...DEUDAS}
+      >
         {pendientes.map((deuda) => (
-          <Tarjeta key={deuda.id}>
-            <div
-              className={deuda.esEnfoque ? 'mb-[10px]' : undefined}
-              {...(editable
-                ? {
-                    role: 'button',
-                    tabIndex: 0,
-                    'aria-label': `Editar ${deuda.nombre}`,
-                    onClick: () => setEditando(deuda),
-                    onKeyDown: (e: React.KeyboardEvent) =>
-                      e.key === 'Enter' && setEditando(deuda),
-                  }
-                : {})}
-            >
-              <Fila
-                titulo={
+          <Fila
+            key={deuda.id}
+            {...(editable
+              ? { alTocar: () => setEditando(deuda), etiqueta: `Editar ${deuda.nombre}` }
+              : {})}
+          >
+            <CeldaNombre
+              detalle={
+                deuda.pagoActualCents > deuda.pagoMinimoCents ? (
                   <>
-                    {deuda.nombre} {deuda.esEnfoque && <Etiqueta>enfoque</Etiqueta>}
+                    Mínimo <Moneda centavos={deuda.pagoMinimoCents} /> · pagas{' '}
+                    <Moneda centavos={deuda.pagoActualCents} />
                   </>
-                }
-                detalle={
-                  deuda.pagoActualCents > deuda.pagoMinimoCents ? (
-                    <>
-                      Mínimo <Moneda centavos={deuda.pagoMinimoCents} /> · pagas{' '}
-                      <Moneda centavos={deuda.pagoActualCents} />
-                    </>
-                  ) : (
-                    <>
-                      Solo el mínimo · <Moneda centavos={deuda.pagoMinimoCents} />
-                    </>
-                  )
-                }
-                derecha={<Moneda centavos={deuda.saldoCents} />}
-              />
-            </div>
-            {deuda.esEnfoque && (
-              // Cuánto lleva pagado de lo que debía al empezar.
-              <Barra
-                porcentaje={
-                  100 - porcentaje(deuda.saldoCents, deuda.saldoInicialCents)
-                }
-                color="var(--teal)"
-              />
-            )}
-          </Tarjeta>
+                ) : (
+                  <>
+                    Solo el mínimo · <Moneda centavos={deuda.pagoMinimoCents} />
+                  </>
+                )
+              }
+            >
+              {deuda.nombre} {deuda.esEnfoque && <Etiqueta>enfoque</Etiqueta>}
+            </CeldaNombre>
+            {/* Cuánto lleva pagado de lo que debía al empezar. Antes solo la
+                deuda en enfoque la traía; en su propia columna se puede comparar
+                el avance de todas, que es de lo que se trata la lista. */}
+            <Barra
+              porcentaje={100 - porcentaje(deuda.saldoCents, deuda.saldoInicialCents)}
+              color="var(--teal)"
+            />
+            <CeldaCifra>
+              <Moneda centavos={deuda.saldoCents} />
+            </CeldaCifra>
+          </Fila>
         ))}
-      </div>
-
-      {editable && (
-        <button
-          type="button"
-          onClick={() => setEditando(null)}
-          className="border-linea text-texto-2 mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[13px] border border-dashed py-3 text-[13.5px]"
-        >
-          <span className="text-teal-osc text-[17px] leading-none">+</span>
-          Agregar una deuda
-        </button>
-      )}
+        <FilaAgregar
+          texto="Agregar una deuda"
+          {...(editable ? { alTocar: () => setEditando(null) } : {})}
+        />
+      </ListaSeccion>
 
       {editando !== undefined && editable && (
         <EditarDeuda

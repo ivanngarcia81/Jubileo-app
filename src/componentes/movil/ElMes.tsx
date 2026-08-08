@@ -2,8 +2,17 @@ import { useState } from 'react'
 import type { LineaMes, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { alturas } from '../../lib/mes/barras'
-import { FilaFondo, Fila, Icono, Moneda, Seccion, Segmentado, Tarjeta } from '../base'
-import { IconoDeClave } from '../iconos'
+import {
+  CeldaCifra,
+  CeldaNombre,
+  Fila,
+  FilaAgregar,
+  FilaFondo,
+  ListaSeccion,
+  Moneda,
+  Segmentado,
+} from '../base'
+import { IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
@@ -108,18 +117,15 @@ function SelectorDeMes({
   )
 }
 
-/** Fila de "agregar", con el mismo aire que las tarjetas pero sin peso. */
-function Agregar({ texto, alTocar }: { texto: string; alTocar: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={alTocar}
-      className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-[15px] border border-dashed px-[14px] py-3 text-left text-[13.5px]"
-    >
-      <span className="text-teal-osc text-[17px] leading-none">+</span>
-      {texto}
-    </button>
-  )
+/**
+ * Las columnas de las listas de esta pantalla. Se declaran aquí y no dentro de
+ * cada fila: es lo que hace que los montos de todas las categorías caigan en la
+ * misma vertical y se puedan comparar de un vistazo.
+ */
+const CATEGORIAS = { columnas: 'minmax(0,1fr) 84px', columnasPanel: 'minmax(150px,1fr) 120px' }
+const FONDOS = {
+  columnas: 'minmax(0,1fr) 44px 84px',
+  columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
 }
 
 export function ElMes({
@@ -150,55 +156,58 @@ export function ElMes({
   // Los cheques extra no se reparten: lo que caiga ahí es de más, no del mes.
   const chequesQueSeReparten = presupuesto.periodos.filter((p) => !p.esExtra).length
 
+  // La fila entera es el botón, como en el mockup: no hay controles sueltos
+  // dentro del renglón. Antes el monto era un botón con borde de 44px de alto
+  // que se comía la mitad de la fila.
   const filaEditable = (linea: LineaMes) => (
-    <Tarjeta key={linea.id}>
-      <Fila
-        izquierda={
-          <Icono>
-            <IconoDeClave clave={linea.icono} tam={14} />
-          </Icono>
-        }
-        titulo={linea.nombre}
-        detalle={linea.detalle}
-        derecha={
-          editable ? (
-            <button
-              type="button"
-              onClick={() => setEditando(linea)}
-              aria-label={`Poner el monto de ${linea.nombre}`}
-              className="border-linea text-texto min-h-11 rounded-[9px] border px-3 text-[15px] font-semibold [font-variant-numeric:tabular-nums]"
-            >
-              <Moneda centavos={linea.montoMensualCents} />
-            </button>
-          ) : (
-            <Moneda centavos={linea.montoMensualCents} />
-          )
-        }
-      />
-    </Tarjeta>
+    <Fila
+      key={linea.id}
+      {...(editable ? { alTocar: () => setEditando(linea), etiqueta: `Poner el monto de ${linea.nombre}` } : {})}
+    >
+      <CeldaNombre
+        icono={<IconoDeClave clave={linea.icono} tam={13} />}
+        {...(linea.detalle ? { detalle: linea.detalle } : {})}
+      >
+        {linea.nombre}
+      </CeldaNombre>
+      <CeldaCifra>
+        <Moneda centavos={linea.montoMensualCents} />
+      </CeldaCifra>
+    </Fila>
   )
 
   return (
-    <>
+    <div className="flex flex-col gap-3">
       <SelectorDeMes presupuesto={presupuesto} {...(alVerMes ? { alVerMes } : {})} />
 
-      <Seccion>Primero</Seccion>
-      {filaEditable(presupuesto.mayordomia)}
+      <ListaSeccion
+        titulo="Primero"
+        icono={<IconoDinero tam={15} />}
+        {...CATEGORIAS}
+      >
+        {filaEditable(presupuesto.mayordomia)}
+      </ListaSeccion>
 
-      <Seccion dato={`${presupuesto.fijos.length} categorías`}>Gastos fijos</Seccion>
-      <div className="flex flex-col gap-2">
+      <ListaSeccion
+        titulo="Gastos fijos"
+        icono={<IconoDinero tam={15} />}
+        dato={`${presupuesto.fijos.length} categorías`}
+        {...CATEGORIAS}
+      >
         {presupuesto.fijos.map(filaEditable)}
-        {alCrearCategoria && <Agregar texto="Agregar un gasto fijo" alTocar={() => setCreando('fijo')} />}
-      </div>
+        {alCrearCategoria && <FilaAgregar texto="Agregar un gasto fijo" alTocar={() => setCreando('fijo')} />}
+      </ListaSeccion>
 
       {(presupuesto.variables.length > 0 || alCrearCategoria) && (
-        <>
-          <Seccion dato={`${presupuesto.variables.length} sobres`}>Gastos variables</Seccion>
-          <div className="flex flex-col gap-2">
-            {presupuesto.variables.map(filaEditable)}
-            {alCrearCategoria && <Agregar texto="Agregar un sobre" alTocar={() => setCreando('variable')} />}
-          </div>
-        </>
+        <ListaSeccion
+          titulo="Gastos variables"
+          icono={<IconoDinero tam={15} />}
+          dato={`${presupuesto.variables.length} sobres`}
+          {...CATEGORIAS}
+        >
+          {presupuesto.variables.map(filaEditable)}
+          {alCrearCategoria && <FilaAgregar texto="Agregar un sobre" alTocar={() => setCreando('variable')} />}
+        </ListaSeccion>
       )}
 
       {editando && alPonerMonto && (
@@ -220,8 +229,12 @@ export function ElMes({
         />
       )}
 
-      <Seccion>Fondos de reserva</Seccion>
-      <Tarjeta>
+      <ListaSeccion
+        titulo="Fondos de reserva"
+        icono={<IconoMetas tam={15} />}
+        encabezados={['Fondo', null, 'Llevas']}
+        {...FONDOS}
+      >
         {presupuesto.fondos.slice(0, 2).map((fondo) => (
           <FilaFondo
             key={fondo.id}
@@ -230,17 +243,14 @@ export function ElMes({
             metaCents={fondo.metaCents}
             cuando={
               <>
-                {fondo.mesObjetivo} ·{' '}
-                <b className="text-teal-osc font-semibold">
-                  <Moneda centavos={fondo.porChequeCents} /> por cheque
-                </b>
+                {fondo.mesObjetivo} · <Moneda centavos={fondo.porChequeCents} /> por cheque
               </>
             }
           />
         ))}
-      </Tarjeta>
+      </ListaSeccion>
 
       {alCerrarMes && <CerrarMes presupuesto={presupuesto} alCerrar={alCerrarMes} />}
-    </>
+    </div>
   )
 }

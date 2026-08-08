@@ -528,8 +528,17 @@ const f2 = fondos[0]
 ok(f2?.meta_cents === 60000 && f2?.acumulado_cents === 12000, 'el fondo se guarda en centavos')
 ok(f2?.fecha_objetivo === '2026-12-01', 'con su fecha objetivo')
 const conFondo = await p.locator('body').innerText()
-ok(conFondo.includes('Llantas') && conFondo.includes('20%'),
-   'y la barra ya enseña el avance calculado, no uno inventado')
+// Antes esto miraba el texto "20%" que la tarjeta imprimía al lado del nombre.
+// La fila en grid ya no lo imprime —el carril de la barra lo dice— así que se
+// mide la barra misma, que es lo que la frase promete.
+const anchoDeLlantas = await p.evaluate(() => {
+  const fila = [...document.querySelectorAll('button')].find(
+    (b) => b.getAttribute('aria-label') === 'Editar Llantas',
+  )
+  return fila?.querySelector('div[style*="width"]')?.style.width ?? null
+})
+ok(conFondo.includes('Llantas') && anchoDeLlantas === '20%',
+   `y la barra ya enseña el avance calculado, no uno inventado: ${anchoDeLlantas}`)
 await p.screenshot({ path: RAIZ + 'capturas/app-metas.png' })
 
 // ---- El onboarding a medias -----------------------------------------------

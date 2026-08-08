@@ -3,7 +3,7 @@ import type { Presupuesto } from '../../datos/tipos'
 import { simular } from '../../lib/deudas'
 import { centavos, formatearRedondo, suma } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
-import { FilaFondo, Moneda, Segmentado } from '../base'
+import { FilaFondo, ListaSeccion, Moneda, Segmentado } from '../base'
 import {
   IconoCoach,
   IconoDeClave,
@@ -204,14 +204,19 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
           dos adentro, como en el mockup. Sin eso se caía a la fila de abajo y
           se estiraba a ~700px: barras de progreso larguísimas con texto de 13px. */}
       <div className="flex flex-col gap-4 panel:col-span-2 panel:grid panel:grid-cols-2 panel:items-start ancho:col-span-1 ancho:flex">
-        <TarjetaEscritorio icono={<IconoMetas tam={16} />} titulo="Fondos de reserva">
+        {/* Sin `columnasPanel`: esta columna mide 262px en un monitor grande, y
+            ahí no cabe el carril de barra ancho del mockup. */}
+        <ListaSeccion
+          icono={<IconoMetas tam={16} />}
+          titulo="Fondos de reserva"
+          columnas="minmax(0,1fr) 48px 84px"
+        >
           {presupuesto.fondos.map((fondo) => (
             <FilaFondo
               key={fondo.id}
               nombre={fondo.nombre}
               acumuladoCents={fondo.acumuladoCents}
               metaCents={fondo.metaCents}
-              cifras
               cuando={
                 fondo.mesesQueFaltan > 0 ? (
                   <>
@@ -229,7 +234,7 @@ export function Resumen({ presupuesto }: { presupuesto: Presupuesto }) {
               }
             />
           ))}
-        </TarjetaEscritorio>
+        </ListaSeccion>
 
         {presupuesto.coach && (
           <TarjetaEscritorio icono={<IconoCoach tam={16} />} titulo="Tu coach">

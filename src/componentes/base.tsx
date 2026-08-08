@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { type Centavos, formatear, formatearRedondo } from '../lib/dinero'
 
 /**
@@ -161,77 +161,232 @@ export function Casilla({
   )
 }
 
-/** Cuadrito con el icono de la categoría. */
-export function Icono({ children, className = '' }: { children: ReactNode; className?: string }) {
+/* ---------------------------------------------------------------------------
+ * El sistema de listas — ver `design/listas.html`
+ * ---------------------------------------------------------------------------
+ *
+ * La tarjeta dejó de ser el **renglón** y pasó a ser la **sección**. Antes cada
+ * línea del presupuesto era su propia `<Tarjeta>`, con su borde, su relleno y
+ * su sombra: nada quedaba alineado entre renglones, cada barra tenía su propio
+ * ancho, y en una pantalla cabían seis líneas donde caben dieciséis. Ahora hay
+ * un panel blanco por sección y adentro filas en grid separadas por una línea
+ * de 1px.
+ *
+ * Las columnas se declaran **una sola vez, en la sección**, y las filas las
+ * heredan por la variable `--cols`. Esa es toda la mecánica de la alineación:
+ * si cada fila pudiera declarar las suyas, se irían separando de a poquito y
+ * volveríamos al principio. Por eso `Fila` no recibe columnas.
+ *
+ * El teléfono y el escritorio no caben en las mismas columnas —el mockup es un
+ * documento de 1420px y la app arranca en 320— así que la sección acepta dos
+ * juegos: el de teléfono y, desde el corte `panel`, el del mockup.
+ */
+
+function estiloDeColumnas(columnas: string, columnasPanel: string | undefined) {
+  return {
+    '--cols': columnas,
+    '--cols-panel': columnasPanel ?? columnas,
+  } as CSSProperties
+}
+
+/** El alto mínimo de una fila. 44px es el objetivo táctil de un dedo. */
+const FILA = 'grid min-h-11 items-center gap-x-3 px-[14px] panel:gap-x-[14px] panel:px-[18px]'
+
+export function ListaSeccion({
+  titulo,
+  icono,
+  dato,
+  columnas,
+  columnasPanel,
+  encabezados,
+  children,
+  className = '',
+}: {
+  /** El título del panel. Sin él, el panel va pelón: solo las filas. */
+  titulo?: string
+  icono?: ReactNode
+  /** El dato de la derecha del encabezado: un conteo, un total. */
+  dato?: ReactNode
+  /** `grid-template-columns` en el teléfono. */
+  columnas: string
+  /** Y desde 880px, cuando cambia. */
+  columnasPanel?: string
+  /** Rótulos de columna. El primero a la izquierda, los demás a la derecha. */
+  encabezados?: readonly (string | null)[]
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      style={estiloDeColumnas(columnas, columnasPanel)}
+      className={`bg-blanco border-linea overflow-hidden rounded-[15px] border ${className}`}
+    >
+      {titulo !== undefined && (
+        <div className="flex items-center gap-[11px] px-[14px] pt-[15px] pb-[13px] panel:px-[18px]">
+          {icono !== undefined && (
+            <div className="bg-carbon text-teal grid size-7 shrink-0 place-items-center rounded-[9px]">
+              {icono}
+            </div>
+          )}
+          <h3 className="font-serif min-w-0 flex-1 truncate text-[17px] font-normal">{titulo}</h3>
+          {dato !== undefined && <div className="text-texto-2 text-[12px]">{dato}</div>}
+        </div>
+      )}
+      {encabezados !== undefined && (
+        <div
+          className={`${FILA} border-linea text-texto-2 min-h-0 border-b pb-2 text-[10px] font-semibold tracking-[.12em] uppercase grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)]`}
+        >
+          {encabezados.map((rotulo, i) => (
+            // El primer rótulo que existe va a la izquierda —es el de la
+            // columna del nombre, aunque antes venga una casilla sin rótulo— y
+            // los demás a la derecha, encima de sus cifras.
+            <span
+              key={i}
+              className={i === encabezados.findIndex((r) => r !== null) ? '' : 'text-right'}
+            >
+              {rotulo}
+            </span>
+          ))}
+        </div>
+      )}
+      {children}
+    </section>
+  )
+}
+
+/**
+ * Una fila de la lista. Hereda las columnas de su `ListaSeccion`.
+ *
+ * Con `etiqueta` la fila entera es el botón —como en el mockup, donde no hay
+ * controles sueltos dentro del renglón— y esa etiqueta es su nombre accesible:
+ * un botón sin nombre no existe para quien navega con lector. Con etiqueta pero
+ * sin `alTocar` sale desactivada, que es como se ve la demostración: se mira,
+ * no se toca.
+ */
+export function Fila({
+  children,
+  alTocar,
+  etiqueta,
+  className = '',
+}: {
+  children: ReactNode
+  alTocar?: (() => void) | undefined
+  etiqueta?: string
+  className?: string
+}) {
+  const comun = `${FILA} border-linea w-full border-b text-left last:border-b-0 grid-cols-[var(--cols)] panel:grid-cols-[var(--cols-panel)] ${className}`
+  if (etiqueta === undefined) return <div className={comun}>{children}</div>
+  return (
+    <button
+      type="button"
+      onClick={alTocar}
+      disabled={!alTocar}
+      aria-label={etiqueta}
+      className={`${comun} enabled:hover:bg-[#FAFBFA] disabled:opacity-60`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** La última fila de una lista: la que la hace crecer. */
+export function FilaAgregar({
+  texto,
+  alTocar,
+}: {
+  texto: string
+  alTocar?: (() => void) | undefined
+}) {
+  return (
+    <Fila {...(alTocar ? { alTocar } : {})} etiqueta={texto}>
+      <div className="text-texto-2 flex min-w-0 items-center gap-2 py-2 text-[13px]">
+        <span className="text-teal-osc shrink-0 text-[17px] leading-none">+</span>
+        <span className="truncate">{texto}</span>
+      </div>
+    </Fila>
+  )
+}
+
+/** La celda del nombre: icono opcional, el nombre que se corta, y su detalle. */
+export function CeldaNombre({
+  icono,
+  children,
+  detalle,
+}: {
+  icono?: ReactNode
+  children: ReactNode
+  detalle?: ReactNode
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-[9px] py-[7px]">
+      {icono !== undefined && (
+        <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-[7px] border">
+          {icono}
+        </div>
+      )}
+      <div className="min-w-0">
+        <div className="truncate text-[13.5px] font-medium">{children}</div>
+        {detalle !== undefined && (
+          <div className="text-texto-2 mt-[1px] truncate text-[11px]">{detalle}</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Una cifra a la derecha. `apagada` es para el dato de referencia, no el principal. */
+export function CeldaCifra({
+  children,
+  apagada = false,
+  className = '',
+}: {
+  children: ReactNode
+  apagada?: boolean
+  className?: string
+}) {
   return (
     <div
-      className={`bg-gris border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border text-[12px] ${className}`}
+      className={`text-right whitespace-nowrap [font-variant-numeric:tabular-nums] ${
+        apagada ? 'text-texto-2 text-[13px]' : 'text-[13.5px] font-semibold'
+      } ${className}`}
     >
       {children}
     </div>
   )
 }
 
-/** Una fila de tarjeta: icono o casilla, nombre y detalle, y el monto. */
-export function Fila({
-  izquierda,
-  titulo,
-  detalle,
-  derecha,
-}: {
-  izquierda?: ReactNode
-  titulo: ReactNode
-  detalle?: ReactNode
-  derecha: ReactNode
-}) {
-  return (
-    <div className="flex items-center gap-[11px]">
-      {izquierda}
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[14.5px] font-medium">{titulo}</div>
-        {detalle !== undefined && (
-          <div className="text-texto-2 mt-[2px] text-[11.5px]">{detalle}</div>
-        )}
-      </div>
-      <div className="text-[15px] font-semibold whitespace-nowrap">{derecha}</div>
-    </div>
-  )
-}
-
-/** Un fondo de reserva con su barra y su fecha objetivo. */
+/**
+ * Un fondo de reserva: nombre y fecha objetivo, la barra en su carril, y lo
+ * que lleva juntado de lo que necesita. Va dentro de una `ListaSeccion` de tres
+ * columnas.
+ */
 export function FilaFondo({
   nombre,
   acumuladoCents,
   metaCents,
   cuando,
-  cifras = false,
+  alTocar,
+  etiqueta,
 }: {
   nombre: string
   acumuladoCents: Centavos
   metaCents: Centavos
   cuando: ReactNode
-  cifras?: boolean
+  alTocar?: (() => void) | undefined
+  etiqueta?: string
 }) {
   const avance = porcentaje(acumuladoCents, metaCents)
   return (
-    <div className="border-linea border-b py-[11px] last:border-b-0 last:pb-0">
-      <div className="mb-[2px] flex items-baseline justify-between">
-        <div className="text-[13.5px] font-semibold">{nombre}</div>
-        <div className="text-texto-2 text-[11px]">{avance}%</div>
-      </div>
-      <div className="text-texto-2 mb-[7px] text-[11px]">{cuando}</div>
+    <Fila {...(alTocar ? { alTocar, etiqueta } : {})}>
+      <CeldaNombre detalle={cuando}>{nombre}</CeldaNombre>
       <Barra porcentaje={avance} color="var(--teal)" />
-      {cifras && (
-        <div className="mt-[6px] flex justify-between text-[11.5px]">
-          <b className="font-semibold">
-            <Moneda centavos={acumuladoCents} />
-          </b>
-          <span className="text-texto-2">
-            de <Moneda centavos={metaCents} />
-          </span>
+      <CeldaCifra>
+        <Moneda centavos={acumuladoCents} />
+        <div className="text-texto-2 text-[11px] font-normal">
+          de <Moneda centavos={metaCents} />
         </div>
-      )}
-    </div>
+      </CeldaCifra>
+    </Fila>
   )
 }
 

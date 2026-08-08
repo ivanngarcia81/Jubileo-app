@@ -1,16 +1,17 @@
-import { IconoAnotar, IconoPalomita, IconoReloj } from '../iconos'
+import { IconoAnotar, IconoDinero, IconoPalomita, IconoReloj } from '../iconos'
 import { useState } from 'react'
 import type { Pago, Presupuesto } from '../../datos/tipos'
 import { type Centavos, formatearRedondo } from '../../lib/dinero'
 import { diaDe, mesDe } from '../../lib/fecha'
 import {
   Barra,
+  CeldaCifra,
+  CeldaNombre,
   Casilla,
   Etiqueta,
   Fila,
+  ListaSeccion,
   Moneda,
-  Seccion,
-  Tarjeta,
   colorDeSobre,
   porcentaje,
 } from '../base'
@@ -86,6 +87,13 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
   )
 }
 
+/** Las columnas de las dos listas. Ver el comentario de `ListaSeccion`. */
+const PAGOS = { columnas: '21px minmax(0,1fr) 84px', columnasPanel: '21px minmax(150px,1fr) 120px' }
+const SOBRES = {
+  columnas: 'minmax(0,1fr) 44px 84px',
+  columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
+}
+
 const CHIPS = [
   { Icono: IconoAnotar, texto: 'Anotar' },
   { Icono: IconoPalomita, texto: 'Pagué' },
@@ -143,32 +151,37 @@ export function MiSemana({
         ))}
       </div>
 
-      <Seccion dato={`${hechos} de ${presupuesto.pagos.length} hechos`}>Pagos de esta semana</Seccion>
-      <div className="flex flex-col gap-2">
+      <ListaSeccion
+        titulo="Pagos de esta semana"
+        icono={<IconoPalomita tam={15} />}
+        dato={`${hechos} de ${presupuesto.pagos.length} hechos`}
+        encabezados={[null, 'Pago', 'Monto']}
+        className="mt-3"
+        {...PAGOS}
+      >
         {presupuesto.pagos.map((pago) => {
           const pagado = pago.pagado
           return (
-            <Tarjeta key={pago.id}>
-              <Fila
-                izquierda={
-                  <Casilla
-                    marcada={pagado}
-                    etiqueta={pago.nombre}
-                    ocupada={ocupado === pago.id}
-                    alCambiar={
-                      alMarcarPago
-                        ? () => {
-                            setOcupado(pago.id)
-                            void alMarcarPago(pago).finally(() => setOcupado(null))
-                          }
-                        : undefined
-                    }
-                  />
+            <Fila key={pago.id}>
+              <Casilla
+                marcada={pagado}
+                etiqueta={pago.nombre}
+                ocupada={ocupado === pago.id}
+                alCambiar={
+                  alMarcarPago
+                    ? () => {
+                        setOcupado(pago.id)
+                        void alMarcarPago(pago).finally(() => setOcupado(null))
+                      }
+                    : undefined
                 }
-                titulo={pago.nombre}
+              />
+              <CeldaNombre
                 detalle={
                   <>
-                    {pagado ? `Venció el ${pago.diaVencimiento} · pagado` : `Vence el ${pago.diaVencimiento}`}
+                    {pagado
+                      ? `Venció el ${pago.diaVencimiento} · pagado`
+                      : `Vence el ${pago.diaVencimiento}`}
                     {pago.esEnfoque && !pagado && (
                       <>
                         {' · '}
@@ -177,23 +190,28 @@ export function MiSemana({
                     )}
                   </>
                 }
-                derecha={
-                  <span className={pagado ? 'text-texto-2 line-through' : undefined}>
-                    <Moneda centavos={pago.montoCents} />
-                  </span>
-                }
-              />
-            </Tarjeta>
+              >
+                {pago.nombre}
+              </CeldaNombre>
+              <CeldaCifra className={pagado ? 'text-texto-2 line-through' : ''}>
+                <Moneda centavos={pago.montoCents} />
+              </CeldaCifra>
+            </Fila>
           )
         })}
-      </div>
+      </ListaSeccion>
 
-      <Seccion>Sobres de la semana</Seccion>
-      <div className="flex flex-col gap-2">
+      <ListaSeccion
+        titulo="Sobres de la semana"
+        icono={<IconoDinero tam={15} />}
+        encabezados={['Sobre', null, 'Gastado']}
+        className="mt-3"
+        {...SOBRES}
+      >
         {presupuesto.sobres.map((sobre) => (
           <Sobre key={sobre.id} {...sobre} />
         ))}
-      </div>
+      </ListaSeccion>
       {cerrando && alCerrarSemana && (
         <CerrarSemana
           presupuesto={presupuesto}
@@ -223,20 +241,18 @@ function Sobre({
   presupuestoCents: Centavos
 }) {
   return (
-    <div className="bg-blanco border-linea rounded-[13px] border px-[14px] py-3">
-      <div className="mb-[9px] flex items-baseline justify-between">
-        <div className="text-[14px] font-medium">{nombre}</div>
-        <div className="text-texto-2 text-[12px]">
-          <b className="text-texto text-[14px] font-semibold">
-            <Moneda centavos={gastadoCents} />
-          </b>{' '}
-          de <Moneda centavos={presupuestoCents} />
-        </div>
-      </div>
+    <Fila>
+      <CeldaNombre>{nombre}</CeldaNombre>
       <Barra
         porcentaje={porcentaje(gastadoCents, presupuestoCents)}
         color={colorDeSobre(gastadoCents, presupuestoCents)}
       />
-    </div>
+      <CeldaCifra>
+        <Moneda centavos={gastadoCents} />
+        <div className="text-texto-2 text-[11px] font-normal">
+          de <Moneda centavos={presupuestoCents} />
+        </div>
+      </CeldaCifra>
+    </Fila>
   )
 }

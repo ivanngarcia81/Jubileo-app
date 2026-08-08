@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { Fondo, Presupuesto } from '../../datos/tipos'
 import { type Centavos, centavos } from '../../lib/dinero'
 import { FONDOS_GRATIS, puede } from '../../lib/membresia'
-import { FilaFondo, Moneda, Seccion, Tarjeta } from '../base'
+import { FilaAgregar, FilaFondo, ListaSeccion, Moneda, Seccion, Tarjeta } from '../base'
+import { IconoMetas } from '../iconos'
 import { meses } from '../textos'
 import { EditarFondo } from './EditarFondo'
 
@@ -14,6 +15,12 @@ import { EditarFondo } from './EditarFondo'
  * define — la del panel de escritorio, con su barra y sus cifras — sin
  * inventar nada nuevo.
  */
+
+const FONDOS = {
+  columnas: 'minmax(0,1fr) 44px 84px',
+  columnasPanel: 'minmax(150px,1fr) minmax(90px,300px) 140px',
+}
+
 export function Metas({
   presupuesto,
   alCrearFondo,
@@ -43,52 +50,42 @@ export function Metas({
   )
 
   return (
-    <>
-      <Seccion dato={`${presupuesto.fondos.length} fondos`}>Fondos de reserva</Seccion>
-      <Tarjeta>
+    <div className="flex flex-col gap-3">
+      <ListaSeccion
+        titulo="Fondos de reserva"
+        icono={<IconoMetas tam={15} />}
+        dato={`${presupuesto.fondos.length} fondos`}
+        encabezados={['Fondo', null, 'Llevas']}
+        {...FONDOS}
+      >
         {presupuesto.fondos.map((fondo) => (
-          <div
-            key={fondo.id}
-            {...(editable
-              ? {
-                  role: 'button',
-                  tabIndex: 0,
-                  'aria-label': `Editar ${fondo.nombre}`,
-                  onClick: () => setEditando(fondo),
-                  onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && setEditando(fondo),
-                }
-              : {})}
-          >
           <FilaFondo
             key={fondo.id}
             nombre={fondo.nombre}
             acumuladoCents={fondo.acumuladoCents}
             metaCents={fondo.metaCents}
-            cifras
+            {...(editable
+              ? { alTocar: () => setEditando(fondo), etiqueta: `Editar ${fondo.nombre}` }
+              : {})}
             cuando={
               <>
-                {fondo.mesObjetivo} · faltan <b className="text-teal-osc font-semibold">{meses(fondo.mesesQueFaltan)}</b>
+                {fondo.mesObjetivo} · faltan {meses(fondo.mesesQueFaltan)}
               </>
             }
           />
-          </div>
         ))}
         {puedeCrearMas ? (
-          <button
-            type="button"
-            onClick={editable ? () => setEditando(null) : undefined}
-            disabled={!editable}
-            className="border-linea text-texto-2 mt-[14px] min-h-11 w-full rounded-[11px] border py-[10px] text-[12.5px] font-semibold disabled:opacity-50"
-          >
-            Agregar un fondo
-          </button>
+          <FilaAgregar
+            texto="Agregar un fondo"
+            {...(editable ? { alTocar: () => setEditando(null) } : {})}
+          />
         ) : (
-          <p className="text-texto-2 mt-[14px] text-[12.5px] leading-[1.55]">
+          <p className="text-texto-2 px-[14px] py-3 text-[12.5px] leading-[1.55] panel:px-[18px]">
             El nivel gratis lleva {FONDOS_GRATIS} fondos. Con Premium no hay tope — y los que ya
             tienes se quedan como están.
           </p>
         )}
-      </Tarjeta>
+      </ListaSeccion>
 
       <Seccion>Lo que apartas</Seccion>
       <Tarjeta>
@@ -109,7 +106,6 @@ export function Metas({
           alCerrar={() => setEditando(undefined)}
         />
       )}
-
-    </>
+    </div>
   )
 }

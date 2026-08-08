@@ -35,6 +35,24 @@ detiene**. Por eso el `max-w-app` vive ahora *dentro* de `BarraSuperior`, `Banda
 `Resumen`, y no en quien las envuelve. La regla práctica es sencilla: el elemento que lleva el color
 de fondo nunca lleva el tope de ancho, y el que lleva el tope nunca lleva el color.
 
+**Por qué la tarjeta dejó de ser el renglón y pasó a ser la sección.** Ver `design/listas.html`.
+Los mockups de teléfono dibujan cada línea del presupuesto como su propia tarjeta —borde,
+esquinas redondeadas, relleno propio— y así se copió. En un mockup con seis renglones se ve bien;
+con dieciséis no. Cada tarjeta trae 26 px de cromo que no dicen nada, nada queda alineado entre
+renglones porque cada una es un `flex` independiente, y cada barra de progreso mide lo que le
+sobra a su tarjeta, así que comparar dos sobres exige leer los números uno por uno. En una
+pantalla de teléfono cabían seis líneas donde caben dieciséis. Ahora hay un panel blanco por
+sección y adentro filas en `grid` separadas por una línea de 1 px: la del borde de abajo, sin
+borde en la última.
+
+La pieza que hace que esto funcione no es el panel, es de dónde salen las columnas. Se declaran
+**una sola vez, en la `ListaSeccion`**, y las filas las heredan por la variable CSS `--cols`. Si
+cada fila pudiera declarar las suyas volveríamos al principio en tres meses, porque se irían
+separando de a poquito y nadie lo notaría hasta que ya no se pareciera a nada. Por eso `Fila` no
+recibe columnas: no es que se le hayan olvidado. Y como el mockup es un documento de 1420 px y la
+app arranca en 320, la sección acepta dos juegos —el del teléfono y, desde el corte `panel`, el
+del mockup— en vez de fingir que un solo juego sirve para los dos.
+
 Eso obligó a cambiar también la prueba. `revisar-pantallas.mjs` medía el primer elemento visible con
 `bg-carbon` y exigía que no pasara de 1440 px; con el arreglo bueno ese elemento mide lo que mide la
 pantalla, **a propósito**, así que la prueba habría fallado justo cuando el código quedó bien. Ahora
