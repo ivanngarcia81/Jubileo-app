@@ -39,6 +39,13 @@
   --color-ambar: var(--ambar);
   --color-rojo: var(--rojo);
 
+  /* Los tonos de las píldoras de categoría. */
+  --color-brillo-teal: var(--brillo-teal);
+  --color-brillo-ambar: var(--brillo-ambar);
+  --color-brillo-neutro: var(--brillo-neutro);
+  --color-ambar-osc: var(--ambar-osc);
+  --color-neutro-osc: var(--neutro-osc);
+
   --color-texto: var(--texto);
   --color-texto-2: var(--texto-2);
 

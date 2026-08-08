@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { type Centavos, formatear, formatearRedondo } from '../lib/dinero'
+import { IconoDeClave, type ClaveIcono } from './iconos'
 
 /**
  * Piezas compartidas, extraídas del CSS de `design/`. Los colores y las
@@ -96,9 +97,62 @@ export function porcentaje(parte: Centavos, total: Centavos): number {
   return Math.round((parte / total) * 100)
 }
 
-export function Etiqueta({ children }: { children: ReactNode }) {
+/**
+ * La píldora de categoría — una sola pieza, igual en la lista, en el detalle y
+ * en el panel. Ver `design/listas.html`.
+ *
+ * El tono sale de la clave del icono y no de quien la dibuja: si cada pantalla
+ * escogiera su color, la misma categoría saldría de un color en la lista y de
+ * otro en el detalle, y el color dejaría de querer decir algo.
+ *
+ * **El mockup trae un cuarto tono en rojo y no se copió.** El rojo es del
+ * sobregiro —regla 4 de los tokens— y una categoría pintada de rojo porque sí
+ * le enseña al usuario que el rojo no significa nada. Cuando de verdad se pase,
+ * ya no lo va a leer.
+ */
+export type TonoChip = 'teal' | 'ambar' | 'neutro'
+
+const TONOS: Record<TonoChip, string> = {
+  teal: 'bg-brillo-teal text-teal-osc',
+  ambar: 'bg-brillo-ambar text-ambar-osc',
+  neutro: 'bg-brillo-neutro text-neutro-osc',
+}
+
+const TONO_POR_CLAVE: Record<ClaveIcono, TonoChip> = {
+  // Lo que se da y lo que entra: teal, el color de la marca.
+  mayordomia: 'teal',
+  ingreso: 'teal',
+  // El techo y los servicios, que es lo que sostiene la casa.
+  casa: 'teal',
+  servicios: 'teal',
+  // Lo que se gasta día con día y hay que cuidar.
+  comida: 'ambar',
+  transporte: 'ambar',
+  // Todo lo demás, sin color: el color se gasta si se usa en todo.
+  fijo: 'neutro',
+  variable: 'neutro',
+  seguro: 'neutro',
+  deuda: 'neutro',
+  gasto: 'neutro',
+}
+
+export function ChipCategoria({
+  clave,
+  tono,
+  children,
+}: {
+  /** La categoría. Sin ella la píldora va sin icono, como el rótulo "enfoque". */
+  clave?: ClaveIcono
+  /** Para forzarlo. Normalmente lo decide la clave. */
+  tono?: TonoChip
+  children: ReactNode
+}) {
+  const elegido = tono ?? (clave ? TONO_POR_CLAVE[clave] : 'neutro')
   return (
-    <span className="bg-teal/14 text-teal-osc inline-block rounded-[5px] px-[6px] py-[2px] text-[10px] font-bold tracking-[.05em] uppercase">
+    <span
+      className={`inline-flex h-[21px] shrink-0 items-center gap-[5px] rounded-full px-2 text-[10.5px] font-bold tracking-[.06em] whitespace-nowrap uppercase ${TONOS[elegido]}`}
+    >
+      {clave !== undefined && <IconoDeClave clave={clave} tam={11} />}
       {children}
     </span>
   )

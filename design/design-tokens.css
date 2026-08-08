@@ -23,6 +23,15 @@
   --ambar:         #E8A33D;  /* cerca del límite, cheque extra */
   --rojo:          #D9503F;  /* sobregiro, solo cuando ya se pasó */
 
+  /* Los tres tonos de las píldoras de categoría (`design/listas.html`). El
+     fondo es el color al 13–16% y el texto una versión oscura que sí pasa AA
+     encima de él — la regla 5. El mockup trae además un cuarto tono en rojo;
+     no se copió: el rojo es del sobregiro y nada más, regla 4. */
+  --brillo-ambar:  rgb(232 163 61 / .16);
+  --brillo-neutro: rgb(28 30 31 / .07);
+  --ambar-osc:     #8A5C10;
+  --neutro-osc:    #4A4F4E;
+
   --texto:         #1C1E1F;
   --texto-2:       #6B7175;  /* etiquetas, texto secundario */
 

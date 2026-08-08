@@ -7,7 +7,7 @@ import {
   Barra,
   CeldaCifra,
   CeldaNombre,
-  Etiqueta,
+  ChipCategoria,
   Fila,
   FilaAgregar,
   ListaSeccion,
@@ -187,7 +187,7 @@ export function Deudas({
                 )
               }
             >
-              {deuda.nombre} {deuda.esEnfoque && <Etiqueta>enfoque</Etiqueta>}
+              {deuda.nombre} {deuda.esEnfoque && <ChipCategoria tono="teal">enfoque</ChipCategoria>}
             </CeldaNombre>
             {/* Cuánto lleva pagado de lo que debía al empezar. Antes solo la
                 deuda en enfoque la traía; en su propia columna se puede comparar

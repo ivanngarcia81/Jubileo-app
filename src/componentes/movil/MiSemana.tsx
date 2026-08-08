@@ -8,7 +8,7 @@ import {
   CeldaNombre,
   CeldasDeAvance,
   Casilla,
-  Etiqueta,
+  ChipCategoria,
   Fila,
   ListaSeccion,
   Moneda,
@@ -183,7 +183,7 @@ export function MiSemana({
                     {pago.esEnfoque && !pagado && (
                       <>
                         {' · '}
-                        <Etiqueta>enfoque</Etiqueta>
+                        <ChipCategoria tono="teal">enfoque</ChipCategoria>
                       </>
                     )}
                   </>
