@@ -245,7 +245,7 @@ export function Movimientos({
               type="button"
               onClick={() => marcar(sinRevisar.map((m) => m.id), true)}
               disabled={ocupados.length > 0}
-              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-menor font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-menor font-bold text-tinta-teal disabled:opacity-50"
             >
               {sinRevisar.length === 1
                 ? 'Marcarlo como revisado'

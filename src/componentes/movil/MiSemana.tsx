@@ -51,16 +51,16 @@ function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
   )
 
   return (
-    <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#0A847F_0%,#0ABBB4_100%)] px-[18px] pt-[17px] pb-4 text-[#022B29]">
+    <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,var(--color-teal-hondo)_0%,var(--color-teal)_100%)] px-[18px] pt-[17px] pb-4 text-tinta-heroe">
       <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
       <div className="relative">
-        <div className="text-rotulo font-bold tracking-[.12em] text-[#022B29]/60 uppercase">
+        <div className="text-rotulo font-bold tracking-[.12em] text-tinta-heroe/60 uppercase">
           Te queda esta semana
         </div>
         <div className="font-serif mt-[6px] mb-[3px] text-heroe leading-none [font-variant-numeric:tabular-nums]">
           {formatearRedondo(disponible)}
         </div>
-        <div className="text-menor text-[#022B29]/75">
+        <div className="text-menor text-tinta-heroe/75">
           {semana
             ? `Semana ${semana.numero} · del ${diaDe(semana.fechaInicio)} al ${diaDe(semana.fechaFin)} de ${MESES[mesDe(semana.fechaInicio) - 1]}`
             : 'Sin semanas todavía'}
@@ -151,7 +151,7 @@ export function MiSemana({
           >
             {/* El círculo sube a 20 y el icono baja a 12: a 15 dentro de 17
                 quedaba pegado al borde por los cuatro lados. */}
-            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-full text-[#043432]">
+            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-full text-tinta-teal">
               <Icono tam={12} />
             </span>
             {texto}

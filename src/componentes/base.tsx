@@ -645,7 +645,7 @@ export function PieDeHoja({
         type="button"
         onClick={alConfirmar}
         disabled={!listo || ocupado}
-        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
       >
         {ocupado ? 'Guardando…' : confirmar}
       </button>

@@ -1,0 +1,48 @@
+# Lo que se revisa en cada empujón.
+#
+# Hasta ahora el repositorio solo tenía el cron del aviso: nada corría al subir
+# código. Las pruebas y el typecheck existían y se corrían a mano, que es otra
+# forma de decir que se corrían hasta que alguien se acordara.
+#
+# Aquí NO van las comprobaciones de navegador (`revisar:pantallas`,
+# `revisar:el-mes`, `revisar:entrar`): necesitan Chromium y tardan minutos. Se
+# siguen corriendo a mano antes de cada commit que toca pantallas, que es
+# cuando dicen algo. Lo de aquí es lo que tiene que estar verde siempre.
+
+name: Revisar
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      # El typecheck va primero: si los tipos no cierran, lo demás son ruidos.
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Pruebas
+        run: npm test
+
+      # El candado de los tokens. Ver la cabecera de herramientas/revisar-tokens.mjs:
+      # es un trinquete, el número de colores crudos solo puede bajar.
+      - name: Tokens
+        run: npm run revisar:tokens
+
+      # Que compile de verdad. `vite build` hace cosas que `tsc` no ve.
+      - name: Compilar
+        run: npm run build

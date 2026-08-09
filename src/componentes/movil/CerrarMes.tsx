@@ -96,7 +96,7 @@ export function CerrarMes({
         type="button"
         onClick={() => void cerrar()}
         disabled={!cuadrado || cerrando}
-        className="bg-teal mt-4 min-h-11 w-full rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-40"
+        className="bg-teal mt-4 min-h-11 w-full rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-40"
       >
         {cerrando ? 'Cerrando…' : 'Cerrar el mes'}
       </button>

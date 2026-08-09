@@ -222,14 +222,14 @@ export function BandaIndicadores({
                     periodo.esExtra
                       ? "border-ambar border-[1.5px] border-dashed"
                       : esActivo
-                        ? "bg-[linear-gradient(150deg,#0A847F,#0ABBB4)] text-[#022B29]"
+                        ? "bg-[linear-gradient(150deg,var(--color-teal-hondo),var(--color-teal))] text-tinta-heroe"
                         : "bg-carbon-2"
                   } ${cerrado ? "opacity-55" : ""}`}
                 >
                   <div
                     className={`text-rotulo font-semibold tracking-[.1em] uppercase ${
                       esActivo && !periodo.esExtra
-                        ? "text-[#022B29]/70"
+                        ? "text-tinta-heroe/70"
                         : "text-[#787E7D]"
                     }`}
                   >
@@ -247,7 +247,7 @@ export function BandaIndicadores({
                   <div
                     className={`text-rotulo leading-[1.35] ${
                       esActivo && !periodo.esExtra
-                        ? "text-[#022B29]/70"
+                        ? "text-tinta-heroe/70"
                         : "text-[#787E7D]"
                     }`}
                   >

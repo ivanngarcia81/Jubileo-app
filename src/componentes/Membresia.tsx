@@ -163,7 +163,7 @@ export function Membresia({
             type="button"
             onClick={() => void intentar(() => alPagar(plan))}
             disabled={ocupado}
-            className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {ocupado ? 'Abriendo…' : `Hacerme Premium · ${PRECIOS[plan].etiqueta}`}
           </button>

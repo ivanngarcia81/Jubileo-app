@@ -253,7 +253,7 @@ export function Resumen({
         </TarjetaEscritorio>
 
         <div className="bg-carbon rounded-[15px] p-[18px] text-white">
-          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-menor text-[#043432]">
+          <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-menor text-tinta-teal">
             <IconoEnfoque tam={12} />
           </div>
           <h4 className="font-serif mb-2 text-titulo leading-[1.15] font-normal">
@@ -265,7 +265,7 @@ export function Resumen({
           </p>
           <button
             type="button"
-            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-menor font-bold text-[#043432]"
+            className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-menor font-bold text-tinta-teal"
           >
             Hazte Premium
           </button>

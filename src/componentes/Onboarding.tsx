@@ -258,7 +258,7 @@ export function Onboarding({
                       ]
                   ).map((texto, i) => (
                     <li key={texto} className="flex gap-3">
-                      <span className="bg-teal text-[#043432] grid size-6 shrink-0 place-items-center rounded-full text-menor font-bold">
+                      <span className="bg-teal text-tinta-teal grid size-6 shrink-0 place-items-center rounded-full text-menor font-bold">
                         {i + 1}
                       </span>
                       {texto}
@@ -291,7 +291,7 @@ export function Onboarding({
             type="button"
             onClick={() => void siguiente()}
             disabled={guardando}
-            className="bg-teal min-h-11 flex-[2] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[2] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Guardando…' : paso === PASOS ? 'Ver mi primera semana' : 'Siguiente'}
           </button>

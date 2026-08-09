@@ -91,7 +91,7 @@ export function Deudas({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,#2A2D2E_0%,#1C1E1F_100%)] px-[18px] pt-[17px] pb-4 text-white">
+      <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,var(--color-carbon-2)_0%,var(--color-carbon)_100%)] px-[18px] pt-[17px] pb-4 text-white">
         <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
         <div className="relative">
           <div className="text-rotulo font-bold tracking-[.12em] text-[#787E7D] uppercase">

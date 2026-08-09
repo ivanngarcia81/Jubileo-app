@@ -96,7 +96,7 @@ export function MesNuevo({
           type="button"
           onClick={() => void abrir()}
           disabled={abriendo}
-          className="bg-teal mt-7 min-h-12 w-full rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+          className="bg-teal mt-7 min-h-12 w-full rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
         >
           {abriendo ? 'Armando…' : `Armar ${esteMes}`}
         </button>

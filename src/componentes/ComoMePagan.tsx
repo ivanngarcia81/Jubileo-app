@@ -271,7 +271,7 @@ export function ComoMePagan({
           type="button"
           onClick={() => void guardar()}
           disabled={!listo || guardando}
-          className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+          className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
         >
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>

@@ -120,7 +120,7 @@ export function Entrar() {
               onChange={(e) => alEscribirCodigo(e.target.value)}
               placeholder="······"
               aria-label="Código del correo"
-              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-cifra tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-[#4A4F4E] focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
+              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-cifra tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-neutro-osc focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
             />
 
             {estado.paso === 'verificando' && (
@@ -139,7 +139,7 @@ export function Entrar() {
               type="button"
               onClick={() => void verificar(codigo)}
               disabled={codigo.length < MINIMO || estado.paso === 'verificando'}
-              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
             >
               Entrar
             </button>
@@ -188,7 +188,7 @@ export function Entrar() {
             <button
               type="submit"
               disabled={estado.paso === 'mandando' || correo.trim() === ''}
-              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-[#043432] disabled:opacity-50"
+              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
             >
               {estado.paso === 'mandando' ? 'Mandando…' : 'Mándame el código'}
             </button>

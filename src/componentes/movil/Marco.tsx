@@ -82,7 +82,7 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
             aria-current={activo ? 'page' : undefined}
             aria-label={nombre}
             className={`grid size-[48px] place-items-center rounded-full ${
-              activo ? 'bg-teal text-[#043432]' : 'text-[#787E7D]'
+              activo ? 'bg-teal text-tinta-teal' : 'text-[#787E7D]'
             }`}
           >
             <Icono tam={19} />

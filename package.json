@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
     "periodos:demo": "tsx herramientas/demo-periodos.ts",
+    "revisar:tokens": "node herramientas/revisar-tokens.mjs",
     "revisar:pantallas": "node herramientas/revisar-pantallas.mjs",
     "revisar:entrar": "node herramientas/revisar-entrar.mjs",
     "revisar:el-mes": "node herramientas/revisar-el-mes.mjs",

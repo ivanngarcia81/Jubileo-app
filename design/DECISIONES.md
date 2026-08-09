@@ -86,6 +86,33 @@ de los seis. Recorre nodos de texto y no elementos a propósito: un `<div>` que 
 los 16px del navegador y saldría como si fuera un tamaño de la app. Y cuenta cuántos midió, porque
 una comprobación que mide dos cosas y pasa no vale nada.
 
+**El candado de los tokens, y por qué es un trinquete y no una limpieza.**
+`design-tokens.css` dice desde el primer día que es "la única fuente de verdad para color y tipo", y
+`tema.css` repite que el único lugar donde vive un hex es ese archivo. Era falso: llegó a haber **92
+hexes crudos en `src/`**. Un archivo que declara una regla que nadie comprueba no es una regla, es
+una nota. Lo que se arregló de una vez fue lo que no tiene criterio de por medio: los hexes que
+*ya eran* un token declarado (`#1C1E1F` es `--carbon`, `#0ABBB4` es `--teal`) y los que hacen un
+solo trabajo evidente y nadie había nombrado — la tinta que va **encima** del turquesa
+(`--tinta-teal` en los botones, `--tinta-heroe` en el degradado; nunca es blanco, que sobre el teal
+de la marca no pasa AA) y el extremo oscuro de los degradados (`--teal-hondo`). Eso son 43 de 92, y
+no mueve un píxel.
+
+Los 49 que quedan son **ocho grises casi iguales** —`#9AA09E`, `#787E7D`, `#6E7473`, `#C9CECC`,
+`#C9CCCA`, `#8E9492`, `#A7ACAB`, `#C3C7C4`— haciendo casi el mismo trabajo: texto secundario sobre
+carbón y marcadores de posición. Colapsarlos en dos o tres es la decisión correcta y **mueve píxeles
+en casi toda la app**, igual que cerrar la escala tipográfica de treinta tamaños a seis: no es una
+limpieza mecánica, es una decisión de diseño y se toma aparte. Mientras tanto,
+`herramientas/revisar-tokens.mjs` congela el inventario: cada color con su cuenta y con el trabajo
+que hace. Si aparece uno nuevo, truena. Si uno sube de cuenta, truena. Y si baja también truena,
+pidiendo que se actualice el inventario — un trinquete que se afloja solo no es un trinquete. Lo
+único exento es `lib/aviso/correo.ts`: Gmail y Outlook no entienden `var()`, así que ahí el hex es
+la única forma que hay.
+
+De paso, el repositorio dejó de no tener CI. Había un workflow, y era el cron del aviso: nada corría
+al subir código. Ahora `revisar.yml` corre tipos, pruebas, el candado y el build en cada empujón.
+Las comprobaciones de navegador se quedan fuera a propósito —necesitan Chromium y tardan minutos— y
+se siguen corriendo a mano antes de cada commit que toca pantallas.
+
 **Un solo árbol en el documento, escogido con lógica.** `panel:hidden` y `hidden panel:block`
 escondían con CSS, no con lógica: los dos árboles —el del teléfono y el del escritorio— se
 renderizaban siempre. Eso costaba el doble de trabajo en cada cambio de estado, pero lo caro era

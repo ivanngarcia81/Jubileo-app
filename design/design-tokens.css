@@ -15,6 +15,13 @@
 
   --teal:          #0ABBB4;  /* acento de marca: disponible, activo, positivo */
   --teal-osc:      #057F7A;  /* teal sobre fondo claro, para texto legible */
+  --teal-hondo:    #0A847F;  /* el extremo oscuro de los degradados turquesa */
+
+  /* La tinta que va ENCIMA del turquesa. Nunca es blanco: sobre el teal de la
+     marca el blanco no pasa AA, y el carbón se ve sucio. Son dos porque el
+     botón usa el teal plano y el héroe un degradado más oscuro. */
+  --tinta-teal:    #043432;  /* sobre `bg-teal`: botones, chips, iconos */
+  --tinta-heroe:   #022B29;  /* sobre el degradado del héroe */
   /* El brillo del degradado de la banda. Venía del mockup como
      `rgba(18,194,160,.14)` — un segundo teal (#12C2A0) que nunca se declaró y
      que no es el de la marca. Se recalculó con el teal oficial. */

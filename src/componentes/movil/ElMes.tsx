@@ -112,7 +112,7 @@ function SelectorDeMes({
                 <div
                   className={`absolute bottom-0 left-0 w-full rounded-[7px] ${
                     activo
-                      ? 'bg-[linear-gradient(180deg,#0ABBB4,#0A847F)]'
+                      ? 'bg-[linear-gradient(180deg,var(--color-teal),var(--color-teal-hondo))]'
                       : m.alcanzable
                         ? 'bg-[#B9C2BF]'
                         : 'bg-linea'

@@ -56,7 +56,7 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
   const libre = presupuesto.libreporPeriodoCents[presupuesto.periodoActivo]!
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[linear-gradient(170deg,#1C1E1F_0%,#31302B_58%,#4A4238_100%)] px-[15px] pt-4 pb-[22px] text-white">
+    <div className="flex min-h-dvh flex-col bg-[linear-gradient(170deg,var(--color-carbon)_0%,#31302B_58%,#4A4238_100%)] px-[15px] pt-4 pb-[22px] text-white">
       <div className="flex items-center justify-end gap-1 px-2 text-menor font-semibold">
         <IconoSenal tam={13} />
         <IconoBateria tam={15} />
