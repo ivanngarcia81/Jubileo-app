@@ -39,6 +39,11 @@ from (values
    exists(select 1 from pg_trigger where tgname='siembra_semanas')),
   ('disparador semana_valida_y_repartible (0006)',
    exists(select 1 from pg_trigger where tgname='semana_valida_y_repartible')),
+  ('categorias.icono — la clave del icono, no el dibujo (0007)',
+   exists(select 1 from information_schema.columns
+           where table_name='categorias' and column_name='icono')),
+  ('y su CHECK contra las claves de la rejilla (0007)',
+   exists(select 1 from pg_constraint where conname='icono_conocido')),
   ('las 15 tablas',
    (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
      where n.nspname='public' and c.relkind='r') = 15),

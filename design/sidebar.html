@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritorio con sidebar — Jubileo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carbon:#1C1E1F; --carbon-2:#2A2D2E; --gris:#F2F3F1; --blanco:#FFFFFF;
+    --linea:#E2E4E1; --teal:#0ABBB4; --teal-osc:#057F7A; --ambar:#E8A33D;
+    --texto:#1C1E1F; --texto-2:#6B7175;
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --ancho-max:1420px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--carbon);color:var(--texto);
+    padding:30px 16px 70px;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  .doc{max-width:var(--ancho-max);margin:0 auto 26px;color:#fff}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .doc h1{font-family:var(--serif);font-size:clamp(28px,4.4vw,40px);font-weight:400;margin:9px 0 12px;line-height:1.05}
+  .doc p{color:#9AA09E;max-width:76ch;font-size:14.5px;line-height:1.62}
+  .doc p b{color:var(--teal);font-weight:600}
+
+  /* ---------- el marco ---------- */
+  .app{max-width:var(--ancho-max);margin:0 auto;background:var(--gris);
+    border-radius:20px;overflow:hidden;display:grid;grid-template-columns:236px 1fr;
+    min-height:660px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+
+  /* ---------- sidebar ---------- */
+  .sb{background:var(--carbon);color:#fff;display:flex;flex-direction:column;
+    padding:18px 12px 14px;gap:2px}
+  .marca{display:flex;align-items:center;gap:10px;padding:4px 11px 16px}
+  .marca .sello{width:30px;height:30px;border-radius:10px;background:var(--teal);color:#043432;
+    display:grid;place-items:center;font-family:var(--serif);font-size:17px}
+  .marca b{font-family:var(--serif);font-weight:400;font-size:17px;letter-spacing:.01em}
+
+  .it{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;
+    color:#B9C2BF;font-size:13px;font-weight:500;cursor:default}
+  .it svg{width:15px;height:15px;flex-shrink:0}
+  .it.on{background:rgba(10,187,180,.14);color:#fff}
+  .it.on svg{color:var(--teal)}
+  .it:not(.on):hover{background:#232626}
+
+  .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#7C8483;
+    font-weight:700;margin:18px 11px 7px}
+
+  /* el rail de semanas — donde Copilot pone las cuentas */
+  .wk{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;
+    padding:7px 11px;border-radius:9px;font-size:12px;color:#C9CCCA;cursor:default}
+  .wk:hover{background:#232626}
+  .wk .n{width:21px;height:21px;border-radius:6px;background:var(--carbon-2);
+    display:grid;place-items:center;font-size:10px;font-weight:700;color:#9AA09E}
+  .wk .r{display:flex;align-items:center;gap:6px;min-width:0}
+  .wk .m{font-weight:600;color:#fff;font-size:12px}
+  .wk.pasada{opacity:.42}
+  .wk.pasada .m{font-weight:500}
+  .wk.actual{background:rgba(10,187,180,.14)}
+  .wk.actual .n{background:var(--teal);color:#043432}
+  .wk.actual .m{color:#fff}
+  .pt{width:6px;height:6px;border-radius:99px;background:var(--ambar);flex-shrink:0}
+  .wk.apretada .m{color:var(--ambar)}
+  .lg{font-size:10.5px;color:#7C8483;margin:7px 11px 0;line-height:1.5}
+
+  /* enfoque */
+  .foco{margin:2px 0 0;padding:9px 11px;border-radius:10px;display:flex;flex-direction:column;gap:7px}
+  .foco:hover{background:#232626}
+  .foco .fila{display:flex;align-items:baseline;justify-content:space-between;font-size:12.5px;color:#E6E9E7}
+  .foco .fila span{color:#9AA09E;font-size:11px}
+  .foco .carril{height:4px;border-radius:99px;background:var(--carbon-2);overflow:hidden}
+  .foco .carril i{display:block;height:100%;width:34%;background:var(--teal);border-radius:99px}
+
+  .abajo{margin-top:auto;padding-top:10px;border-top:1px solid #2E3232;display:flex;
+    flex-direction:column;gap:2px}
+  .yo{display:flex;align-items:center;gap:10px;padding:8px 11px}
+  .yo .ava{width:26px;height:26px;border-radius:99px;background:var(--carbon-2);color:#C9CCCA;
+    display:grid;place-items:center;font-size:10.5px;font-weight:700}
+  .yo b{font-size:12.5px;font-weight:600;color:#E6E9E7}
+
+  /* ---------- contenido ---------- */
+  .main{padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+  .cab{display:flex;align-items:baseline;justify-content:space-between}
+  .cab h2{font-family:var(--serif);font-size:26px;font-weight:400}
+  .cab span{font-size:12px;color:var(--texto-2)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat{background:var(--blanco);border:1px solid var(--linea);border-radius:13px;padding:13px 15px}
+  .stat .t{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-2);font-weight:600}
+  .stat .v{font-family:var(--serif);font-size:26px;margin-top:5px}
+  .stat .v.ok{color:var(--teal-osc)}
+
+  .heroe{background:linear-gradient(135deg,#0ABBB4,#0A847F);border-radius:15px;color:#fff;
+    padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .heroe .t{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.85}
+  .heroe .v{font-family:var(--serif);font-size:44px;line-height:1;margin-top:4px}
+  .heroe .s{font-size:12px;opacity:.85;margin-top:6px}
+  .chips{display:flex;gap:9px}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;
+    border-radius:99px;padding:9px 15px;font-size:12.5px;font-weight:600;font-family:var(--sans)}
+
+  .stub{background:var(--blanco);border:1px solid var(--linea);border-radius:15px;padding:15px 18px}
+  .stub .hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+  .stub .hd b{font-family:var(--serif);font-size:16px;font-weight:400}
+  .stub .hd span{font-size:11.5px;color:var(--texto-2)}
+  .lin{height:11px;border-radius:99px;background:var(--gris);margin:13px 0}
+  .lin.c{width:72%}.lin.d{width:56%}
+
+  .nota{font-size:12.5px;color:#8A908F;line-height:1.6;border-left:2px solid var(--carbon-2);
+    padding-left:14px;max-width:var(--ancho-max);margin:24px auto 0}
+  .nota b{color:#C9CCCA;font-weight:600}
+  .nota li{list-style:none;margin-top:5px;padding-left:14px;position:relative}
+  .nota li::before{content:"—";position:absolute;left:0;color:var(--teal)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-panel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="3" width="8" height="6" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="15" width="8" height="6" rx="1.5"/></symbol>
+  <symbol id="s-reloj" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="s-mes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
+  <symbol id="s-deuda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l5-5 4 4 7-8"/><path d="M20 12V8h-4"/></symbol>
+  <symbol id="s-meta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="s-mov" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V6"/><path d="M4 9l3-3 3 3"/><path d="M17 3v15"/><path d="M20 15l-3 3-3-3"/></symbol>
+  <symbol id="s-tuerca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+</svg>
+
+<div class="doc">
+  <div class="eyebrow">Contrato del marco de escritorio · reemplaza la barra superior</div>
+  <h1>Sidebar con el mes por semanas</h1>
+  <p>La navegación se muda de la barra de arriba al costado, como en la referencia. Y donde la referencia lista <b>cuentas</b> —su contexto permanente, porque su producto son cuentas conectadas— Jubileo pone su propio contexto permanente: <b>las semanas del mes</b>, con la actual marcada y la apretada en ámbar. El contenido de la derecha no es parte de este contrato: sigue rigiendo <b>listas.html</b>.</p>
+</div>
+
+<div class="app">
+  <aside class="sb">
+    <div class="marca"><div class="sello">J</div><b>Jubileo</b></div>
+
+    <div class="it on"><svg><use href="#s-panel"/></svg>Panel</div>
+    <div class="it"><svg><use href="#s-reloj"/></svg>Mi semana</div>
+    <div class="it"><svg><use href="#s-mes"/></svg>El mes</div>
+    <div class="it"><svg><use href="#s-deuda"/></svg>Deudas</div>
+    <div class="it"><svg><use href="#s-meta"/></svg>Metas</div>
+    <div class="it"><svg><use href="#s-mov"/></svg>Movimientos</div>
+
+    <div class="k">Agosto por semanas</div>
+    <div class="wk pasada">
+      <span class="n">S1</span>
+      <span class="r">1 – 7</span>
+      <span class="m num">$612</span>
+    </div>
+    <div class="wk actual">
+      <span class="n">S2</span>
+      <span class="r">8 – 14</span>
+      <span class="m num">$480</span>
+    </div>
+    <div class="wk apretada">
+      <span class="n">S3</span>
+      <span class="r">15 – 21 <span class="pt"></span></span>
+      <span class="m num">$96</span>
+    </div>
+    <div class="wk">
+      <span class="n">S4</span>
+      <span class="r">22 – 28</span>
+      <span class="m num">$505</span>
+    </div>
+    <div class="wk">
+      <span class="n">S5</span>
+      <span class="r">29 – 31 · 3 días</span>
+      <span class="m num">$188</span>
+    </div>
+    <div class="lg">El número es lo que te toca esa semana. El punto ámbar: se vence más de lo que hay — tócala para ver qué mover.</div>
+
+    <div class="k">Tu enfoque</div>
+    <div class="foco">
+      <div class="fila"><b>Tarjeta Visa</b><span class="num">$3,120</span></div>
+      <div class="carril"><i></i></div>
+    </div>
+
+    <div class="abajo">
+      <div class="it"><svg><use href="#s-tuerca"/></svg>Ajustes</div>
+      <div class="yo"><span class="ava">IG</span><b>Iván</b></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="cab"><h2>Panel</h2><span>viernes 8 de agosto</span></div>
+
+    <div class="stats">
+      <div class="stat"><div class="t">Entra este mes</div><div class="v num">$4,960</div></div>
+      <div class="stat"><div class="t">Sale este mes</div><div class="v num">$4,180</div></div>
+      <div class="stat"><div class="t">Sin repartir</div><div class="v num ok">$0</div></div>
+    </div>
+
+    <div class="heroe">
+      <div>
+        <div class="t">Te queda · Semana 2 · 8 al 14</div>
+        <div class="v num">$480</div>
+        <div class="s">Del cheque del 6 · siguiente pago: seguro del carro, el 20</div>
+      </div>
+      <div class="chips"><span class="chip">+ Anotar</span><span class="chip">✓ Pagué</span></div>
+    </div>
+
+    <div class="stub">
+      <div class="hd"><b>Cómo va el reparto</b><span>El mes ›</span></div>
+      <div class="lin"></div><div class="lin c"></div><div class="lin d"></div>
+    </div>
+  </main>
+</div>
+
+<div class="nota">
+  <b>Qué es contrato aquí y qué no:</b>
+  <li><b>Contrato:</b> el sidebar y sus tres zonas — navegación, el rail de semanas, el enfoque — y que la banda de indicadores se vuelve las tres tarjetas de arriba del contenido. La barra superior de <b>escritorio.html</b> queda reemplazada como navegación; ese mockup sigue mandando en lo demás.</li>
+  <li><b>No contrato:</b> el contenido de la derecha (héroe, tarjetas). Eso ya lo rigen <b>listas.html</b> y los tokens.</li>
+  <li>El rail muestra las semanas de <b>lib/semanas</b>: pasadas atenuadas, la actual resaltada, la apretada con punto y monto en ámbar. El número es <b>lo que te toca</b> esa semana; tocar una lleva a El mes en vista semanal con esa semana activa.</li>
+  <li>La S5 se rotula con sus días ("29 – 31 · 3 días") y solo aparece cuando el mes la tiene.</li>
+  <li>Este marco existe desde el corte <b>panel</b> (880px). El teléfono no cambia: píldora de cuatro lugares.</li>
+  <li>Tipografías desde Google Fonts <b>solo en este documento</b>; la app sigue con las locales de public/fuentes/.</li>
+</div>
+
+</body>
+</html>
