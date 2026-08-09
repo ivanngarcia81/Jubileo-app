@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import type { Presupuesto } from "../../datos/tipos";
 import { type Centavos, formatearRedondo } from "../../lib/dinero";
 import type { Ruta } from "../../rutas";
-import { Moneda } from "../base";
 
 /**
  * Todo lo que tiene una línea en el presupuesto del mes: los cuatro grupos que
@@ -153,8 +152,4 @@ export function TarjetaEscritorio({
       {children}
     </section>
   );
-}
-
-export function BloqueMoneda({ centavos: monto }: { centavos: Centavos }) {
-  return <Moneda centavos={monto} />;
 }

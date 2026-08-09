@@ -386,7 +386,10 @@ function SinConexion() {
   return (
     <div
       role="status"
-      className="bg-ambar fixed inset-x-0 top-0 z-40 px-4 py-[6px] text-center text-menor font-semibold text-[#3A2A08]"
+      // Fija arriba, pero **sin invadir el sidebar**: mientras alguien lee
+      // números que quizá no son los de hoy, el aviso tiene que seguir a la
+      // vista; taparle la marca y la navegación es otra cosa.
+      className="bg-ambar fixed top-0 right-0 left-0 z-40 px-4 py-[6px] text-center text-menor font-semibold text-[#3A2A08] panel:left-sidebar"
     >
       Sin conexión — estás viendo tu última copia guardada
     </div>
