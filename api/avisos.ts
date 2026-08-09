@@ -8,6 +8,13 @@ import {
 } from '../src/lib/aviso/index.js'
 import { centavos } from '../src/lib/dinero/index.js'
 import { fecha } from '../src/lib/fecha/index.js'
+import {
+  faltanteAcumulado,
+  numerosDeSemanas,
+  semanaDeDia,
+  semanaDeFijo,
+  semanasDelMes,
+} from '../src/lib/semanas/index.js'
 
 /**
  * El aviso de arranque de periodo.
@@ -146,34 +153,97 @@ export default async function handler(req: Peticion, res: Respuesta) {
       })
       if (yaFue) continue
 
-      const [{ data: asignaciones }, { data: categorias }, { data: lineas }, { data: deudas }] =
-        await Promise.all([
-          db.from('asignaciones').select('linea_presupuesto_id, monto_cents').eq('periodo_id', periodo.id),
-          db.from('categorias').select('id, nombre, grupo, activa, dia_vencimiento, deuda_id'),
-          db.from('lineas_presupuesto').select('id, categoria_id').eq('mes_id', periodo.mes_id),
-          db.from('deudas').select('id, es_enfoque'),
-        ])
+      // El aviso habla de la semana del mes que arranca con este cheque. Aquí
+      // solo se juntan filas: los números de la semana, la bandera de apretada
+      // y el faltante salen de `lib/semanas`, que es puro y está probado.
+      const [
+        { data: mes },
+        { data: periodosDelMes },
+        { data: semanales },
+        { data: categorias },
+        { data: lineas },
+        { data: deudas },
+      ] = await Promise.all([
+        db.from('meses').select('anio, mes').eq('id', periodo.mes_id).single(),
+        db
+          .from('periodos')
+          .select('fecha_pago, ingreso_esperado_cents, ingreso_real_cents, es_extra')
+          .eq('mes_id', periodo.mes_id),
+        db
+          .from('asignaciones_semana')
+          .select('linea_presupuesto_id, semana, monto_cents')
+          .eq('mes_id', periodo.mes_id),
+        db.from('categorias').select('id, nombre, grupo, activa, dia_vencimiento, deuda_id'),
+        db
+          .from('lineas_presupuesto')
+          .select('id, categoria_id, monto_mensual_cents')
+          .eq('mes_id', periodo.mes_id),
+        db.from('deudas').select('id, es_enfoque'),
+      ])
+      if (!mes) throw new Error('el cheque no tiene mes')
 
-      const categoriaPorLinea = new Map(
-        (lineas ?? []).map((l) => [l.id, (categorias ?? []).find((c) => c.id === l.categoria_id)]),
-      )
+      const semanas = semanasDelMes(mes.anio, mes.mes)
+      // Un cheque movido puede caer fuera del mes que financia: se recorta a
+      // la primera o a la última semana, igual que los gastos en `mapeo`.
+      const indiceSemana =
+        periodo.fecha_pago < semanas[0]!.fechaInicio
+          ? 0
+          : periodo.fecha_pago > semanas.at(-1)!.fechaFin
+            ? semanas.length - 1
+            : semanaDeDia(Number(periodo.fecha_pago.slice(8, 10))) - 1
+      const laSemana = semanas[indiceSemana]!
+
+      const categoriaPorId = new Map((categorias ?? []).map((c) => [c.id, c]))
       const enfoque = new Set((deudas ?? []).filter((d) => d.es_enfoque).map((d) => d.id))
 
-      const pagos: PagoDelAviso[] = []
-      const sobres: SobreDelAviso[] = []
-      for (const a of asignaciones ?? []) {
-        const c = categoriaPorLinea.get(a.linea_presupuesto_id)
-        if (!c?.activa || a.monto_cents === 0) continue
-        if (c.grupo === 'variable') {
-          sobres.push({ nombre: c.nombre, montoCents: centavos(a.monto_cents) })
-        } else if (c.dia_vencimiento) {
-          pagos.push({
+      const lineasFijas = (lineas ?? []).flatMap((l) => {
+        const c = categoriaPorId.get(l.categoria_id)
+        if (!c || (c.grupo !== 'fijo' && c.grupo !== 'deuda')) return []
+        return [
+          {
             nombre: c.nombre,
-            dia: c.dia_vencimiento,
-            montoCents: centavos(a.monto_cents),
-            ...(c.deuda_id && enfoque.has(c.deuda_id) ? { esEnfoque: true } : {}),
-          })
-        }
+            diaVencimiento: c.dia_vencimiento ?? null,
+            montoCents: centavos(l.monto_mensual_cents),
+          },
+        ]
+      })
+      const numeros = numerosDeSemanas(
+        semanas,
+        lineasFijas,
+        (semanales ?? []).map((a) => ({ semana: a.semana, montoCents: centavos(a.monto_cents) })),
+        (periodosDelMes ?? []).map((p) => ({
+          fechaPago: fecha(p.fecha_pago),
+          ingresoCents: centavos(p.ingreso_real_cents ?? p.ingreso_esperado_cents ?? 0),
+          esExtra: p.es_extra,
+        })),
+      )
+      const numeroDeLaSemana = numeros[indiceSemana]!
+
+      // Los pagos de la semana: lo fijo que vence en sus días, entero.
+      const pagos: PagoDelAviso[] = []
+      for (const c of categorias ?? []) {
+        if (!c.activa || !c.dia_vencimiento) continue
+        if (c.grupo !== 'fijo' && c.grupo !== 'deuda') continue
+        if (semanaDeFijo(c.dia_vencimiento, semanas) !== laSemana.numero) continue
+        const monto = (lineas ?? []).find((l) => l.categoria_id === c.id)?.monto_mensual_cents ?? 0
+        if (monto === 0) continue
+        pagos.push({
+          nombre: c.nombre,
+          dia: c.dia_vencimiento,
+          montoCents: centavos(monto),
+          ...(c.deuda_id && enfoque.has(c.deuda_id) ? { esEnfoque: true } : {}),
+        })
+      }
+
+      // Los sobres de la semana: lo repartible que tiene asignado en ella.
+      const lineaPorId = new Map((lineas ?? []).map((l) => [l.id, l]))
+      const sobres: SobreDelAviso[] = []
+      for (const a of semanales ?? []) {
+        if (a.semana !== laSemana.numero || a.monto_cents === 0) continue
+        const linea = lineaPorId.get(a.linea_presupuesto_id)
+        const c = linea ? categoriaPorId.get(linea.categoria_id) : undefined
+        if (!c?.activa) continue
+        sobres.push({ nombre: c.nombre, montoCents: centavos(a.monto_cents) })
       }
 
       const ingreso = periodo.ingreso_real_cents ?? periodo.ingreso_esperado_cents
@@ -181,6 +251,14 @@ export default async function handler(req: Peticion, res: Respuesta) {
         nombre: u.nombre ?? (u.correo.split('@')[0] ?? 'tú'),
         fechaPago: fecha(periodo.fecha_pago),
         ingresoCents: ingreso === null ? null : centavos(ingreso),
+        semana: {
+          numero: laSemana.numero,
+          desdeDia: Number(laSemana.fechaInicio.slice(8, 10)),
+          hastaDia: Number(laSemana.fechaFin.slice(8, 10)),
+          presupuestoCents: numeroDeLaSemana.totalCents,
+          faltanCents: faltanteAcumulado(numeros, indiceSemana),
+          movibleCents: numeroDeLaSemana.variableCents,
+        },
         pagos,
         sobres,
         esExtra: periodo.es_extra,

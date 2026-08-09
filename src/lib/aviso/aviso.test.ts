@@ -15,6 +15,15 @@ function datos(cambios: Partial<DatosDelAviso> = {}): DatosDelAviso {
     nombre: 'Iván',
     fechaPago: fecha('2026-08-04'),
     ingresoCents: centavos(171000),
+    semana: {
+      numero: 1,
+      desdeDia: 1,
+      hastaDia: 7,
+      // Los pagos más los sobres de abajo: 1180 + 210.
+      presupuestoCents: centavos(139000),
+      faltanCents: centavos(0),
+      movibleCents: centavos(21000),
+    },
     pagos: [
       { nombre: 'Renta', dia: 1, montoCents: centavos(90000) },
       { nombre: 'Capital One', dia: 9, montoCents: centavos(15000), esEnfoque: true },
@@ -69,9 +78,10 @@ describe('lo que queda libre', () => {
 })
 
 describe('el aviso armado', () => {
-  it('sigue el orden del SPEC: entra, vence, sobres, libre', () => {
+  it('sigue el orden del SPEC: entra, la semana, vence, sobres, libre', () => {
     const a = armarAviso(datos())
     expect(a.entra).toBe('Entran $1,710 el martes 4 de agosto.')
+    expect(a.semana).toBe('Semana 1 · del 1 al 7 · presupuesto de $1,390')
     expect(a.pagos.map((p) => p.texto)).toEqual([
       'Renta — $900, vence el 1',
       'Servicios — $130, vence el 5',
@@ -115,6 +125,32 @@ describe('el aviso armado', () => {
   })
 })
 
+describe('la alerta de apretada', () => {
+  it('cuando la semana alcanza, no hay alerta', () => {
+    expect(armarAviso(datos()).alerta).toBeNull()
+  })
+
+  it('cuando se aprieta, dice cuánto falta y qué se puede mover', () => {
+    const a = armarAviso(
+      datos({
+        semana: { ...datos().semana, faltanCents: centavos(60000) },
+      }),
+    )
+    expect(a.alerta).toContain('se vencen $600 más de lo que habrá entrado')
+    expect(a.alerta).toContain('Sus sobres traen $210')
+    expect(a.alerta).toContain('mover a una semana con cheque')
+  })
+
+  it('cuando todo lo que aprieta es fijo, no promete sobres que no hay', () => {
+    const a = armarAviso(
+      datos({
+        semana: { ...datos().semana, faltanCents: centavos(60000), movibleCents: centavos(0) },
+      }),
+    )
+    expect(a.alerta).toContain('no hay sobres que mover')
+  })
+})
+
 describe('el formato del dinero', () => {
   it('redondea al dólar y separa los miles', () => {
     expect(formatearDolares(centavos(171000))).toBe('$1,710')
@@ -134,9 +170,21 @@ describe('el correo', () => {
 
   it('trae todo lo del aviso, sin perder renglones', () => {
     expect(html).toContain('Entran $1,710 el martes 4 de agosto')
+    expect(html).toContain('Semana 1 · del 1 al 7 · presupuesto de $1,390')
     expect(html).toContain('Renta')
     expect(html).toContain('Comida: $150')
     expect(html).toContain('Te quedan $320 libres')
+  })
+
+  it('la alerta de apretada sale en su propio bloque, en ámbar', () => {
+    const apretado = avisoEnHtml(
+      armarAviso(datos({ semana: { ...datos().semana, faltanCents: centavos(60000) } })),
+      'https://x.com',
+    )
+    expect(apretado).toContain('Apretada.')
+    expect(apretado).toContain('se vencen $600 más')
+    // Y cuando alcanza, el bloque no existe: una alerta permanente no alerta.
+    expect(html).not.toContain('Apretada.')
   })
 
   it('escapa lo que teclea el usuario, que es su nombre de categoría', () => {
@@ -151,10 +199,18 @@ describe('el correo', () => {
   it('la versión en texto dice lo mismo, para quien bloquea el HTML', () => {
     const texto = avisoEnTexto(a, 'https://jubileo-app.vercel.app')
     expect(texto).toContain('Entran $1,710')
+    expect(texto).toContain('Semana 1 · del 1 al 7')
+    expect(texto).toContain('SE VENCE EN LA SEMANA')
     expect(texto).toContain('· Renta — $900, vence el 1')
     expect(texto).toContain('TE QUEDA: $320')
     expect(texto).toContain('https://jubileo-app.vercel.app')
     expect(texto).not.toContain('<')
+
+    const apretado = avisoEnTexto(
+      armarAviso(datos({ semana: { ...datos().semana, faltanCents: centavos(60000) } })),
+      'https://x.com',
+    )
+    expect(apretado).toContain('APRETADA: La semana se aprieta')
   })
 
   it('cuando no alcanza, la cifra se pinta en ámbar y no en turquesa', () => {

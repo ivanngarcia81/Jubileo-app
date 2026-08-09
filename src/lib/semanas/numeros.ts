@@ -92,6 +92,21 @@ export function numerosDeSemanas(
 }
 
 /**
+ * Cuánto falta hasta el fin de la semana `indice` (base 0): lo vencido
+ * acumulado menos lo que habrá entrado. Cero cuando alcanza — es el número
+ * que la bandera de apretada resume en sí o no, y el que el aviso dice con
+ * cifra para que se sepa cuánto mover.
+ */
+export function faltanteAcumulado(
+  numeros: readonly NumeroDeSemana[],
+  indice: number,
+): Centavos {
+  const vencido = suma(numeros.slice(0, indice + 1).map((n) => n.totalCents))
+  const entra = numeros[indice]?.entraAcumuladoCents ?? centavos(0)
+  return centavos(Math.max(0, vencido - entra))
+}
+
+/**
  * El arrastre dentro del mes: lo que sobra de un sobre en una semana pasa al
  * mismo sobre en la siguiente — y lo que se pasó también viaja, en negativo.
  * Esconder el sobregasto haría que las semanas siguientes prometieran dinero

@@ -50,6 +50,7 @@ function Renglon({ texto, monto }: { texto: string; monto: Centavos }) {
 
 export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
   const activo = presupuesto.periodos[presupuesto.periodoActivo]!
+  const semana = presupuesto.semanas[presupuesto.semanaActiva]
   const pendientes = presupuesto.pagos.filter((p) => !p.pagado)
   const sobresTotal = centavos(suma(presupuesto.sobres.map((s) => s.presupuestoCents)))
   const libre = presupuesto.libreporPeriodoCents[presupuesto.periodoActivo]!
@@ -71,7 +72,13 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
 
       <Notificacion>
         <Encabezado cuando="ahora" />
-        <h4 className="mb-[7px] text-cuerpo font-semibold">Tu semana empieza mañana</h4>
+        <h4 className="mb-[2px] text-cuerpo font-semibold">Tu semana empieza mañana</h4>
+        {semana && (
+          <div className="text-texto-2 mb-[7px] text-rotulo">
+            Semana {semana.numero} · del {diaDe(semana.fechaInicio)} al {diaDe(semana.fechaFin)}{' '}
+            · presupuesto de <Moneda centavos={semana.totalCents} />
+          </div>
+        )}
 
         <ul className="list-none text-menor leading-[1.62]">
           <Renglon texto="Entra el lunes" monto={presupuesto.ingresoPorChequeCents} />
@@ -102,6 +109,14 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
             <Moneda centavos={libre} />
           </b>
         </div>
+
+        {/* Solo cuando la semana se aprieta: una alerta permanente no alerta. */}
+        {semana?.apretada && (
+          <div className="text-ambar mt-2 text-menor font-semibold">
+            La semana se aprieta: se vence más de lo que habrá entrado. Mueve
+            tus sobres a una semana con cheque.
+          </div>
+        )}
       </Notificacion>
 
       <div className="mt-[11px]">

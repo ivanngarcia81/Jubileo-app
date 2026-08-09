@@ -12,6 +12,7 @@ export {
   type NumeroDeSemana,
   semanaDeFijo,
   numerosDeSemanas,
+  faltanteAcumulado,
   presupuestoConArrastre,
   disponibleConArrastre,
 } from './numeros.js'

@@ -3,6 +3,7 @@ import { centavos } from '../dinero'
 import { fecha } from '../fecha'
 import {
   disponibleConArrastre,
+  faltanteAcumulado,
   numerosDeSemanas,
   presupuestoConArrastre,
   semanaDeFijo,
@@ -68,6 +69,18 @@ describe('el número de cada semana', () => {
     ])
     expect(tarde[0]).toMatchObject({ apretada: true, entraAcumuladoCents: 0 })
     expect(tarde[1]!.apretada).toBe(false)
+  })
+
+  it('el faltante acumulado le pone cifra a la bandera', () => {
+    // Con el cheque el día 10, la semana 1 debe 500 + 100 y no ha entrado
+    // nada: faltan 600. Para la semana 2 el cheque ya llegó y alcanza.
+    const numeros = numerosDeSemanas(AGOSTO, fijos, asignado, [
+      { fechaPago: fecha('2026-08-10'), ingresoCents: centavos(100000), esExtra: false },
+      { fechaPago: fecha('2026-08-20'), ingresoCents: centavos(100000), esExtra: false },
+    ])
+    expect(faltanteAcumulado(numeros, 0)).toBe(60000)
+    expect(faltanteAcumulado(numeros, 1)).toBe(0)
+    expect(faltanteAcumulado(numeros, 4)).toBe(0)
   })
 
   it('la bandera cuenta el extra: mide la caja real, no el plan', () => {

@@ -16,6 +16,7 @@ import { formatearDolares } from './contenido.js'
 const CARBON = '#1C1E1F'
 const TEAL = '#0ABBB4'
 const TEXTO2 = '#6B7175'
+const AMBAR = '#E8A33D'
 
 function escapar(s: string): string {
   return s
@@ -53,8 +54,18 @@ export function avisoEnHtml(a: Aviso, urlApp: string): string {
   ${escapar(a.entra)}
 </td></tr>
 
+<tr><td style="font:700 13px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:${TEXTO2};padding:6px 0 2px">
+  ${escapar(a.semana)}
+</td></tr>
+
+${
+  a.alerta
+    ? `<tr><td style="padding-top:14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBF3E4;border-radius:10px"><tr><td style="padding:12px 14px;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#7A5310"><b style="color:${AMBAR}">Apretada.</b> ${escapar(a.alerta)}</td></tr></table></td></tr>`
+    : ''
+}
+
 ${seccion(
-  'Se vence esta semana',
+  'Se vence en la semana',
   a.pagos.map((p) =>
     fila(
       p.esEnfoque
@@ -64,7 +75,7 @@ ${seccion(
   ),
 )}
 
-${seccion('Tus sobres', a.sobres.map((s) => fila(escapar(s))))}
+${seccion('Tus sobres de la semana', a.sobres.map((s) => fila(escapar(s))))}
 
 <tr><td style="padding-top:20px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CARBON};border-radius:12px">
@@ -91,12 +102,15 @@ ${seccion('Tus sobres', a.sobres.map((s) => fila(escapar(s))))}
 
 /** La misma cosa en texto, para quien bloquea el HTML. */
 export function avisoEnTexto(a: Aviso, urlApp: string): string {
-  const partes = [a.saludo, '', a.entra]
+  const partes = [a.saludo, '', a.entra, a.semana]
+  if (a.alerta) {
+    partes.push('', `APRETADA: ${a.alerta}`)
+  }
   if (a.pagos.length > 0) {
-    partes.push('', 'SE VENCE ESTA SEMANA', ...a.pagos.map((p) => `· ${p.texto}`))
+    partes.push('', 'SE VENCE EN LA SEMANA', ...a.pagos.map((p) => `· ${p.texto}`))
   }
   if (a.sobres.length > 0) {
-    partes.push('', 'TUS SOBRES', ...a.sobres.map((s) => `· ${s}`))
+    partes.push('', 'TUS SOBRES DE LA SEMANA', ...a.sobres.map((s) => `· ${s}`))
   }
   partes.push('', `TE QUEDA: ${formatearDolares(a.libreCents)}`, a.cierre, '', urlApp)
   return partes.join('\n')

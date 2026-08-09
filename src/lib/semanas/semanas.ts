@@ -1,4 +1,4 @@
-import { type FechaCivil, deYMD, diaDe, diasDelMes } from '../fecha'
+import { type FechaCivil, deYMD, diaDe, diasDelMes } from '../fecha/index.js'
 
 /**
  * Las semanas del mes — el eje donde se presupuesta lo variable.
