@@ -86,6 +86,39 @@ de los seis. Recorre nodos de texto y no elementos a propósito: un `<div>` que 
 los 16px del navegador y saldría como si fuera un tamaño de la app. Y cuenta cuántos midió, porque
 una comprobación que mide dos cosas y pasa no vale nada.
 
+**Por qué el icono de una categoría es una clave y no un dibujo.** La columna `categorias.icono`
+guarda `'comida'`; qué SVG es `'comida'` lo decide `componentes/iconos.tsx`. Guardar el marcado
+convertiría "corregir un icono que se ve mal en un Android" en una migración de datos, y metería en
+la base algo que no le toca — la base sabe de dinero, no de trazos. El precio es que la clave puede
+quedar huérfana si alguien borra un icono del set, y por eso `mapeo` la valida al leer y cae al
+grupo en vez de pintar un hueco, **aunque el CHECK de la base ya la cuide**: la fila llega por
+PostgREST como texto suelto, y un cliente viejo o una migración a medias no son imposibles.
+
+Lo que sí importaba distinguir: **nulo no es `'gasto'`**. Nulo quiere decir "esta categoría no eligió
+icono" y entonces manda su grupo, que es lo que la app hacía siempre; `'gasto'` es elegir el genérico
+a propósito. Sin esa distinción, la siembra por palabras clave no podría correrse dos veces sin
+pisarle la elección a alguien — y una migración que se corre de nuevo pasa, pero que le borre la
+elección al usuario no puede.
+
+**Por qué el rail del sidebar lleva semanas y no cuentas.** La referencia de la que sale
+`design/sidebar.html` pone ahí las cuentas conectadas, y tiene razón: su producto son cuentas, y el
+contexto permanente de una app es lo que la define. El de Jubileo no son las cuentas —la mitad del
+público no conecta banco, y eso es a propósito (sección 11)— sino **dónde estás parado en el mes**.
+Por eso el rail son las semanas, con la actual marcada y la apretada en ámbar. Estar siempre a la
+vista es justo lo que convierte la semana en un marco mental en vez de una pantalla que se visita.
+
+El número de cada semana es **lo presupuestado**, no lo que queda. Es tentador poner lo que queda
+—suena más útil— pero en una semana que ya pasó "lo que te queda" no quiere decir nada, y un rail
+que dice una cosa en las semanas futuras y otra en las pasadas no se puede leer de un vistazo. Es
+además el mismo número que enseña El mes › Semanas: dos lugares que dicen lo mismo del mismo dinero
+terminan diciendo cosas distintas en cuanto uno de los dos cambia.
+
+Tocar una semana navega con **el fragmento** (`#/mes?semana=3`) y no con un estado compartido en
+memoria. El enrutador de este proyecto era deliberadamente sin parámetros, y agregar el primero se
+pensó dos veces; ganó porque un estado en memoria habría perdido lo único que el fragmento da
+gratis —dirección compartible y botón de atrás— que es exactamente la razón por la que este
+enrutador usa el fragmento y no un enrutador de verdad.
+
 **El candado de los tokens, y por qué es un trinquete y no una limpieza.**
 `design-tokens.css` dice desde el primer día que es "la única fuente de verdad para color y tipo", y
 `tema.css` repite que el único lugar donde vive un hex es ese archivo. Era falso: llegó a haber **92

@@ -82,10 +82,14 @@ SPEC.md              contrato del proyecto
 CLAUDE.md            este archivo
 design/              contrato visual — no rediseñar
   escritorio.html
+  sidebar.html       el marco de escritorio: navegación al costado
   movil.html
+  listas.html
   design-tokens.css
+  DECISIONES.md      por qué el diseño es como es. Léelo antes de "arreglarlo"
 src/
   lib/periodos/      módulo puro + pruebas: los cheques
+  lib/iconos/        las claves de icono y la sugerencia por nombre
   lib/semanas/       módulo puro + pruebas: el eje. Semanas del mes, números,
                      apretada, arrastre
   lib/dinero/        centavos enteros; el único lugar donde se divide dinero
@@ -96,7 +100,11 @@ src/
 supabase/
   migraciones/       solo hacia adelante: 0001, 0002, 0003…
   pruebas/           se corren con ./supabase/pruebas/probar-esquema.sh
+herramientas/        las comprobaciones de navegador y el candado de tokens
 ```
+
+Migraciones corridas contra producción, y por lo tanto congeladas: **0001 a 0007**.
+El cambio que sigue va en `0008_…`.
 
 ## Cómo trabajar
 

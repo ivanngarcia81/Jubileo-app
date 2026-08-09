@@ -102,6 +102,7 @@ Nombres orientativos; ajusta a la convención del proyecto.
 - grupo: `mayordomia` | `fijo` | `variable` | `deuda` | `fondo`
 - es_fija (booleano: monto igual todos los meses)
 - dia_vencimiento (1–31, nulo para variables) — **campo obligatorio para las fijas: sin él el aviso semanal pierde la mitad de su valor**
+- icono — **la clave, no el dibujo** (`'comida'`, no un SVG). Nulo significa "no eligió", y entonces manda el icono del grupo; no es lo mismo que `'gasto'`, que sí es elegir el genérico. Un CHECK la limita a las claves que la interfaz sabe dibujar. La lista vive en `src/lib/iconos/claves.ts`, con la sugerencia por nombre que la migración espeja en SQL.
 
 **lineas_presupuesto**
 - id, mes_id, categoria_id, monto_mensual_cents
@@ -219,9 +220,17 @@ teléfono sube desde abajo en una hoja.
 
 ### Escritorio
 
-Barra carbón arriba. Banda oscura con cuatro indicadores (entra, sale, sin repartir, a la deuda) con comparación contra el mes anterior, y los cheques del mes a la derecha. Lienzo claro de tres columnas: reparto y gráfica de planeado vs. gastado; movimientos y bloque de premium; fondos de reserva y bloque del coach.
+**Sidebar carbón al costado**, desde el corte `panel` (880px) — contrato: `/design/sidebar.html`. Tres zonas:
+
+1. **Navegación:** Mi semana · El mes · Deudas · Metas · Movimientos, con Ajustes y el avatar al pie. *(El renglón "Panel" del mockup entra cuando esa pantalla exista, y ahí se despide Mi semana.)*
+2. **El mes por semanas** — el contexto permanente del producto, donde otras apps ponen las cuentas conectadas. Las 4–5 semanas con su rango; las pasadas atenuadas, la actual en teal, la apretada con punto y monto en ámbar, y la quinta solo cuando el mes la tiene, rotulada con sus días. El número es **lo que te toca esa semana**, el mismo de El mes › Semanas. Tocar una abre El mes en el eje Semanas con esa semana desplegada.
+3. **Tu enfoque** — la deuda que se está atacando, con su saldo y una barra que mide lo **pagado**. Sin deudas, la zona no aparece.
+
+A la derecha, la cabecera del contenido —el nombre de la pantalla y la fecha— y tres tarjetas con entra, sale y sin repartir. Debajo, el lienzo de tres columnas: reparto y gráfica de planeado vs. gastado; movimientos y bloque de premium; fondos de reserva y bloque del coach.
 
 El "Ver todos" de la tarjeta de movimientos abre la pantalla de Movimientos.
+
+El sidebar lleva el color de fondo, así que llega al borde izquierdo y al alto de la pantalla; el que se detiene es el contenido. Ver `design/DECISIONES.md`.
 
 ### Onboarding — 6 pasos, nada más
 
