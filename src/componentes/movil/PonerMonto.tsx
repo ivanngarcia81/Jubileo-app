@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { LineaMes } from '../../datos/tipos'
 import { type Centavos, deDolares, formatear, repartir } from '../../lib/dinero'
+import { type ClaveIcono, esClaveDeCategoria } from '../../lib/iconos'
+import { RejillaDeIconos, RotuloDeIconos } from './RejillaDeIconos'
 
 /**
  * Poner cuánto va a una categoría en el mes.
@@ -36,6 +38,7 @@ export function PonerMonto({
   diasPorSemana,
   alGuardar,
   alRenombrar,
+  alCambiarIcono,
   alQuitar,
   alCerrar,
 }: {
@@ -44,6 +47,8 @@ export function PonerMonto({
   diasPorSemana: readonly number[]
   alGuardar: (montoCents: Centavos) => Promise<void>
   alRenombrar?: ((nombre: string) => Promise<void>) | undefined
+  /** Ausente en el onboarding y en la demostración: ahí solo se pone el monto. */
+  alCambiarIcono?: ((icono: ClaveIcono) => Promise<void>) | undefined
   alQuitar?: (() => Promise<void>) | undefined
   alCerrar: () => void
 }) {
@@ -68,6 +73,23 @@ export function PonerMonto({
       alCerrar()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo.')
+      setGuardando(false)
+    }
+  }
+
+  /**
+   * Igual, pero la hoja se queda abierta. Escoger icono no es terminar: quien
+   * vino a poner el monto todavía no lo ha puesto, y cerrarle la hoja debajo
+   * sería castigarlo por tocar un dibujo.
+   */
+  async function intentarSinCerrar(accion: () => Promise<void>) {
+    setGuardando(true)
+    setError(null)
+    try {
+      await accion()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo.')
+    } finally {
       setGuardando(false)
     }
   }
@@ -127,6 +149,20 @@ export function PonerMonto({
             className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
           />
         </div>
+
+        {alCambiarIcono && (
+          <>
+            <RotuloDeIconos>Su icono</RotuloDeIconos>
+            <RejillaDeIconos
+              // La línea trae el icono ya resuelto por `mapeo`: cuando la
+              // categoría no eligió, viene el de su grupo — que no está en la
+              // rejilla y por eso no marca ninguno, que es lo correcto.
+              elegido={esClaveDeCategoria(linea.icono) ? linea.icono : null}
+              alElegir={(clave) => void intentarSinCerrar(() => alCambiarIcono(clave))}
+              desactivada={guardando}
+            />
+          </>
+        )}
 
         {porSemana.length > 0 && monto !== null && monto > 0 && (
           <p className="text-texto-2 mt-3 text-menor leading-[1.5]">

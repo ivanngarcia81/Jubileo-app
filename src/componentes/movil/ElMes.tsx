@@ -10,6 +10,7 @@ import {
   leerAbiertos,
   type ClaveGrupo,
 } from '../../lib/mes/grupos'
+import type { ClaveIcono } from '../../lib/iconos'
 import { semanaDeFijo } from '../../lib/semanas'
 import { nombreDeMes } from '../textos'
 import {
@@ -226,6 +227,7 @@ export function ElMes({
   alRenombrar,
   alQuitar,
   alCrearCategoria,
+  alCambiarIcono,
   alCerrarMes,
   alVerMes,
 }: {
@@ -239,7 +241,9 @@ export function ElMes({
     grupo: 'fijo' | 'variable',
     nombre: string,
     diaVencimiento: number | undefined,
+    icono: ClaveIcono | null,
   ) => Promise<void>
+  alCambiarIcono?: (categoriaId: string, icono: ClaveIcono) => Promise<void>
   alCerrarMes?: () => Promise<void>
   alVerMes?: (anio: number, mes: number) => void
 }) {
@@ -546,6 +550,9 @@ export function ElMes({
           diasPorSemana={presupuesto.semanas.map((s) => s.dias)}
           alGuardar={(monto) => alPonerMonto(editando.id, monto)}
           {...(alRenombrar ? { alRenombrar: (n: string) => alRenombrar(editando.id, n) } : {})}
+          {...(alCambiarIcono
+            ? { alCambiarIcono: (i: ClaveIcono) => alCambiarIcono(editando.id, i) }
+            : {})}
           {...(alQuitar ? { alQuitar: () => alQuitar(editando.id) } : {})}
           alCerrar={() => setEditando(null)}
         />
@@ -554,7 +561,7 @@ export function ElMes({
       {creando && alCrearCategoria && (
         <NuevaCategoria
           grupo={creando}
-          alCrear={(nombre, dia) => alCrearCategoria(creando, nombre, dia)}
+          alCrear={(nombre, dia, icono) => alCrearCategoria(creando, nombre, dia, icono)}
           alCerrar={() => setCreando(null)}
         />
       )}

@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+import { type ClaveIcono, sugerirIcono } from '../../lib/iconos'
+import { RejillaDeIconos, RotuloDeIconos } from './RejillaDeIconos'
 
 /**
  * Una categoría nueva.
  *
- * Solo el nombre, y el día de vencimiento cuando es fija. El monto se pone
+ * El nombre, su icono, y el día de vencimiento cuando es fija. El monto se pone
  * después, en la misma hoja que el de las demás: crear y presupuestar son dos
  * actos distintos, y juntarlos obliga a decidir el número antes de saber si la
  * categoría siquiera hace falta.
+ *
+ * El icono se **sugiere** mientras se escribe el nombre: quien teclea "Comida"
+ * ve el cubierto marcado antes de llegar al botón. Se sugiere y no se impone —
+ * en cuanto el usuario toca otro, la sugerencia deja de mandar aunque siga
+ * escribiendo.
  *
  * El día no es opcional en las fijas, y no por burocracia de la base: sin él el
  * aviso del domingo no puede decir qué se vence esta semana, que es la mitad de
@@ -19,11 +26,16 @@ export function NuevaCategoria({
   alCerrar,
 }: {
   grupo: 'fijo' | 'variable'
-  alCrear: (nombre: string, diaVencimiento: number | undefined) => Promise<void>
+  alCrear: (
+    nombre: string,
+    diaVencimiento: number | undefined,
+    icono: ClaveIcono | null,
+  ) => Promise<void>
   alCerrar: () => void
 }) {
   const [nombre, setNombre] = useState('')
   const [dia, setDia] = useState('')
+  const [aMano, setAMano] = useState<ClaveIcono | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const campo = useRef<HTMLInputElement>(null)
@@ -34,13 +46,16 @@ export function NuevaCategoria({
   const diaNumero = Number(dia)
   const diaValido = !esFija || (Number.isInteger(diaNumero) && diaNumero >= 1 && diaNumero <= 31)
   const listo = nombre.trim() !== '' && diaValido
+  // Lo que el usuario escogió gana; si no ha escogido, la sugerencia del
+  // nombre. Nulo = ninguno, y entonces manda el grupo.
+  const icono = aMano ?? sugerirIcono(nombre)
 
   async function crear() {
     if (!listo) return
     setGuardando(true)
     setError(null)
     try {
-      await alCrear(nombre, esFija ? diaNumero : undefined)
+      await alCrear(nombre, esFija ? diaNumero : undefined, icono)
       alCerrar()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo crear.')
@@ -80,6 +95,9 @@ export function NuevaCategoria({
           aria-label="Nombre de la categoría"
           className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
         />
+
+        <RotuloDeIconos>Su icono</RotuloDeIconos>
+        <RejillaDeIconos elegido={icono} alElegir={setAMano} desactivada={guardando} />
 
         {esFija && (
           <>

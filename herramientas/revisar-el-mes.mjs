@@ -48,10 +48,10 @@ const periodos = [1,2,3,4].map((n) => ({
   ingreso_esperado_cents: 171000, ingreso_real_cents: null, es_extra: false, estado: n === 1 ? 'abierto' : 'futuro',
 }))
 let categorias = [
-  { id: 'c-diezmo', hogar_id: H, nombre: 'Diezmo y ofrenda', grupo: 'mayordomia', orden: 0, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
-  { id: 'c-renta',  hogar_id: H, nombre: 'Renta',    grupo: 'fijo',     orden: 1, activa: true, es_fija: true,  dia_vencimiento: 1, deuda_id: null },
-  { id: 'c-serv',   hogar_id: H, nombre: 'Servicios',grupo: 'fijo',     orden: 2, activa: true, es_fija: true,  dia_vencimiento: 5, deuda_id: null },
-  { id: 'c-comida', hogar_id: H, nombre: 'Comida',   grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
+  { id: 'c-diezmo', hogar_id: H, nombre: 'Diezmo y ofrenda', grupo: 'mayordomia', orden: 0, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null, icono: null },
+  { id: 'c-renta',  hogar_id: H, nombre: 'Renta',    grupo: 'fijo',     orden: 1, activa: true, es_fija: true,  dia_vencimiento: 1, deuda_id: null, icono: 'casa' },
+  { id: 'c-serv',   hogar_id: H, nombre: 'Servicios',grupo: 'fijo',     orden: 2, activa: true, es_fija: true,  dia_vencimiento: 5, deuda_id: null, icono: 'servicios' },
+  { id: 'c-comida', hogar_id: H, nombre: 'Comida',   grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null, icono: 'comida' },
 ]
 // Los meses viven en una lista, no en un renglón fijo: el arrastre al mes
 // siguiente no se puede probar contra un mock que solo sabe de agosto.
@@ -283,7 +283,7 @@ await p.route('**/*', async (r) => {
             return json({ code: '23505', message: 'duplicate key' }, 409)
           }
           const id = `c-nueva-${categorias.length}`
-          categorias.push({ id, activa: true, deuda_id: null, ...f })
+          categorias.push({ id, activa: true, deuda_id: null, icono: null, ...f })
           return json([{ id }])
         }
         const id = (url.searchParams.get('id') ?? '').replace('eq.', '')
@@ -666,25 +666,53 @@ ok((await p.getByRole('alert').first().innerText()).includes('Ya tienes una cate
    'un nombre repetido se explica en español, no con el error de Postgres')
 
 await p.getByLabel('Nombre de la categoría').first().fill('Ropa')
+// El icono se elige a mano cuando el nombre no sugiere ninguno: "Ropa" no
+// está en las palabras clave, así que la rejilla nace sin nada marcado.
+ok(await p.getByRole('radio', { name: 'Ropa' }).first().getAttribute('aria-checked') === 'false',
+   'un nombre que no sugiere icono deja la rejilla sin marcar')
+await p.getByRole('radio', { name: 'Ropa' }).first().click()
 await p.getByRole('button', { name: 'Crear' }).first().click()
 await p.waitForTimeout(1200)
 ok(categorias.some((c) => c.nombre === 'Ropa' && c.grupo === 'variable'), 'se crea el sobre nuevo')
+ok(categorias.find((c) => c.nombre === 'Ropa')?.icono === 'ropa',
+   `y guarda la clave del icono que se escogió: ${categorias.find((c) => c.nombre === 'Ropa')?.icono}`)
 ok((await p.locator('body').innerText()).includes('Ropa'), 'y aparece en la pantalla')
 
 // Un fijo sin día no debe poderse crear: sin él el aviso pierde la mitad.
 await p.getByRole('button', { name: 'Agregar un gasto fijo' }).first().click()
-await p.getByLabel('Nombre de la categoría').first().fill('Seguro')
+await p.getByLabel('Nombre de la categoría').first().fill('Seguro del carro')
+// La sugerencia se ve mientras escribes: "Seguro del carro" trae las dos
+// palabras y gana el escudo, no el coche — el mismo orden que en SQL.
+await p.waitForTimeout(250)
+ok(await p.getByRole('radio', { name: 'Seguro' }).first().getAttribute('aria-checked') === 'true',
+   'la sugerencia por nombre se preselecciona sola')
+ok(await p.getByRole('radio', { name: 'Transporte' }).first().getAttribute('aria-checked') === 'false',
+   'y gana el orden: "Seguro del carro" es un seguro, no un coche')
 ok(await p.getByRole('button', { name: 'Crear' }).first().isDisabled(),
    'un gasto fijo sin día de vencimiento no se puede crear')
 await p.getByLabel('¿Qué día del mes se vence?').first().fill('18')
 await p.screenshot({ path: RAIZ + 'capturas/app-nueva-categoria.png' })
 await p.getByRole('button', { name: 'Crear' }).first().click()
 await p.waitForTimeout(1200)
-const seguro = categorias.find((c) => c.nombre === 'Seguro')
+const seguro = categorias.find((c) => c.nombre === 'Seguro del carro')
 ok(seguro?.dia_vencimiento === 18 && seguro?.es_fija === true, 'con su día guardado y marcado como fijo')
+ok(seguro?.icono === 'seguro', `y con la sugerencia guardada: ${seguro?.icono}`)
+
+// Cambiar el icono de una categoría que ya existe, desde la hoja del monto.
+await p.getByRole('button', { name: 'Poner el monto de Ropa' }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+ok(await p.getByRole('radio', { name: 'Ropa' }).first().getAttribute('aria-checked') === 'true',
+   'la hoja del monto enseña el icono que ya tiene marcado')
+await p.getByRole('radio', { name: 'Regalos' }).first().click()
+await esperarA(() => categorias.find((c) => c.nombre === 'Ropa')?.icono === 'regalo')
+ok(categorias.find((c) => c.nombre === 'Ropa')?.icono === 'regalo',
+   'tocar otro lo cambia sin cerrar la hoja')
+ok(await p.getByRole('dialog').first().isVisible(),
+   'y la hoja sigue abierta: escoger icono no es terminar')
+await p.getByRole('radio', { name: 'Ropa' }).first().click()
+await esperarA(() => categorias.find((c) => c.nombre === 'Ropa')?.icono === 'ropa')
 
 // Renombrar
-await p.getByRole('button', { name: 'Poner el monto de Ropa' }).first().click()
 await p.getByRole('button', { name: 'Renombrar' }).first().click()
 await p.getByLabel('Nombre de Ropa').first().fill('Ropa y calzado')
 await p.getByRole('button', { name: 'Guardar el nombre' }).first().click()

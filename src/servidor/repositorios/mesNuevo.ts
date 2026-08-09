@@ -62,7 +62,7 @@ async function arrastreDe(mesAnteriorId: string) {
       .returns<FilaLinea[]>(),
     db
       .from('categorias')
-      .select('id, hogar_id, nombre, grupo, orden, activa, es_fija, dia_vencimiento, deuda_id')
+      .select('id, hogar_id, nombre, grupo, orden, activa, es_fija, dia_vencimiento, deuda_id, icono')
       .returns<FilaCategoria[]>(),
   ])
   reventar('No se pudieron leer las líneas del mes anterior', lineas.error)

@@ -122,18 +122,28 @@ const TONO_POR_CLAVE: Record<ClaveIcono, TonoChip> = {
   // Lo que se da y lo que entra: teal, el color de la marca.
   mayordomia: 'teal',
   ingreso: 'teal',
-  // El techo y los servicios, que es lo que sostiene la casa.
+  ahorro: 'teal',
+  // El techo y lo que lo sostiene.
   casa: 'teal',
   servicios: 'teal',
   // Lo que se gasta día con día y hay que cuidar.
   comida: 'ambar',
   transporte: 'ambar',
-  // Todo lo demás, sin color: el color se gasta si se usa en todo.
+  // Todo lo demás, sin color: el color se gasta si se usa en todo. Los ocho
+  // iconos nuevos entran aquí a propósito — si cada categoría trajera su tono,
+  // la lista se volvería un arcoíris y el teal dejaría de querer decir algo.
   fijo: 'neutro',
   variable: 'neutro',
   seguro: 'neutro',
   deuda: 'neutro',
   gasto: 'neutro',
+  telefono: 'neutro',
+  salud: 'neutro',
+  ropa: 'neutro',
+  regalo: 'neutro',
+  mascota: 'neutro',
+  ninos: 'neutro',
+  tarjeta: 'neutro',
 }
 
 export function ChipCategoria({

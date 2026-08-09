@@ -3,11 +3,19 @@ import {
   ArrowDownLeft,
   ArrowRight,
   ArrowUpDown,
+  Baby,
   Car,
   CircleDollarSign,
+  CreditCard,
   Diamond,
+  Gift,
+  HeartPulse,
   Home,
+  PawPrint,
+  Phone,
+  PiggyBank,
   ShieldCheck,
+  Shirt,
   Sparkles,
   UtensilsCrossed,
   Zap,
@@ -29,6 +37,7 @@ import {
   TrendingDown,
   UserRound,
 } from 'lucide-react'
+import type { ClaveIcono } from '../lib/iconos'
 
 /**
  * Los iconos de la app. El único archivo que importa de `lucide-react`.
@@ -101,31 +110,35 @@ export const IconoBateria = (p: PropsIcono) => <BatteryMedium {...base(p)} />
 // Ahora el campo guarda una **clave**. Cambiar de set de iconos era un UPDATE
 // en la base; ahora es este archivo.
 
-export type ClaveIcono =
-  | 'mayordomia'
-  | 'fijo'
-  | 'variable'
-  | 'casa'
-  | 'comida'
-  | 'transporte'
-  | 'seguro'
-  | 'servicios'
-  | 'deuda'
-  | 'ingreso'
-  | 'gasto'
+/**
+ * El tipo vive en `lib/iconos` y no aquí: la clave es un dato —va en la base,
+ * la sugiere una función pura, la valida un CHECK— y este archivo solo dice
+ * qué dibujo le toca. Se re-exporta porque media app ya la importa de aquí.
+ */
+export type { ClaveIcono }
 
 const POR_CLAVE: Record<ClaveIcono, (p: PropsIcono) => ReactNode> = {
+  // Las que salen del grupo cuando la categoría no eligió ninguna.
   mayordomia: (p) => <Sparkles {...base(p)} />,
   fijo: (p) => <CircleDollarSign {...base(p)} />,
   variable: (p) => <Diamond {...base(p)} />,
-  casa: (p) => <Home {...base(p)} />,
-  comida: (p) => <UtensilsCrossed {...base(p)} />,
-  transporte: (p) => <Car {...base(p)} />,
-  seguro: (p) => <ShieldCheck {...base(p)} />,
-  servicios: (p) => <Zap {...base(p)} />,
   deuda: (p) => <TrendingDown {...base(p)} />,
   ingreso: (p) => <ArrowDownLeft {...base(p)} />,
   gasto: (p) => <CircleDollarSign {...base(p)} />,
+  // Las que se eligen a mano, en el orden de la rejilla.
+  casa: (p) => <Home {...base(p)} />,
+  comida: (p) => <UtensilsCrossed {...base(p)} />,
+  transporte: (p) => <Car {...base(p)} />,
+  servicios: (p) => <Zap {...base(p)} />,
+  telefono: (p) => <Phone {...base(p)} />,
+  seguro: (p) => <ShieldCheck {...base(p)} />,
+  salud: (p) => <HeartPulse {...base(p)} />,
+  ropa: (p) => <Shirt {...base(p)} />,
+  ninos: (p) => <Baby {...base(p)} />,
+  mascota: (p) => <PawPrint {...base(p)} />,
+  regalo: (p) => <Gift {...base(p)} />,
+  ahorro: (p) => <PiggyBank {...base(p)} />,
+  tarjeta: (p) => <CreditCard {...base(p)} />,
 }
 
 /** El icono de una clave. Una clave desconocida cae al genérico, no revienta. */

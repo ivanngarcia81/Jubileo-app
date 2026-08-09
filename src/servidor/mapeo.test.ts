@@ -5,6 +5,7 @@ import type { FilasDelMes } from './esquema'
 import {
   aPresupuesto,
   chequeEnCurso,
+  iconoDeCategoria,
   iniciales,
   ingresoDe,
   libreDelPeriodo,
@@ -63,12 +64,12 @@ function filas(): FilasDelMes {
       { id: 'r2', mes_id: MES, usuario_id: ROSA, numero: 2, fecha_inicio: '2026-08-15', fecha_fin: '2026-08-31', fecha_pago: '2026-08-15', ingreso_esperado_cents: 90000, ingreso_real_cents: null, es_extra: false, estado: 'futuro' },
     ],
     categorias: [
-      { id: 'c-diezmo', nombre: 'Diezmo y ofrenda', grupo: 'mayordomia', orden: 0, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
-      { id: 'c-renta', nombre: 'Renta', grupo: 'fijo', orden: 1, activa: true, es_fija: true, dia_vencimiento: 3, deuda_id: null },
-      { id: 'c-luz', nombre: 'Luz y agua', grupo: 'fijo', orden: 2, activa: true, es_fija: true, dia_vencimiento: 4, deuda_id: null },
-      { id: 'c-comida', nombre: 'Comida', grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null },
-      { id: 'c-capital', nombre: 'Capital One', grupo: 'deuda', orden: 4, activa: true, es_fija: true, dia_vencimiento: 9, deuda_id: 'd-capital' },
-      { id: 'c-vieja', nombre: 'Categoría apagada', grupo: 'fijo', orden: 9, activa: false, es_fija: true, dia_vencimiento: 5, deuda_id: null },
+      { id: 'c-diezmo', nombre: 'Diezmo y ofrenda', grupo: 'mayordomia', orden: 0, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null, icono: null },
+      { id: 'c-renta', nombre: 'Renta', grupo: 'fijo', orden: 1, activa: true, es_fija: true, dia_vencimiento: 3, deuda_id: null, icono: null },
+      { id: 'c-luz', nombre: 'Luz y agua', grupo: 'fijo', orden: 2, activa: true, es_fija: true, dia_vencimiento: 4, deuda_id: null, icono: null },
+      { id: 'c-comida', nombre: 'Comida', grupo: 'variable', orden: 3, activa: true, es_fija: false, dia_vencimiento: null, deuda_id: null, icono: 'comida' },
+      { id: 'c-capital', nombre: 'Capital One', grupo: 'deuda', orden: 4, activa: true, es_fija: true, dia_vencimiento: 9, deuda_id: 'd-capital', icono: null },
+      { id: 'c-vieja', nombre: 'Categoría apagada', grupo: 'fijo', orden: 9, activa: false, es_fija: true, dia_vencimiento: 5, deuda_id: null, icono: null },
     ],
     lineas: [
       { id: 'l-diezmo', mes_id: MES, categoria_id: 'c-diezmo', monto_mensual_cents: 36800 },
@@ -125,6 +126,18 @@ describe('piezas del mapeo', () => {
     const p = { ingreso_real_cents: null, ingreso_esperado_cents: 124000 } as never
     expect(libreDelPeriodo(p, 124000)).toBe(0)
     expect(libreDelPeriodo(p, 118000)).toBe(6000)
+  })
+
+  it('el icono de la categoría le gana al de su grupo', () => {
+    expect(iconoDeCategoria('comida', 'variable')).toBe('comida')
+    expect(iconoDeCategoria('mascota', 'fijo')).toBe('mascota')
+    // Sin elegir, manda el grupo: es lo que la app hacía antes de 0007.
+    expect(iconoDeCategoria(null, 'variable')).toBe('variable')
+    expect(iconoDeCategoria(undefined, 'deuda')).toBe('deuda')
+    // Elegir el genérico a propósito no es lo mismo que no elegir.
+    expect(iconoDeCategoria('gasto', 'variable')).toBe('gasto')
+    // Una clave que este cliente no conoce no pinta un hueco: cae al grupo.
+    expect(iconoDeCategoria('bitcoin', 'fijo')).toBe('fijo')
   })
 
   it('reparte lo que falta de un fondo entre los cheques que quedan', () => {

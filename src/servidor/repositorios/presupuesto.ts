@@ -64,7 +64,7 @@ export async function cargarPresupuestoDelMes(
         .returns<FilaPeriodo[]>(),
       db
         .from('categorias')
-        .select('id, nombre, grupo, orden, activa, es_fija, dia_vencimiento, deuda_id')
+        .select('id, nombre, grupo, orden, activa, es_fija, dia_vencimiento, deuda_id, icono')
         .returns<FilaCategoria[]>(),
       db
         .from('lineas_presupuesto')

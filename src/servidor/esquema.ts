@@ -79,6 +79,12 @@ export interface FilaCategoria {
   activa: boolean
   es_fija: boolean
   dia_vencimiento: number | null
+  /**
+   * La clave del icono que eligió el usuario (0007). Nula cuando no eligió:
+   * entonces manda el grupo. No es lo mismo que `'gasto'`, que sí es elegir el
+   * genérico a propósito.
+   */
+  icono: string | null
   /** Solo en grupo `deuda`: qué deuda paga esta línea. Amarrada por llave. */
   deuda_id: string | null
 }

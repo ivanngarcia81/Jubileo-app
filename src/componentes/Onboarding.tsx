@@ -4,6 +4,7 @@ import { type Centavos, formatear } from '../lib/dinero'
 import { Moneda } from './base'
 import { EditarDeuda } from './movil/EditarDeuda'
 import { NuevaCategoria } from './movil/NuevaCategoria'
+import type { ClaveIcono } from '../lib/iconos'
 import { PonerMonto } from './movil/PonerMonto'
 
 /**
@@ -47,6 +48,7 @@ export function Onboarding({
     grupo: 'fijo' | 'variable',
     nombre: string,
     diaVencimiento: number | undefined,
+    icono: ClaveIcono | null,
   ) => Promise<void>
   alCrearDeuda: (
     nombre: string,
@@ -312,7 +314,7 @@ export function Onboarding({
       {creandoFijo && (
         <NuevaCategoria
           grupo="fijo"
-          alCrear={(nombre, dia) => alCrearCategoria('fijo', nombre, dia)}
+          alCrear={(nombre, dia, icono) => alCrearCategoria('fijo', nombre, dia, icono)}
           alCerrar={() => setCreandoFijo(false)}
         />
       )}

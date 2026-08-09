@@ -1,4 +1,4 @@
-import type { ClaveIcono } from '../componentes/iconos'
+import { type ClaveIcono, esClaveDeCategoria } from '../lib/iconos'
 import type {
   AsignacionDeSemana,
   Fondo,
@@ -101,6 +101,25 @@ export function porChequeParaLaMeta(
 ): Centavos {
   const cheques = Math.max(1, mesesQueFaltan * Math.max(1, chequesPorMes))
   return centavos(Math.ceil(faltanteCents / cheques))
+}
+
+/**
+ * Qué icono le toca a una categoría.
+ *
+ * Manda lo que el usuario eligió; cuando no eligió, manda el grupo — que es lo
+ * único que la app sabía hacer antes de 0007, y por eso toda categoría salía
+ * con el mismo rombo o el mismo `$`.
+ *
+ * La clave se valida al leer aunque el CHECK ya la cuide en la base: la fila
+ * llega por PostgREST como texto suelto, y una clave desconocida —de un cliente
+ * viejo, de una migración a medias— pintaría un hueco en vez de un icono.
+ */
+export function iconoDeCategoria(
+  icono: string | null | undefined,
+  grupo: string,
+): ClaveIcono {
+  if (icono && esClaveDeCategoria(icono)) return icono
+  return (grupo || 'gasto') as ClaveIcono
 }
 
 export function mesesEntre(desde: FechaCivil, hasta: FechaCivil | null): number {
@@ -213,12 +232,14 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     )
   }
 
-  const aLineaMes = (c: (typeof filas.categorias)[number], icono: ClaveIcono): LineaMes => {
+  // El grupo entra como respaldo, no como respuesta: si la categoría eligió su
+  // icono, gana el suyo.
+  const aLineaMes = (c: (typeof filas.categorias)[number], delGrupo: ClaveIcono): LineaMes => {
     const cheque = c.dia_vencimiento === null ? null : chequeQuePaga(c.dia_vencimiento)
     return {
       id: c.id,
       nombre: c.nombre,
-      icono,
+      icono: iconoDeCategoria(c.icono, delGrupo),
       detalle: c.dia_vencimiento
         ? `Vence el ${c.dia_vencimiento}${cheque ? ` · Cheque ${cheque}` : ''}`
         : '',
@@ -439,9 +460,12 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       return {
         id: t.id,
         nombre: t.descripcion ?? t.comercio ?? 'Movimiento',
-        // El icono sale del grupo de su categoría, no del tipo: así el gasto de
-        // comida trae el icono de comida y no el genérico de gasto.
-        icono: t.tipo === 'ingreso' ? 'ingreso' : ((categoria?.grupo ?? 'gasto') as ClaveIcono),
+        // El icono sale de su categoría, no del tipo: así el gasto del súper
+        // trae el icono de comida y no el genérico de gasto.
+        icono:
+          t.tipo === 'ingreso'
+            ? ('ingreso' as ClaveIcono)
+            : iconoDeCategoria(categoria?.icono, categoria?.grupo ?? 'gasto'),
         categoria: categoria?.nombre ?? (t.tipo === 'ingreso' ? 'Entró' : 'Sin asignar'),
         categoriaId: t.categoria_id,
         asignado: categoria !== undefined || t.tipo === 'ingreso',

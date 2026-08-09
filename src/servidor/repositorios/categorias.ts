@@ -1,3 +1,4 @@
+import type { ClaveIcono } from '../../lib/iconos'
 import { cliente } from '../cliente'
 
 /**
@@ -26,6 +27,8 @@ export interface CategoriaNueva {
   grupo: Grupo
   /** Obligatorio en las fijas: sin él el aviso semanal pierde la mitad de su valor. */
   diaVencimiento?: number | undefined
+  /** La clave del icono. Nula cuando no se eligió: entonces manda el grupo. */
+  icono?: ClaveIcono | null | undefined
   orden: number
 }
 
@@ -43,12 +46,22 @@ export async function crearCategoria(c: CategoriaNueva): Promise<string> {
       orden: c.orden,
       es_fija: esFija,
       dia_vencimiento: esFija ? c.diaVencimiento : null,
+      icono: c.icono ?? null,
     })
     .select('id')
     .single<{ id: string }>()
   reventar('No se pudo crear la categoría', error)
   if (!data) throw new Error('No se pudo crear la categoría')
   return data.id
+}
+
+/**
+ * Cambiar el icono de una categoría. Se guarda **la clave**, y el CHECK de la
+ * base la vuelve a revisar: el cliente puede mentir.
+ */
+export async function cambiarIcono(id: string, icono: ClaveIcono): Promise<void> {
+  const { error } = await cliente().from('categorias').update({ icono }).eq('id', id)
+  reventar('No se pudo cambiar el icono', error)
 }
 
 export async function renombrarCategoria(id: string, nombre: string): Promise<void> {

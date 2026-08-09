@@ -35,6 +35,7 @@ import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
 import { MiSemana } from "./componentes/movil/MiSemana";
 import { useEsEscritorio } from "./componentes/pantalla";
 import { mesYAnio } from "./componentes/textos";
+import type { ClaveIcono } from "./lib/iconos";
 import { simular } from "./lib/deudas";
 import { type Centavos, centavos, suma } from "./lib/dinero";
 import { fecha } from "./lib/fecha";
@@ -139,7 +140,9 @@ interface Acciones {
     grupo: "fijo" | "variable",
     nombre: string,
     diaVencimiento: number | undefined,
+    icono: ClaveIcono | null,
   ) => Promise<void>;
+  alCambiarIcono?: (categoriaId: string, icono: ClaveIcono) => Promise<void>;
   alAnotar?: (
     categoriaId: string,
     montoCents: Centavos,
@@ -192,6 +195,7 @@ function Contenido({
     alRenombrar,
     alQuitar,
     alCrearCategoria,
+    alCambiarIcono,
     alAnotar,
     alMarcarPago,
     alCerrarSemana,
@@ -217,6 +221,7 @@ function Contenido({
           {...(alRenombrar ? { alRenombrar } : {})}
           {...(alQuitar ? { alQuitar } : {})}
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
+          {...(alCambiarIcono ? { alCambiarIcono } : {})}
           {...(alCerrarMes ? { alCerrarMes } : {})}
           {...(alVerMes ? { alVerMes } : {})}
         />
@@ -559,12 +564,22 @@ export function App() {
       }
     : undefined;
 
+  const alCambiarIcono = mesId
+    ? async (categoriaId: string, icono: ClaveIcono) => {
+        const { cambiarIcono } =
+          await import("./servidor/repositorios/categorias");
+        await cambiarIcono(categoriaId, icono);
+        fuente.recargar();
+      }
+    : undefined;
+
   const alCrearCategoria =
     mesId && hogarId
       ? async (
           grupo: "fijo" | "variable",
           nombre: string,
           diaVencimiento: number | undefined,
+          icono: ClaveIcono | null,
         ) => {
           const { crearCategoria } =
             await import("./servidor/repositorios/categorias");
@@ -578,6 +593,7 @@ export function App() {
             nombre,
             grupo,
             ...(diaVencimiento === undefined ? {} : { diaVencimiento }),
+            icono,
             orden: 10 + cuantas,
           });
           fuente.recargar();
@@ -747,6 +763,7 @@ export function App() {
     ...(alRenombrar ? { alRenombrar } : {}),
     ...(alQuitar ? { alQuitar } : {}),
     ...(alCrearCategoria ? { alCrearCategoria } : {}),
+    ...(alCambiarIcono ? { alCambiarIcono } : {}),
     ...(alAnotar ? { alAnotar } : {}),
     ...(alMarcarPago ? { alMarcarPago } : {}),
     ...(alCerrarSemana ? { alCerrarSemana } : {}),
