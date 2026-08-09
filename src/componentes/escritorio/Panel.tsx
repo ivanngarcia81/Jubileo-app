@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Presupuesto } from "../../datos/tipos";
 import { type Centavos, formatearRedondo } from "../../lib/dinero";
 import type { Ruta } from "../../rutas";
+import { ROTULO } from "../rotulos";
 import { cuantos } from "../textos";
 
 /**
@@ -28,15 +29,6 @@ function contarCategorias(p: Presupuesto): number {
  * costado: con los enlaces arriba, el que estaba subrayado decía dónde estabas.
  */
 
-const TITULOS: Partial<Record<Ruta, string>> = {
-  resumen: "Mi semana",
-  mes: "El mes",
-  deudas: "Deudas",
-  metas: "Metas",
-  movimientos: "Movimientos",
-  ajustes: "Ajustes",
-};
-
 export function CabeceraDeContenido({
   activa,
   hoy,
@@ -50,7 +42,7 @@ export function CabeceraDeContenido({
       data-ancho="contenido"
       className="mx-auto flex max-w-contenido items-baseline justify-between gap-4 px-[22px] pt-5"
     >
-      <h1 className="font-serif text-cifra font-normal">{TITULOS[activa] ?? "Jubileo"}</h1>
+      <h1 className="font-serif text-cifra font-normal">{ROTULO[activa].pantalla}</h1>
       <span className="text-texto-2 text-menor">{hoy}</span>
     </div>
   );

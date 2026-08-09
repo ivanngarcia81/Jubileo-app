@@ -62,7 +62,7 @@ function cabeceraDe(
       return (
         <Cabecera
           avatar={<IconoRegresar />}
-          alTocarAvatar={() => ir("semana")}
+          alTocarAvatar={() => ir("resumen")}
           titulo={presupuesto.mes.etiqueta}
           subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
           accion={<IconoEditar tam={16} />}
@@ -90,7 +90,7 @@ function cabeceraDe(
       return (
         <Cabecera
           avatar={<IconoRegresar />}
-          alTocarAvatar={() => ir("semana")}
+          alTocarAvatar={() => ir("resumen")}
           titulo="Movimientos"
           subtitulo={`${presupuesto.mes.etiqueta} · ${cuantos(presupuesto.movimientos.length, 'movimiento', 'movimientos')} en total`}
           accion={<IconoMovimientos tam={16} />}
@@ -100,7 +100,7 @@ function cabeceraDe(
       return (
         <Cabecera
           avatar={<IconoRegresar />}
-          alTocarAvatar={() => ir("semana")}
+          alTocarAvatar={() => ir("resumen")}
           titulo="Ajustes"
           subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
           accion={<IconoAjustes tam={16} />}

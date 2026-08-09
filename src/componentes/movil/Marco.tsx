@@ -7,6 +7,7 @@ import {
   type PropsIcono,
 } from '../iconos'
 import type { Ruta } from '../../rutas'
+import { DESTINOS_MOVIL, ROTULO } from '../rotulos'
 
 /**
  * El marco de teléfono: cabecera clara, cuerpo con desplazamiento y la
@@ -56,12 +57,18 @@ export function Cabecera({
   )
 }
 
-const DESTINOS: readonly { ruta: Ruta; Icono: (p: PropsIcono) => ReactNode; nombre: string }[] = [
-  { ruta: 'semana', Icono: IconoSemana, nombre: 'Semana' },
-  { ruta: 'mes', Icono: IconoMes, nombre: 'Mes' },
-  { ruta: 'deudas', Icono: IconoDeudas, nombre: 'Deudas' },
-  { ruta: 'metas', Icono: IconoMetas, nombre: 'Metas' },
-]
+/**
+ * Los cuatro de la píldora: Inicio · Presupuesto · Deudas · Metas.
+ *
+ * El orden y los nombres salen de `componentes/rotulos.ts`, que es el único
+ * sitio donde se decide cómo se llama cada destino. Aquí solo vive el dibujo.
+ */
+const ICONO: Record<(typeof DESTINOS_MOVIL)[number], (p: PropsIcono) => ReactNode> = {
+  resumen: IconoSemana,
+  mes: IconoMes,
+  deudas: IconoDeudas,
+  metas: IconoMetas,
+}
 
 export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => void }) {
   return (
@@ -72,7 +79,9 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
       // sistema y los botones dejan de responder.
       className="bg-carbon fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-full p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
     >
-      {DESTINOS.map(({ ruta, Icono, nombre }) => {
+      {DESTINOS_MOVIL.map((ruta) => {
+        const Icono = ICONO[ruta]
+        const nombre = ROTULO[ruta].pildora ?? ROTULO[ruta].pantalla
         const activo = ruta === activa
         return (
           <button

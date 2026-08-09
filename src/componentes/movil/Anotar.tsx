@@ -124,7 +124,7 @@ export function Anotar({
 
         {presupuesto.sobres.length === 0 && (
           <p className="text-texto-2 text-menor leading-[1.55]">
-            Todavía no tienes sobres con dinero. Ve a El mes y reparte tus semanas primero.
+            Todavía no tienes sobres con dinero. Ve a Presupuesto mensual y reparte tus semanas primero.
           </p>
         )}
 

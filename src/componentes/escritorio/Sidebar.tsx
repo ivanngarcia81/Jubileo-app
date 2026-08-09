@@ -3,6 +3,7 @@ import type { Presupuesto } from '../../datos/tipos'
 import { formatearRedondo } from '../../lib/dinero'
 import { diaDe } from '../../lib/fecha'
 import type { Destino, Ruta } from '../../rutas'
+import { DESTINOS_ESCRITORIO, ROTULO } from '../rotulos'
 import {
   IconoAjustes,
   IconoDeudas,
@@ -21,8 +22,10 @@ import {
  * avatar; al costado caben, y sobra sitio para lo que de verdad hace distinto
  * a Jubileo: **el rail de semanas**, que llega en su propio paso.
  *
- * El renglón "Panel" que dibuja el mockup **no está todavía**: esa pantalla no
- * existe. Entra con su prompt, y ahí se despide Mi semana.
+ * El renglón que el mockup llama "Panel" ya está, y se llama **Dashboard**:
+ * es el primero de la lista y la pantalla de inicio de la app. "Mi semana"
+ * se despidió con él — sus funciones se mudaron a las tarjetas del Dashboard
+ * y al detalle de la semana en Presupuesto mensual.
  *
  * El mockup dibuja todo dentro de una ventana de esquinas redondeadas con
  * sombra. Eso es el marco del documento, no el de la app: aquí el sidebar
@@ -30,16 +33,13 @@ import {
  * `design/DECISIONES.md`.
  */
 
-const DESTINOS: readonly { ruta: Ruta; texto: string; Icono: (p: { tam?: number }) => ReactNode }[] =
-  [
-    // En escritorio, "Mi semana" es el panel de Resumen: el enrutador mapea
-    // `semana → resumen`. Lo que cambia aquí es el nombre, no la pantalla.
-    { ruta: 'resumen', texto: 'Mi semana', Icono: IconoReloj },
-    { ruta: 'mes', texto: 'El mes', Icono: IconoSemana },
-    { ruta: 'deudas', texto: 'Deudas', Icono: IconoDeudas },
-    { ruta: 'metas', texto: 'Metas', Icono: IconoMetas },
-    { ruta: 'movimientos', texto: 'Movimientos', Icono: IconoMovimientos },
-  ]
+const ICONO: Record<(typeof DESTINOS_ESCRITORIO)[number], (p: { tam?: number }) => ReactNode> = {
+  resumen: IconoReloj,
+  mes: IconoSemana,
+  deudas: IconoDeudas,
+  metas: IconoMetas,
+  movimientos: IconoMovimientos,
+}
 
 function Renglon({
   texto,
@@ -218,11 +218,19 @@ export function Sidebar({
       </div>
 
       <nav aria-label="Navegación principal" className="flex shrink-0 flex-col gap-[2px]">
-        {DESTINOS.map(({ ruta, texto, Icono }) => (
-          <Renglon key={ruta} texto={texto} activo={ruta === activa} alTocar={() => ir(ruta)}>
-            <Icono tam={15} />
-          </Renglon>
-        ))}
+        {DESTINOS_ESCRITORIO.map((ruta) => {
+          const Icono = ICONO[ruta]
+          return (
+            <Renglon
+              key={ruta}
+              texto={ROTULO[ruta].pantalla}
+              activo={ruta === activa}
+              alTocar={() => ir(ruta)}
+            >
+              <Icono tam={15} />
+            </Renglon>
+          )
+        })}
       </nav>
 
       {/*
@@ -243,7 +251,7 @@ export function Sidebar({
 
       <div className="border-linea-oscura mt-auto flex shrink-0 flex-col gap-[2px] border-t pt-[10px]">
         <Renglon
-          texto="Ajustes"
+          texto={ROTULO.ajustes.pantalla}
           activo={activa === 'ajustes'}
           alTocar={() => ir('ajustes')}
         >

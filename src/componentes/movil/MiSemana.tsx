@@ -225,7 +225,7 @@ export function MiSemana({
       >
         {presupuesto.sobres.length === 0 && (
           <Vacio>
-            Todavía no tienes sobres. Ve a El mes y reparte tus semanas: ahí es
+            Todavía no tienes sobres. Ve a Presupuesto mensual y reparte tus semanas: ahí es
             donde el dinero recibe su trabajo.
           </Vacio>
         )}

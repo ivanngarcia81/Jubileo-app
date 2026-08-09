@@ -340,7 +340,7 @@ await bajo.evaluate(() => {
   for (const caja of [sb, ...sb.querySelectorAll('div')]) caja.scrollTop = caja.scrollHeight
 })
 await bajo.waitForTimeout(200)
-for (const destino of ['Mi semana', 'Movimientos', 'Ajustes']) {
+for (const destino of ['Dashboard', 'Movimientos', 'Ajustes']) {
   const caja = await bajo
     .getByRole('button', { name: destino, exact: true })
     .first()
@@ -349,6 +349,25 @@ for (const destino of ['Mi semana', 'Movimientos', 'Ajustes']) {
     `con el rail hasta el fondo, "${destino}" sigue en la pantalla`)
 }
 await bajoCtx.close()
+
+// ---------- La pantalla de inicio, y la direccion que se mudo ----------
+// El Dashboard tomo el lugar de Mi semana. Lo que no puede pasar es que quien
+// tenga `#/semana` guardado en marcadores o clavado en la pantalla de inicio
+// del telefono aterrice en cualquier parte: se le prometio un destino.
+const inicioCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const inicio = vigilar(await inicioCtx.newPage())
+await inicio.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+await inicio.waitForTimeout(400)
+revisar(/Dashboard/.test(await inicio.locator('h1').first().innerText()),
+  `la app abre en el Dashboard (${await inicio.locator('h1').first().innerText()})`)
+
+await inicio.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+await inicio.waitForTimeout(400)
+revisar(/Dashboard/.test(await inicio.locator('h1').first().innerText()),
+  '#/semana lleva al Dashboard en vez de caer por descarte')
+revisar(!(await inicio.locator('aside').innerText()).includes('Mi semana'),
+  'y "Mi semana" ya no es un destino del sidebar')
+await inicioCtx.close()
 
 // ---------- El corte, medido justo en su borde ----------
 // Desde que el arbol se escoge con logica, el numero vive en dos mundos: la

@@ -103,8 +103,8 @@ supabase/
 herramientas/        las comprobaciones de navegador y el candado de tokens
 ```
 
-Migraciones corridas contra producción, y por lo tanto congeladas: **0001 a 0007**.
-El cambio que sigue va en `0008_…`.
+Migraciones corridas contra producción, y por lo tanto congeladas: **0001 a 0008**.
+El cambio que sigue va en `0009_…`.
 
 ## Cómo trabajar
 

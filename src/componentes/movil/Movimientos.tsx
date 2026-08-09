@@ -257,7 +257,7 @@ export function Movimientos({
 
       {dias.length === 0 ? (
         <Vacio>
-          Todavía no hay nada anotado este mes. Lo que anotes en Mi semana
+          Todavía no hay nada anotado este mes. Lo que anotes en el Dashboard
           aparece aquí, con su sobre y su cheque.
         </Vacio>
       ) : (
