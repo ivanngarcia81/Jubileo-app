@@ -86,6 +86,19 @@ de los seis. Recorre nodos de texto y no elementos a propósito: un `<div>` que 
 los 16px del navegador y saldría como si fuera un tamaño de la app. Y cuenta cuántos midió, porque
 una comprobación que mide dos cosas y pasa no vale nada.
 
+**Un solo árbol en el documento, escogido con lógica.** `panel:hidden` y `hidden panel:block`
+escondían con CSS, no con lógica: los dos árboles —el del teléfono y el del escritorio— se
+renderizaban siempre. Eso costaba el doble de trabajo en cada cambio de estado, pero lo caro era
+otra cosa: en el documento había **dos `<nav aria-label="Navegación principal">` y dos `<main>`**, y
+para quien navega con lector de pantalla eso no es una optimización pendiente, es una app con dos de
+cada cosa donde la mitad no se ve. Ahora `useEsEscritorio()` (`src/componentes/pantalla.ts`) escoge
+uno. El detalle que hace que esto no se pudra: el corte **no se escribe en el JavaScript**, se lee
+de `--breakpoint-panel` con `getComputedStyle`. La media query de `tema.css` no puede leer `var()`
+—por eso el 880 está escrito ahí— pero el JS sí puede leer la variable, así que sigue habiendo una
+sola fuente de verdad. Y `revisar-pantallas.mjs` lo mide en el borde exacto, a 879 y a 880: si algún
+día los dos números se separan, la app dibujaría el árbol de un lado con los estilos del otro, y eso
+no se nota en ningún ancho redondo.
+
 **Por qué el eje del presupuesto pasó del cheque a la semana del mes.** *(Agosto de 2026 — ver
 `SEMANAS-PRESUPUESTABLES-JUBILEO.md`.)* La voz del producto ya era semanal —el aviso sale el
 domingo, la pantalla se llama "Mi semana", el texto dice "te queda esta semana"— pero el motor

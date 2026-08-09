@@ -33,6 +33,7 @@ import { Metas } from "./componentes/movil/Metas";
 import { Movimientos } from "./componentes/movil/Movimientos";
 import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
 import { MiSemana } from "./componentes/movil/MiSemana";
+import { useEsEscritorio } from "./componentes/pantalla";
 import { mesYAnio } from "./componentes/textos";
 import { simular } from "./lib/deudas";
 import { type Centavos, centavos, suma } from "./lib/dinero";
@@ -400,6 +401,9 @@ function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
 export function App() {
   const sesion = usarSesion();
   const [ruta, ir] = useRuta();
+  // Arriba del todo: los ganchos van antes de cualquier retorno temprano, y
+  // abajo hay varios —cargando, fuera, armar el mes—.
+  const esEscritorio = useEsEscritorio();
 
   // Sin servidor, la app enseña el mes del ejemplo. Con servidor, el mes en el
   // que está parado el usuario — que ahora puede moverse: desde que los meses
@@ -803,7 +807,7 @@ export function App() {
     <>
       {sinConexion && <SinConexion />}
 
-      <div className="panel:hidden">
+      {!esEscritorio && (
         <Marco
           cabecera={cabeceraDe(enMovil, presupuesto, ir)}
           activa={enMovil}
@@ -828,14 +832,17 @@ export function App() {
             />
           )}
         </Marco>
-      </div>
+      )}
 
       {/* El mockup dibuja la ventana de escritorio dentro de `.win`, de 1420px
           centrada. Eso no era el marco del documento: era el ancho del
           contenido, y al pasarlo a React se perdió. Sin él, en un monitor
           grande la columna central crece sin límite mientras las laterales
-          siguen en 262px, y el texto de 13px queda en renglones larguísimos. */}
-      <div className="bg-gris text-texto font-sans hidden min-h-dvh panel:block">
+          siguen en 262px, y el texto de 13px queda en renglones larguísimos.
+
+          El árbol se escoge con lógica y no con `hidden`: ver `pantalla.ts`. */}
+      {esEscritorio && (
+      <div className="bg-gris text-texto font-sans block min-h-dvh">
         <BarraSuperior
           presupuesto={presupuesto}
           activa={enEscritorio}
@@ -877,6 +884,7 @@ export function App() {
           </div>
         )}
       </div>
+      )}
     </>
   );
 }

@@ -217,9 +217,17 @@ for (const { w, quien, arbol } of ANCHOS) {
   // Se mide una pieza concreta y no "el elemento mas ancho": el fondo si llega
   // hasta el borde a proposito, y medirlo todo hacia que la comprobacion
   // midiera el contenedor raiz y no el contenido.
+  // Un solo arbol en el documento, no dos escondidos con CSS. Dos `<nav>` con
+  // la misma etiqueta y dos `<main>` no son un detalle de rendimiento: para
+  // quien navega con lector son dos de cada cosa, la mitad invisible.
+  const duplicados = await v.evaluate(() => ({
+    nav: document.querySelectorAll('nav[aria-label="Navegación principal"]').length,
+    main: document.querySelectorAll('main').length,
+  }))
+  revisar(duplicados.nav <= 1 && duplicados.main <= 1,
+    `${quien}: un solo arbol en el DOM (${duplicados.nav} nav, ${duplicados.main} main)`)
+
   const ancho = await v.evaluate((esMovil) => {
-    // El primero del DOM no sirve: los dos arboles existen siempre y el movil
-    // va antes, oculto y con ancho cero. Se busca el primero que se ve.
     // `[data-ancho="contenido"]` y no el elemento con `bg-carbon`: desde que el
     // fondo llega de borde a borde, ese mide lo que mide la pantalla, a
     // proposito. Lo que se vigila es el contenido de adentro.
@@ -246,6 +254,28 @@ for (const { w, quien, arbol } of ANCHOS) {
     })
     revisar(fondo === w, `${quien}: el fondo oscuro llega al borde (${fondo} de ${w})`)
   }
+  await ctx.close()
+}
+
+// ---------- El corte, medido justo en su borde ----------
+// Desde que el arbol se escoge con logica, el numero vive en dos mundos: la
+// media query de `tema.css` y el `matchMedia` de `pantalla.ts`, que lo lee de
+// ahi. Si algun dia dejan de coincidir, la app dibujaria el arbol de un lado
+// con los estilos del otro — y eso no se ve en ningun ancho "redondo". Se mide
+// el pixel de antes y el de despues.
+for (const [w, espera] of [
+  [879, 'movil'],
+  [880, 'escritorio'],
+]) {
+  const ctx = await navegador.newContext({ viewport: { width: w, height: 900 } })
+  const v = vigilar(await ctx.newPage())
+  await v.goto(`${BASE}/#/${espera === 'movil' ? 'semana' : 'resumen'}`, { waitUntil: 'networkidle' })
+  await v.waitForTimeout(300)
+  const cual = await v.evaluate(() =>
+    document.querySelector('[data-ancho="contenido"]') ? 'escritorio' : 'movil',
+  )
+  revisar(cual === espera,
+    `a ${w}px se dibuja el arbol de ${espera}: el corte de CSS y el de JS son el mismo`)
   await ctx.close()
 }
 
