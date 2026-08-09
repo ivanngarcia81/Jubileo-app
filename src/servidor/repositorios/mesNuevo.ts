@@ -4,6 +4,7 @@ import type { MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type { FilaCategoria, FilaLinea, FilaMes, FilaUsuario } from '../esquema'
 import { miHogar } from './arranque'
+import { SELLO_DEL_EJE } from './puente'
 import { sembrarMes } from './mes'
 import { sembrarPlanSemanal } from './semanas'
 
@@ -130,6 +131,7 @@ export async function abrirElMes(usuarioId: string, objetivo: MesObjetivo): Prom
           mes_id: mesId,
           categoria_id: l.categoriaId,
           monto_mensual_cents: l.montoMensualCents,
+          ...SELLO_DEL_EJE,
         })),
         { onConflict: 'mes_id,categoria_id' },
       )

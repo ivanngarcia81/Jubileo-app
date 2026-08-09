@@ -1,5 +1,6 @@
 import type { Centavos } from '../../lib/dinero'
 import { cliente } from '../cliente'
+import { SELLO_DEL_EJE } from './puente'
 import { guardarPlanSemanal, repartirLineaEnSemanas } from './semanas'
 
 /**
@@ -35,7 +36,7 @@ export async function ponerMontoMensual(
   const { data: linea, error } = await db
     .from('lineas_presupuesto')
     .upsert(
-      { mes_id: mesId, categoria_id: categoriaId, monto_mensual_cents: montoCents },
+      { mes_id: mesId, categoria_id: categoriaId, monto_mensual_cents: montoCents, ...SELLO_DEL_EJE },
       { onConflict: 'mes_id,categoria_id' },
     )
     .select('id')

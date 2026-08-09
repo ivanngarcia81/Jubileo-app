@@ -180,3 +180,21 @@ más lo variable que se le **asignó**. De ahí salen también la bandera de "ap
 informativa a propósito: cuenta fijos y cheque extra porque mide la caja real, mientras el guardia
 solo bloquea lo que sí se puede mover) y el arrastre dentro del mes: lo que sobra de un sobre en
 una semana pasa al mismo sobre en la siguiente, y el sobregasto viaja igual, en negativo.
+
+**Cuándo se retira el puente: un número, no una corazonada.** El puente del esquema
+(`siembra_semanas`, migración 0006) siembra un plan semanal proporcional cada vez que cambia un
+monto mensual, para que un cliente que todavía solo sabe de cheques no deje el eje semanal
+huérfano. Su retiro estaba escrito como "cuando ya no queden clientes viejos", que no se sabe
+mirando el aire — y con la app en producción con datos de verdad, quitarlo un día antes de tiempo
+le rompe el mes a alguien que no hizo nada. Así que la migración 0008 lo instrumenta: el puente
+cuenta cada línea que siembra **por el camino viejo**, por día, y `dias_sin_puente()` dice cuántos
+días seguidos lleva en cero. En catorce, la contracción se escribe.
+
+Lo que hace que el conteo no mienta es el canal por el que el cliente nuevo se anuncia:
+`lineas_presupuesto.escrito_por` es un **buzón de un solo uso**, no una columna de identidad. Un
+disparador `before` la lee y la deja en null, y un CHECK obliga a que siempre acabe así. Si el
+sello sobreviviera, una línea nacida en el cliente nuevo pasaría por nueva para siempre y las
+ediciones que le hiciera después un cliente viejo no contarían — el contador mentiría **hacia
+abajo**, que es justo la mentira peligrosa: retiraría el puente antes de tiempo. Contar de más solo
+retrasa. Se eligió una columna y no un RPC porque es lo único que PostgREST deja mandar sin
+inventar un camino nuevo, y el cliente viejo no puede mandar una columna que no sabe que existe.

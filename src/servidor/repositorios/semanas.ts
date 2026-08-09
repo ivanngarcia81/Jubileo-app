@@ -1,6 +1,7 @@
 import { type Centavos, centavos, repartir, suma } from '../../lib/dinero'
 import { semanasDelMes } from '../../lib/semanas'
 import { cliente } from '../cliente'
+import { SELLO_DEL_EJE } from './puente'
 
 /**
  * El plan semanal de lo repartible: escribir `asignaciones_semana`.
@@ -55,7 +56,7 @@ export async function guardarPlanSemanal(
   const total = centavos(suma(plan.map((p) => p.montoCents)))
   const { error: errorLinea } = await db
     .from('lineas_presupuesto')
-    .update({ monto_mensual_cents: total })
+    .update({ monto_mensual_cents: total, ...SELLO_DEL_EJE })
     .eq('id', lineaId)
     .eq('mes_id', mesId)
   reventar('No se pudo guardar el monto', errorLinea)
@@ -109,7 +110,7 @@ export async function ponerMontoDeSemana(
   if (lineaId === null) {
     const { data: creada, error: errorCrear } = await db
       .from('lineas_presupuesto')
-      .insert({ mes_id: mesId, categoria_id: categoriaId, monto_mensual_cents: 0 })
+      .insert({ mes_id: mesId, categoria_id: categoriaId, monto_mensual_cents: 0, ...SELLO_DEL_EJE })
       .select('id')
       .single<{ id: string }>()
     reventar('No se pudo crear la línea', errorCrear)

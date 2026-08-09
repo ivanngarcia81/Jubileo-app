@@ -3,6 +3,7 @@ import { type FechaCivil } from '../../lib/fecha'
 import type { FrecuenciaPago, MesObjetivo } from '../../lib/periodos'
 import { cliente } from '../cliente'
 import type { FilaUsuario } from '../esquema'
+import { SELLO_DEL_EJE } from './puente'
 import { sembrarMes } from './mes'
 import { sembrarPlanSemanal } from './semanas'
 
@@ -110,6 +111,7 @@ export async function armarPrimerMes(
         mes_id: mesId,
         categoria_id: c.id,
         monto_mensual_cents: centavos(0),
+        ...SELLO_DEL_EJE,
       })),
     )
     reventar('No se pudieron crear las líneas del mes', errorLineas)
