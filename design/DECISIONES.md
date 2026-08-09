@@ -85,3 +85,25 @@ La escala se fija con una prueba, no con buena voluntad: `revisar-pantallas.mjs`
 de los seis. Recorre nodos de texto y no elementos a propósito: un `<div>` que solo envuelve hereda
 los 16px del navegador y saldría como si fuera un tamaño de la app. Y cuenta cuántos midió, porque
 una comprobación que mide dos cosas y pasa no vale nada.
+
+**Por qué el eje del presupuesto pasó del cheque a la semana del mes.** *(Agosto de 2026 — ver
+`SEMANAS-PRESUPUESTABLES-JUBILEO.md`.)* La voz del producto ya era semanal —el aviso sale el
+domingo, la pantalla se llama "Mi semana", el texto dice "te queda esta semana"— pero el motor
+estaba anclado al cheque. Al usuario quincenal la app le decía "esta semana" enseñándole una
+quincena, y al mensual no le daba ningún corte. Presupuestar por semana del mes (S1: 1–7, S2:
+8–14, S3: 15–21, S4: 22–28, S5: 29–fin) alinea el motor con la voz, y la semana es el marco
+mental que cualquiera entiende sin que se lo expliquen. El cheque no murió: quedó de **guardia**
+—hasta la semana N no se reparte más de lo que entra hasta la semana N, validado en SQL— y de
+**lente** —qué cubre cada cheque se deriva de las fechas, sin presupuestarse aparte—, porque el
+dinero entra cuando entra y esa verdad no se negocia.
+
+**Por qué los fijos no se presupuestan por semana.** La renta con vencimiento el día 3 cae en la
+semana 1 sola: ya lo decidió el calendario. Pedirle al usuario que además la "asigne" a una semana
+es trabajo doble y la puerta a que no cuadre — dos lugares diciendo cuándo pesa la renta terminan
+diciendo cosas distintas. Por eso el plan semanal (`asignaciones_semana`) existe solo para lo
+repartible —mayordomía, sobres variables, fondos—, el esquema rechaza filas semanales de fijos y
+deudas con un disparador, y el número de cada semana se compone: lo fijo que **vence** en sus días
+más lo variable que se le **asignó**. De ahí salen también la bandera de "apretada" (acumulada, e
+informativa a propósito: cuenta fijos y cheque extra porque mide la caja real, mientras el guardia
+solo bloquea lo que sí se puede mover) y el arrastre dentro del mes: lo que sobra de un sobre en
+una semana pasa al mismo sobre en la siguiente, y el sobregasto viaja igual, en negativo.

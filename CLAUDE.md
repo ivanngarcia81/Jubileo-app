@@ -1,9 +1,15 @@
 # Jubileo — App de Presupuesto
 
-Presupuesto personal en español. El mes es el marco; los subperiodos se ajustan a la
-frecuencia de pago del usuario. Se vende como membresía desde jubileofinanciero.com.
+Presupuesto personal en español. El mes es el marco; adentro, **lo variable se
+presupuesta por semana del mes (S1–S5)** y lo fijo vive en su fecha de
+vencimiento. Los cheques —que se ajustan a la frecuencia de pago del usuario—
+son la regla de fondeo y un lente derivado, **no el eje**. Se vende como
+membresía desde jubileofinanciero.com.
 
-Subtítulo del producto: **presupuesto cheque a cheque**
+Subtítulo del producto: **presupuesto cheque a cheque** — el cheque es cómo
+entra el dinero y cómo se cuida que alcance; la semana es donde se reparte.
+No "corrijas" el código de vuelta hacia el cheque como eje: ese cambio fue una
+decisión (agosto 2026, `design/DECISIONES.md`), no un descuido.
 
 ---
 
@@ -17,11 +23,18 @@ Subtítulo del producto: **presupuesto cheque a cheque**
 ## Reglas que no se rompen
 
 - **Dinero en centavos enteros.** Nunca flotantes. Formateo solo al presentar.
-- **La lógica de periodos va en un módulo puro, sin base de datos, con pruebas
-  antes de conectarla a nada.** Ver sección 6 de `SPEC.md`. Es la parte donde un
-  error silencioso arruina el producto.
-- **La invariante de asignaciones:** la suma de las asignaciones por periodo de una
-  línea debe igualar su monto mensual. Si no cuadra, el mes no se cierra.
+- **La lógica de periodos y la de semanas van en módulos puros, sin base de
+  datos, con pruebas antes de conectarlas a nada.** Ver sección 6 de `SPEC.md`.
+  Es la parte donde un error silencioso arruina el producto.
+- **La invariante del eje semanal:** para cada línea repartible (mayordomía,
+  variables, fondos), la suma de sus filas en `asignaciones_semana` debe igualar
+  su monto mensual. Si no cuadra, el mes no se cierra. Lo fijo y las deudas no
+  llevan plan semanal: vencen cuando vencen, y el esquema rechaza sus filas.
+- **La regla de fondeo:** hasta la semana N no se reparte más de lo que entra
+  hasta la semana N, sin contar el cheque extra. Vive en SQL
+  (`semanas_sobregiradas`) y `cerrar_mes` la comprueba. La bandera de "apretada"
+  del cliente es otra cosa a propósito: cuenta todo, fijos y extra incluidos,
+  porque informa de la caja real — informar no es bloquear.
 - **Nada de marcas de Ramsey Solutions** en el producto: no "Baby Steps", no
   "EveryDollar", no "Debt Snowball" como nombre de función. Ver sección 3 de `SPEC.md`.
 - **Nunca auto-categorizar transacciones sin confirmación del usuario.** Presupuestar
@@ -47,9 +60,11 @@ Subtítulo del producto: **presupuesto cheque a cheque**
 ## Vocabulario de la interfaz
 
 Usar siempre los mismos términos, y que los botones y sus confirmaciones usen el
-mismo verbo: **cheque**, **sobre**, **fondo de reserva**, **fecha de libertad**,
-**enfoque** (la deuda que se está atacando), **mayordomía**, **repartir**, **anotar**,
-**cerrar el mes**, **cerrar la semana**.
+mismo verbo: **cheque**, **semana** (la del mes, S1–S5, con su rango: "Semana 2 ·
+del 8 al 14"), **apretada** (la semana en que se vence más de lo que ha llegado),
+**sobre**, **fondo de reserva**, **fecha de libertad**, **enfoque** (la deuda que
+se está atacando), **mayordomía**, **repartir**, **anotar**, **cerrar el mes**,
+**cerrar la semana**.
 
 ## Stack
 
@@ -70,7 +85,9 @@ design/              contrato visual — no rediseñar
   movil.html
   design-tokens.css
 src/
-  lib/periodos/      módulo puro + pruebas. El corazón.
+  lib/periodos/      módulo puro + pruebas: los cheques
+  lib/semanas/       módulo puro + pruebas: el eje. Semanas del mes, números,
+                     apretada, arrastre
   lib/dinero/        centavos enteros; el único lugar donde se divide dinero
   lib/fecha/         fechas civiles AAAA-MM-DD, sin zona horaria
   lib/deudas/        simulador de la fecha de libertad
@@ -84,8 +101,8 @@ supabase/
 ## Cómo trabajar
 
 - Fase 1 es PWA. Nada de Tauri ni App Store todavía. Ver sección 12 de `SPEC.md`.
-- Cambios chicos y verificables. Correr las pruebas de periodos en cada cambio que
-  toque fechas o asignaciones.
+- Cambios chicos y verificables. Correr las pruebas de periodos y de semanas en
+  cada cambio que toque fechas o el plan semanal.
 - Commits en español, en imperativo: "agrega generador de periodos quincenales".
 - Las llaves van en `.env`, nunca en el código ni en un commit.
 - Al tocar el esquema, correr `./supabase/pruebas/probar-esquema.sh`. Levanta un

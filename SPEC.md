@@ -13,9 +13,9 @@ Se vende como membresía desde `jubileofinanciero.com`, con nivel gratis y nivel
 
 **El diferenciador central, y la razón de existir de la app:**
 
-> El mes es siempre el marco del presupuesto. Los subperiodos de ejecución se ajustan a la frecuencia de pago real del usuario.
+> El mes es siempre el marco del presupuesto. Adentro, **lo variable se presupuesta por semana del mes** (S1–S5) y lo fijo vive en su fecha de vencimiento. Los cheques —los subperiodos que se ajustan a la frecuencia de pago real del usuario— son **la regla de fondeo y un lente**, no el eje: el dinero entra cuando entra, y hasta la semana N no se reparte más de lo que entra hasta la semana N.
 
-Ninguna app grande hace esto bien. Todo el diseño gira alrededor de esta idea.
+Ninguna app grande hace esto bien. Todo el diseño gira alrededor de esta idea. *(El eje pasó del cheque a la semana en agosto de 2026 — ver la sección 6 y `design/DECISIONES.md`. Si algo en este documento todavía suena a "se reparte entre los cheques", perdió contra esta línea.)*
 
 **A quién le hablamos.** Persona que cobra por cheque, muchas veces en efectivo o con ingreso variable, que se queda corta la última semana del mes, que manda dinero a su familia en otro país, y que está pagando deudas. Puede tener 50 años y poca paciencia con software. La app tiene que ser obvia.
 
@@ -106,9 +106,14 @@ Nombres orientativos; ajusta a la convención del proyecto.
 **lineas_presupuesto**
 - id, mes_id, categoria_id, monto_mensual_cents
 
-**asignaciones** ← *la capa clave del producto*
-- id, linea_presupuesto_id, periodo_id, monto_cents
-- **Invariante:** para cada línea, la suma de sus asignaciones debe igualar `monto_mensual_cents`. Si no cuadra, la interfaz lo marca y el mes no se puede cerrar.
+**asignaciones_semana** ← *la capa clave del producto (0005)*
+- id, mes_id, linea_presupuesto_id, semana (1–5), monto_cents
+- Solo para lo repartible: `mayordomia`, `variable` y `fondo`. Lo fijo y las deudas **no llevan plan semanal** — pesan en la semana de su vencimiento, y un disparador rechaza sus filas.
+- **Invariante:** para cada línea repartible, la suma de sus semanas debe igualar `monto_mensual_cents`. Si no cuadra, la interfaz lo marca y el mes no se puede cerrar.
+- **Regla de fondeo (el guardia, en SQL):** hasta la semana N, lo repartible acumulado no puede pasar de lo que entra acumulado hasta la semana N — sin contar el cheque extra, que no financia el mes. `cerrar_mes` la comprueba.
+
+**asignaciones** *(legado 0001)*
+- El reparto por cheque. El cliente ya no lo lee ni lo escribe; un puente en el esquema lo mantiene poblado para clientes viejos hasta la migración de contracción, que se lleva la tabla.
 
 **transacciones**
 - id, usuario_id, periodo_id, categoria_id (nulo si está pendiente), fecha, monto_cents
@@ -136,9 +141,19 @@ Nombres orientativos; ajusta a la convención del proyecto.
 
 ---
 
-## 6. La lógica de periodos — el corazón del proyecto
+## 6. La lógica de periodos y semanas — el corazón del proyecto
 
-Esta es la parte donde se gana o se pierde el producto. Aíslala en un módulo puro, sin acceso a base de datos, con pruebas unitarias exhaustivas.
+Esta es la parte donde se gana o se pierde el producto. Aíslala en módulos puros, sin acceso a base de datos, con pruebas unitarias exhaustivas: `lib/periodos` genera los cheques y `lib/semanas` genera el eje.
+
+### El eje semanal
+
+- **Las semanas son del calendario del mes**, no de la semana civil: 1–7, 8–14, 15–21, 22–28 y 29–fin cuando existe. Cuatro semanas de 7 días siempre, y la quinta de 1–3 días o ninguna (febrero de 28). Así "la semana 2 de julio" y "la semana 2 de agosto" miden lo mismo y se pueden comparar.
+- **Lo variable y la mayordomía se presupuestan por semana.** Cada peso repartible vive en una sola semana. El monto mensual de una línea repartible **es la suma de sus semanas** — editar una semana edita el mes.
+- **Lo fijo y las deudas van por fecha.** La renta con `dia_vencimiento` 3 cae en la semana 1 sola; nadie la presupuesta a mano. Sin fecha, cuenta en la última semana: no se le exige antes de tiempo.
+- **El número de cada semana** = lo fijo que vence en sus días + lo variable asignado. Con eso salen la bandera de **apretada** (acumulada: hasta aquí se vence más de lo que ha llegado — informa, no bloquea, y sí cuenta el cheque extra porque mide la caja real) y el **arrastre dentro del mes**: lo que sobra de un sobre pasa al mismo sobre en la semana siguiente, y lo que se pasó también viaja, en negativo.
+- **El cheque queda de guardia y de lente.** El guardia es la regla de fondeo de la sección 5, en SQL, sobre lo repartible y sin el extra. El lente se deriva de las fechas: cada cheque cubre los fijos que vencen y las semanas del plan que arrancan antes de que llegue el siguiente; el extra no cubre nada. Nada de esto se asigna aparte.
+
+### El motor de cheques
 
 **Entrada:** frecuencia de pago, fecha ancla, días de pago, y el mes a generar.
 **Salida:** lista de periodos con fecha de inicio, fecha de fin y fecha de pago.
@@ -154,8 +169,8 @@ Esta es la parte donde se gana o se pierde el producto. Aíslala en un módulo p
 ### Reglas que cruzan meses
 
 1. **Un cheque se asigna al mes que financia, no al mes en que cae.** Un cheque del 28 de agosto que paga cuentas de septiembre pertenece a septiembre. Por defecto asigna al mes de la fecha de pago; el usuario puede moverlo con un control explícito.
-2. **Meses de 3 cheques:** la app los detecta sola y lo dice en la interfaz. El tercer cheque se marca `es_extra` y **no se reparte entre categorías**. Sugerencia por defecto: va completo a la deuda de enfoque, o al fondo de emergencia si no hay deudas.
-3. **Cambiar de frecuencia no rehace el presupuesto.** Es un solo control en ajustes: se regeneran los periodos y se re-reparten las asignaciones proporcionalmente. Los montos mensuales no se tocan. Esto debe tener prueba.
+2. **Meses de 3 cheques:** la app los detecta sola y lo dice en la interfaz. El tercer cheque se marca `es_extra`, **no financia el mes** —el guardia no lo cuenta como ingreso repartible— y llega entero. Sugerencia por defecto: va completo a la deuda de enfoque, o al fondo de emergencia si no hay deudas.
+3. **Cambiar de frecuencia no rehace el presupuesto.** Es un solo control en ajustes: se regeneran los periodos y ya. Los montos mensuales no se tocan, y **el plan semanal tampoco** — las semanas del mes no dependen de cuándo te pagan. Esto debe tener prueba.
 
 ### Pruebas mínimas exigidas
 
@@ -163,8 +178,10 @@ Esta es la parte donde se gana o se pierde el producto. Aíslala en un módulo p
 - Los dos meses de 3 cheques del año en modo `cada_dos_semanas`, con la fecha ancla en distintos días de la semana.
 - Febrero, incluyendo año bisiesto.
 - Un cheque que cae el 28–31 y financia el mes siguiente.
-- Cambio de `semanal` a `cada_dos_semanas` con presupuesto ya armado: los montos mensuales quedan idénticos.
-- Un mes que cierra con la invariante de asignaciones violada: debe rechazarse.
+- Cambio de `semanal` a `cada_dos_semanas` con presupuesto ya armado: los montos mensuales y el plan semanal quedan idénticos.
+- Un mes que cierra con la invariante semanal violada: debe rechazarse.
+- El guardia de fondeo: cargar la semana 1 con dinero que llega el 20 debe rechazarse al cerrar; presupuestar la semana 3 con ese mismo cheque debe pasar, porque llega antes de que la semana 3 termine.
+- Una fila en una semana que el mes no tiene (la 5 de un febrero de 28): debe rechazarse — es dinero que ninguna vista enseña.
 
 ---
 
@@ -181,8 +198,8 @@ El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, e
 
 ### Móvil
 
-1. **Mi semana** *(inicio)* — Héroe turquesa con el dinero que queda en el periodo y el riel de cheques dentro. Debajo, chips de acción rápida: *Anotar · Pagué · Semana*. Luego los pagos del periodo con casilla de marcado, y los sobres variables con barra de progreso.
-2. **El mes** — Base cero. Selector de mes con barras (entra / sale / sobró). Primero mayordomía, luego fijos con su día de vencimiento y su cheque asignado, luego fondos de reserva.
+1. **Mi semana** *(inicio)* — Anclada a la semana del mes en curso. Héroe turquesa con lo que queda en los sobres de la semana (con su arrastre), el rótulo que dice cuál es —"Semana 2 · del 8 al 14"— y el riel de semanas dentro. Debajo, chips de acción rápida: *Anotar · Pagué · Semana*. Luego los pagos que vencen en la semana con casilla de marcado, y los sobres con barra de progreso. *(Cuando llegue el Panel, esta pantalla muere como destino y sus piezas se mudan ahí.)*
+2. **El mes** — Base cero. Selector de mes con barras (entra / sale / sobró) y el segmentado **Semanas · Cheques · Mes**. En Semanas, las 4–5 del calendario con su monto y su bandera de apretada: adentro los fijos que caen por fecha (solo lectura) y los sobres editables por semana. En Cheques, la vista derivada: qué cubre cada uno y cuánto le queda. En Mes, el árbol por grupos: mayordomía, fijos con su día, variables, deudas, y los fondos de reserva.
 3. **Deudas** — Héroe carbón con la fecha de libertad. Deslizador de "¿y si mandas un pago extra?" que recalcula la fecha en vivo. Lista en orden de saldo, menor primero, con la de enfoque marcada.
 4. **Metas** — Los fondos de reserva, con su barra y para cuándo se necesitan.
 5. **Movimientos** — Todo lo del mes agrupado por día, con lo que entró y lo que
@@ -232,13 +249,15 @@ Al terminar, el usuario ve su primera semana ya armada. Nunca una pantalla vací
 
 ## 9. Los avisos
 
-**El aviso de arranque de periodo** es la función más importante del producto.
+**El aviso de arranque de periodo** es la función más importante del producto. Lo dispara la llegada de un cheque —el dinero entra cuando entra— y **habla de la semana del mes que arranca con él**.
 
 Contenido, en este orden:
 1. Cuánto entra y qué día. Si el ingreso es variable, la pregunta es *"¿cuánto entró?"*.
-2. Las cuentas y deudas que vencen dentro del periodo, con su fecha. La de enfoque se señala como pago extra.
-3. Los montos de los sobres variables.
-4. Cuánto queda libre.
+2. De qué semana se trata y cuánto suma: *"Semana 2 · del 8 al 14 · presupuesto de $370"*.
+3. La alerta de **apretada**, solo cuando hace falta, con cifra y con salida: cuánto se vence de más hasta el fin de la semana y cuánto traen sus sobres, que es lo único que se puede mover. Si lo que aprieta es fijo, se dice que no hay sobres que mover.
+4. Las cuentas y deudas que vencen dentro de la semana, con su fecha y su monto entero. La de enfoque se señala como pago extra.
+5. Los sobres de la semana, con lo asignado a ella.
+6. Cuánto queda: lo que entra con el cheque menos lo que la semana compromete.
 
 **El aviso de cierre de periodo:** tres preguntas, treinta segundos. ¿Entró lo esperado? ¿Cuánto gastaste en los sobres variables? ¿Pagaste lo que faltaba?
 
@@ -315,6 +334,8 @@ Modo pareja con la reunión mensual de dinero guiada. Planificador de remesas co
 Usar siempre los mismos términos. Un botón dice exactamente lo que hace, y el mensaje de confirmación usa el mismo verbo.
 
 - **cheque** (no "periodo de pago", no "pay period")
+- **semana** para la semana del mes (S1–S5), el eje donde se presupuesta; el rótulo dice su rango: "Semana 2 · del 8 al 14"
+- **apretada** para la semana en la que se vence más de lo que ha llegado
 - **sobre** para las categorías variables
 - **fondo de reserva** para el ahorro con propósito y fecha
 - **fecha de libertad** para la fecha en que sale de deudas
