@@ -184,10 +184,13 @@ function Contenido({
   ruta,
   presupuesto,
   acciones,
+  semanaPedida,
 }: {
   ruta: Ruta;
   presupuesto: Presupuesto;
   acciones: Acciones;
+  /** La semana que el rail del sidebar pidió abrir, si vino con una. */
+  semanaPedida?: number | undefined;
 }) {
   const {
     alPonerMonto,
@@ -224,6 +227,7 @@ function Contenido({
           {...(alCambiarIcono ? { alCambiarIcono } : {})}
           {...(alCerrarMes ? { alCerrarMes } : {})}
           {...(alVerMes ? { alVerMes } : {})}
+          {...(semanaPedida === undefined ? {} : { semanaPedida })}
         />
       );
     case "deudas":
@@ -405,7 +409,8 @@ function Mensaje({ titulo, cuerpo }: { titulo: string; cuerpo?: string }) {
 
 export function App() {
   const sesion = usarSesion();
-  const [ruta, ir] = useRuta();
+  const [destino, ir] = useRuta();
+  const ruta = destino.ruta;
   // Arriba del todo: los ganchos van antes de cualquier retorno temprano, y
   // abajo hay varios —cargando, fuera, armar el mes—.
   const esEscritorio = useEsEscritorio();
@@ -833,6 +838,7 @@ export function App() {
               ruta={enMovil}
               presupuesto={presupuesto}
               acciones={acciones}
+              {...(destino.semana === undefined ? {} : { semanaPedida: destino.semana })}
             />
           )}
         </Marco>
@@ -884,6 +890,7 @@ export function App() {
                 ruta={enEscritorio}
                 presupuesto={presupuesto}
                 acciones={acciones}
+                {...(destino.semana === undefined ? {} : { semanaPedida: destino.semana })}
               />
             )}
           </div>

@@ -3,41 +3,59 @@ import { useEffect, useState } from 'react'
 /**
  * Enrutador mínimo por fragmento de URL.
  *
- * Cinco destinos fijos, sin parámetros ni rutas anidadas: una dependencia de
- * enrutado completa no se gana su lugar todavía. El fragmento mantiene la
- * dirección compartible y el botón de atrás funcionando, que es lo que hace
- * falta en una app instalada en la pantalla de inicio.
+ * Ocho destinos fijos, sin rutas anidadas: una dependencia de enrutado completa
+ * no se gana su lugar todavía. El fragmento mantiene la dirección compartible y
+ * el botón de atrás funcionando, que es lo que hace falta en una app instalada
+ * en la pantalla de inicio.
+ *
+ * Un solo parámetro, `semana`, y por eso: tocar S3 en el rail del sidebar tiene
+ * que abrir El mes **con esa semana desplegada**. Pasarlo por un estado
+ * compartido en memoria sería otro canal que mantener, y perdería lo único que
+ * el fragmento da gratis — que la dirección se pueda compartir y que el botón
+ * de atrás te regrese a donde estabas.
  */
 
 export const RUTAS = ['semana', 'mes', 'deudas', 'metas', 'movimientos', 'resumen', 'ajustes', 'aviso'] as const
 
 export type Ruta = (typeof RUTAS)[number]
 
-const RUTA_INICIAL: Ruta = 'semana'
-
-function leerRuta(): Ruta {
-  // Lo que venga después de `?` se ignora: Stripe regresa al usuario a
-  // `#/ajustes?pago=listo`, y sin recortarlo la ruta no existiría y caería al
-  // inicio — o sea, pagarías y aterrizarías en la pantalla equivocada.
-  const fragmento = window.location.hash.replace(/^#\/?/, '').split('?')[0] ?? ''
-  return (RUTAS as readonly string[]).includes(fragmento) ? (fragmento as Ruta) : RUTA_INICIAL
+/** A dónde vas, y con qué. */
+export interface Destino {
+  ruta: Ruta
+  /** La semana del mes que se quiere abierta, 1 a 5. */
+  semana?: number
 }
 
-export function useRuta(): [Ruta, (ruta: Ruta) => void] {
-  const [ruta, setRuta] = useState<Ruta>(leerRuta)
+const RUTA_INICIAL: Ruta = 'semana'
+
+function leerDestino(): Destino {
+  // Lo que venga después de `?` no se tira, se lee: Stripe regresa al usuario a
+  // `#/ajustes?pago=listo`, y sin recortar la ruta esta no existiría y caería
+  // al inicio — o sea, pagarías y aterrizarías en la pantalla equivocada.
+  const [camino = '', consulta = ''] = window.location.hash.replace(/^#\/?/, '').split('?')
+  const ruta = (RUTAS as readonly string[]).includes(camino) ? (camino as Ruta) : RUTA_INICIAL
+  const n = Number(new URLSearchParams(consulta).get('semana'))
+  // Una semana fuera de rango se ignora en vez de reventar: el fragmento lo
+  // teclea cualquiera.
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? { ruta, semana: n } : { ruta }
+}
+
+export function useRuta(): [Destino, (destino: Ruta | Destino) => void] {
+  const [destino, setDestino] = useState<Destino>(leerDestino)
 
   useEffect(() => {
-    const alCambiar = () => setRuta(leerRuta())
+    const alCambiar = () => setDestino(leerDestino())
     window.addEventListener('hashchange', alCambiar)
     return () => window.removeEventListener('hashchange', alCambiar)
   }, [])
 
-  const ir = (destino: Ruta) => {
-    window.location.hash = `#/${destino}`
-    setRuta(destino)
+  const ir = (aDonde: Ruta | Destino) => {
+    const d: Destino = typeof aDonde === 'string' ? { ruta: aDonde } : aDonde
+    window.location.hash = d.semana ? `#/${d.ruta}?semana=${d.semana}` : `#/${d.ruta}`
+    setDestino(d)
   }
 
-  return [ruta, ir]
+  return [destino, ir]
 }
 
 /**

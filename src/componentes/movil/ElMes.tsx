@@ -170,8 +170,9 @@ const EJES = ['Semanas', 'Cheques', 'Mes'] as const
 type Eje = (typeof EJES)[number]
 const LLAVE_EJE = 'jubileo:eje-de-el-mes'
 
-function useEje(): [Eje, (nuevo: Eje) => void] {
+function useEje(inicial?: Eje): [Eje, (nuevo: Eje) => void] {
   const [eje, setEje] = useState<Eje>(() => {
+    if (inicial) return inicial
     try {
       const guardado = localStorage.getItem(LLAVE_EJE)
       return (EJES as readonly string[]).includes(guardado ?? '') ? (guardado as Eje) : 'Semanas'
@@ -230,6 +231,7 @@ export function ElMes({
   alCambiarIcono,
   alCerrarMes,
   alVerMes,
+  semanaPedida,
 }: {
   presupuesto: Presupuesto
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
@@ -246,6 +248,12 @@ export function ElMes({
   alCambiarIcono?: (categoriaId: string, icono: ClaveIcono) => Promise<void>
   alCerrarMes?: () => Promise<void>
   alVerMes?: (anio: number, mes: number) => void
+  /**
+   * La semana que hay que dejar abierta, si alguien lo pidió — el rail del
+   * sidebar manda `#/mes?semana=3`. Fuerza también el eje de Semanas: quien
+   * toca una semana viene a verla, no a que le enseñen el árbol del mes.
+   */
+  semanaPedida?: number | undefined
 }) {
   const [editando, setEditando] = useState<LineaMes | null>(null)
   const [editandoSemana, setEditandoSemana] = useState<{
@@ -254,11 +262,23 @@ export function ElMes({
   } | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
   const [abiertos, setAbiertos] = useAbiertos()
-  const [eje, setEje] = useEje()
-  // La semana en curso nace abierta: es a la que se viene.
+  const [eje, setEje] = useEje(semanaPedida === undefined ? undefined : 'Semanas')
+  // La semana en curso nace abierta: es a la que se viene. Si vienes del rail
+  // del sidebar, la que pediste.
   const [semanasAbiertas, setSemanasAbiertas] = useState<number[]>(() => [
-    presupuesto.semanas[presupuesto.semanaActiva]?.numero ?? 1,
+    semanaPedida ?? presupuesto.semanas[presupuesto.semanaActiva]?.numero ?? 1,
   ])
+
+  // Y si el rail manda otra semana con la pantalla ya montada —tocar S4 estando
+  // en El mes— también se abre. `useState` solo mira su valor inicial.
+  const [ultimaPedida, setUltimaPedida] = useState(semanaPedida)
+  if (semanaPedida !== undefined && semanaPedida !== ultimaPedida) {
+    setUltimaPedida(semanaPedida)
+    setEje('Semanas')
+    if (!semanasAbiertas.includes(semanaPedida)) {
+      setSemanasAbiertas([...semanasAbiertas, semanaPedida])
+    }
+  }
   const editable = Boolean(alPonerMonto && presupuesto.mesId)
 
   // Lo que se reparte por semana: la mayordomía y los sobres variables. Los

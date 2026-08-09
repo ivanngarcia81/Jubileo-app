@@ -261,6 +261,48 @@ for (const { w, quien, arbol } of ANCHOS) {
   await ctx.close()
 }
 
+// ---------- El rail de semanas del sidebar ----------
+// El contexto permanente de Jubileo. Se mide en un ancho de escritorio, que es
+// donde el sidebar existe.
+const railCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const rail = vigilar(await railCtx.newPage())
+await rail.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await rail.waitForTimeout(400)
+
+// Agosto tiene 31 dias: cinco semanas. Un febrero de 28 tendria cuatro. El
+// rail no puede dibujar cinco siempre — la quinta es justo donde el usuario
+// truena, y una quinta que no existe seria dinero que ninguna vista enseña.
+const semanasDelRail = await rail.evaluate(() =>
+  [...document.querySelectorAll('aside button[aria-label^="Semana "]')].map((b) =>
+    b.getAttribute('aria-label'),
+  ),
+)
+revisar(semanasDelRail.length === 5,
+  `el rail enseña las semanas que tiene el mes, no cinco siempre (agosto: ${semanasDelRail.length})`)
+revisar(/del 29 al 31/.test(semanasDelRail[4] ?? ''),
+  `y la ultima trae su rango de verdad: ${semanasDelRail[4]}`)
+revisar((await rail.locator('aside').innerText()).includes('3 días'),
+  'la quinta se rotula con sus dias, porque mide distinto que las otras cuatro')
+
+// Tocar una semana lleva a El mes, en el eje Semanas, con esa semana abierta.
+await rail.getByRole('button', { name: /^Semana 4/ }).first().click()
+await rail.waitForTimeout(500)
+revisar((await rail.evaluate(() => location.hash)).includes('semana=4'),
+  `tocar una semana del rail lleva a El mes con esa semana: ${await rail.evaluate(() => location.hash)}`)
+// `body` y no `[data-ancho]`: en escritorio ese gancho lo lleva la cabecera,
+// que es lo primero del DOM y solo dice el nombre de la pantalla.
+const enElMes = await rail.locator('body').innerText()
+revisar(enElMes.includes('Semanas de agosto'),
+  'y cae en el eje de Semanas, no en el arbol del mes')
+revisar(
+  await rail
+    .getByRole('button', { name: 'Cerrar la semana 4' })
+    .first()
+    .isVisible(),
+  'con la semana que se toco ya desplegada',
+)
+await railCtx.close()
+
 // ---------- El corte, medido justo en su borde ----------
 // Desde que el arbol se escoge con logica, el numero vive en dos mundos: la
 // media query de `tema.css` y el `matchMedia` de `pantalla.ts`, que lo lee de
