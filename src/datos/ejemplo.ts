@@ -1,7 +1,7 @@
 import { centavos, repartir } from '../lib/dinero'
 import { fecha } from '../lib/fecha'
 import { type Anulaciones, type ConfigPago, generarPeriodos } from '../lib/periodos'
-import { numerosDeSemanas, semanaDeFecha, semanasDelMes } from '../lib/semanas'
+import { numerosDeSemanas, semanaDeFecha, semanaDeFijo, semanasDelMes } from '../lib/semanas'
 import type { AsignacionDeSemana, Movimiento, Presupuesto } from './tipos'
 
 /**
@@ -109,6 +109,59 @@ for (const m of MOVIMIENTOS) {
   GASTADO_POR_SEMANA[semana - 1]! += m.montoCents
 }
 
+/**
+ * Los pagos del mes, y su reparto por semana.
+ *
+ * El reparto se **deriva** con la misma regla del calendario en vez de
+ * escribirse a mano: dos listas del mismo dato escritas aparte terminan
+ * diciendo cosas distintas, y esta es justo la que la checklist de cada semana
+ * va a leer.
+ *
+ * Con estos días —renta el 3, luz el 4, Capital One el 9, la remesa el 10— las
+ * dos primeras semanas traen dos pagos cada una y las otras tres quedan
+ * vacías, que es lo que un mes de verdad tiene la mitad de las veces. Así la
+ * demostración enseña también cómo se ve una semana sin nada que pagar.
+ */
+const PAGOS: Presupuesto['pagos'] = [
+  {
+    id: 'renta',
+    nombre: 'Renta',
+    diaVencimiento: 3,
+    montoCents: centavos(90000),
+    pagado: true,
+    transaccionId: null,
+  },
+  {
+    id: 'luz',
+    nombre: 'Luz — PSE&G',
+    diaVencimiento: 4,
+    montoCents: centavos(8500),
+    pagado: true,
+    transaccionId: null,
+  },
+  {
+    id: 'capital-one',
+    nombre: 'Capital One',
+    diaVencimiento: 9,
+    montoCents: centavos(15000),
+    pagado: false,
+    transaccionId: null,
+    esEnfoque: true,
+  },
+  {
+    id: 'remesa',
+    nombre: 'Remesa a la familia',
+    diaVencimiento: 10,
+    montoCents: centavos(20000),
+    pagado: false,
+    transaccionId: null,
+  },
+]
+
+const PAGOS_POR_SEMANA: Presupuesto['pagosPorSemana'] = SEMANAS_CALENDARIO.map((s) =>
+  PAGOS.filter((p) => semanaDeFijo(p.diaVencimiento, SEMANAS_CALENDARIO) === s.numero),
+)
+
 export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   usuario: {
     nombre: 'Iván',
@@ -156,41 +209,8 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   variacionEntra: '+$1,200',
   variacionSale: '+4%',
 
-  pagos: [
-    {
-      id: 'renta',
-      nombre: 'Renta',
-      diaVencimiento: 3,
-      montoCents: centavos(90000),
-      pagado: true,
-      transaccionId: null,
-    },
-    {
-      id: 'luz',
-      nombre: 'Luz — PSE&G',
-      diaVencimiento: 4,
-      montoCents: centavos(8500),
-      pagado: true,
-      transaccionId: null,
-    },
-    {
-      id: 'capital-one',
-      nombre: 'Capital One',
-      diaVencimiento: 9,
-      montoCents: centavos(15000),
-      pagado: false,
-      transaccionId: null,
-      esEnfoque: true,
-    },
-    {
-      id: 'remesa',
-      nombre: 'Remesa a la familia',
-      diaVencimiento: 10,
-      montoCents: centavos(20000),
-      pagado: false,
-      transaccionId: null,
-    },
-  ],
+  pagos: PAGOS,
+  pagosPorSemana: PAGOS_POR_SEMANA,
 
   sobres: [
     {

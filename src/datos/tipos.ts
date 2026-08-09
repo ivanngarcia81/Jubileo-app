@@ -179,7 +179,16 @@ export interface Presupuesto {
   variacionEntra: string
   variacionSale: string
 
+  /** Los pagos de la semana en curso. Es `pagosPorSemana[semanaActiva]`. */
   pagos: Pago[]
+  /**
+   * Los pagos de cada semana del mes, en el orden de `semanas`.
+   *
+   * La checklist vive en el detalle de cada semana, no solo en la de hoy: la
+   * semana que viene tiene pagos que adelantar y la que pasó tiene pagos con
+   * los que ponerse al día.
+   */
+  pagosPorSemana: Pago[][]
   sobres: Sobre[]
   mayordomia: LineaMes
   fijos: LineaMes[]

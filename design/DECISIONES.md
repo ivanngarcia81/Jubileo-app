@@ -315,3 +315,23 @@ caja, no la escala.
 Las tres reglas —color, tipo y radio— las comprueba `revisar-tokens.mjs` en cada
 empujón. El inventario de colores quedó **vacío**, que es la primera vez que el
 archivo de tokens dice la verdad.
+
+**Por qué la checklist de pagos tiene una sola casa.** *(Paso 5 del Dashboard.)*
+Vivía en la pantalla de inicio y enseñaba solo los pagos de **la semana de hoy**,
+porque ese era su único cliente. Se mudó al detalle de cada semana en
+Presupuesto mensual, y eso obligó a abrir el dato: `pagosPorSemana` en vez de
+`pagos` a secas. La semana que viene tiene pagos que adelantar y la que pasó
+tiene pagos con los que ponerse al día — recortarla a hoy era una limitación
+del sitio donde estaba, no una decisión.
+
+Durante un rato hubo **dos**: la del detalle de la semana y una hoja que abría
+el chip "Pagué" del Dashboard. Se quitó la hoja. Dos listas del mismo dato
+escritas aparte terminan diciendo cosas distintas, y aquí además la del detalle
+es mejor: el pago se marca viendo el resto de lo que pesa esa semana, no en una
+lista suelta. El chip "Pagué" ahora **lleva** ahí, con la semana ya abierta.
+Cuesta un toque más que la hoja y vale la pena; el que sí se quedó en un toque
+es *Anotar*, que es lo que se hace todos los días.
+
+Con eso `MiSemana` dejó de tener contenido propio y se retiró. Lo único que
+sobrevivió entero fue el héroe, que se fue a `componentes/HeroeDeLaSemana.tsx`
+en vez de seguir colgando de una pantalla que ya no existe.

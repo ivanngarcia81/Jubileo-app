@@ -329,7 +329,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
   }))
 
   const semanaActiva = opciones.hoy ? semanaEnCurso(semanasCalendario, opciones.hoy) : 0
-  const numeroSemanaActiva = semanasCalendario[semanaActiva]?.numero ?? 1
 
   // ---- El cheque como lente ----------------------------------------------
   // Cada necesidad del mes —un fijo en su vencimiento, una semana del plan en
@@ -369,16 +368,24 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
   )
   const cubrePorPeriodoCents = cubreCents.map(centavos)
 
-  // ---- Pagos de la semana en curso ---------------------------------------
+  // ---- Pagos, semana por semana ------------------------------------------
   // Lo fijo y las deudas que vencen en sus días, con su monto mensual entero:
   // un fijo no se parte. Pagado = ya tiene su movimiento asignado en el mes.
-  const pagos: Pago[] = filas.categorias
+  //
+  // Se arma para **todas** las semanas del mes, no solo la de hoy. Antes salía
+  // recortado a la activa porque su único cliente era la pantalla de inicio;
+  // ahora la checklist vive en el detalle de cada semana en Presupuesto
+  // mensual, y una semana que no es la de hoy también tiene pagos que marcar
+  // —los de la que viene, para adelantarse; los de la que pasó, para ponerse al
+  // día—. `pagos` se queda como la de hoy, derivada de esta.
+  const pagosDeSemana = (n: number): Pago[] =>
+    filas.categorias
     .filter(
       (c) =>
         c.activa &&
         c.dia_vencimiento !== null &&
         (c.grupo === 'fijo' || c.grupo === 'deuda') &&
-        semanaDeFijo(c.dia_vencimiento, semanasCalendario) === numeroSemanaActiva,
+        semanaDeFijo(c.dia_vencimiento, semanasCalendario) === n,
     )
     .map((c) => {
       const deuda = c.deuda_id ? deudaPorId.get(c.deuda_id) : undefined
@@ -396,6 +403,9 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
       }
     })
     .sort((a, b) => a.diaVencimiento - b.diaVencimiento)
+
+  const pagosPorSemana: Pago[][] = semanasCalendario.map((s) => pagosDeSemana(s.numero))
+  const pagos: Pago[] = pagosPorSemana[semanaActiva] ?? []
 
   // ---- Sobres de la semana en curso --------------------------------------
   // Lo asignado a la semana más el arrastre de las anteriores, contra lo
@@ -525,6 +535,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     variacionSale: '',
 
     pagos,
+    pagosPorSemana,
     sobres,
     mayordomia: mayordomia
       ? aLineaMes(mayordomia, 'mayordomia')

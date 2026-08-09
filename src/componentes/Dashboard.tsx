@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Pago, Presupuesto } from '../datos/tipos'
+import type { Presupuesto } from '../datos/tipos'
 import { simular } from '../lib/deudas'
 import { type Centavos, centavos, formatearRedondo, suma } from '../lib/dinero'
 import { diaDe, diasEntre } from '../lib/fecha'
@@ -8,12 +8,7 @@ import { ritmoDelPlan } from '../lib/semanas'
 import type { Destino, Ruta } from '../rutas'
 import {
   Barra,
-  Casilla,
-  CeldaCifra,
-  CeldaNombre,
   ChipCategoria,
-  Fila,
-  Hoja,
   FilaFondo,
   ListaSeccion,
   Moneda,
@@ -35,7 +30,7 @@ import {
 } from './iconos'
 import { Anotar } from './movil/Anotar'
 import { CerrarSemana, type RespuestaCierre } from './movil/CerrarSemana'
-import { Hero } from './movil/MiSemana'
+import { Hero } from './HeroeDeLaSemana'
 import { cuantos, mesYAnio, nombreDeMes } from './textos'
 
 /**
@@ -125,9 +120,11 @@ function LaSemanaEnCurso({
   alVerSemana: () => void
 }) {
   const pendientes = presupuesto.pagos.filter((p) => !p.pagado).length
-  // "Pagué" abre siempre, aunque no se pueda marcar nada: la hoja es también
-  // la única manera de VER los pagos de la semana desde el inicio, y con los
-  // datos de ejemplo esconderla dejaría la demostración sin esa mitad.
+  // "Pagué" no abre una hoja: lleva al detalle de la semana, que es donde vive
+  // la checklist. Tener las dos habría sido la misma lista escrita dos veces —y
+  // dos listas del mismo dato terminan diciendo cosas distintas—. De paso se
+  // gana algo: ahí el pago se marca viendo lo demás que pesa esa semana, en vez
+  // de en una lista suelta.
   const CHIPS: { Icono: (p: { tam?: number }) => React.ReactNode; texto: string; alTocar?: () => void }[] = [
     { Icono: IconoAnotar, texto: 'Anotar', ...(alAbrirAnotar ? { alTocar: alAbrirAnotar } : {}) },
     { Icono: IconoPalomita, texto: 'Pagué', alTocar: alAbrirPagos },
@@ -578,74 +575,10 @@ function Coach({ coach }: { coach: NonNullable<Presupuesto['coach']> }) {
   )
 }
 
-/** La hoja de pagos: el chip "Pagué" sin salir del Dashboard. */
-function HojaDePagos({
-  presupuesto,
-  alMarcarPago,
-  alCerrar,
-}: {
-  presupuesto: Presupuesto
-  /** Ausente con los datos de ejemplo: la demostración se ve pero no se toca. */
-  alMarcarPago: ((pago: Pago) => Promise<void>) | undefined
-  alCerrar: () => void
-}) {
-  const [ocupado, setOcupado] = useState<string | null>(null)
-  const hechos = presupuesto.pagos.filter((p) => p.pagado).length
-  return (
-    <Hoja etiqueta="Pagos de esta semana" alCerrar={alCerrar}>
-      <ListaSeccion
-        titulo="Pagos de esta semana"
-        icono={<IconoPalomita tam={15} />}
-        dato={`${hechos} de ${presupuesto.pagos.length} hechos`}
-        encabezados={[null, 'Pago', 'Monto']}
-        columnas="30px minmax(0,1fr) 84px"
-        columnasPanel="30px minmax(150px,1fr) 120px"
-      >
-        {presupuesto.pagos.length === 0 && (
-          <Vacio>
-            Ningún pago vence en esta semana. Los gastos fijos con día de vencimiento aparecen
-            aquí la semana que les toca.
-          </Vacio>
-        )}
-        {presupuesto.pagos.map((pago) => (
-          <Fila key={pago.id}>
-            <Casilla
-              marcada={pago.pagado}
-              etiqueta={pago.nombre}
-              ocupada={ocupado === pago.id}
-              {...(alMarcarPago
-                ? {
-                    alCambiar: () => {
-                      setOcupado(pago.id)
-                      void alMarcarPago(pago).finally(() => setOcupado(null))
-                    },
-                  }
-                : {})}
-            />
-            <CeldaNombre
-              detalle={
-                pago.pagado
-                  ? `Venció el ${pago.diaVencimiento} · pagado`
-                  : `Vence el ${pago.diaVencimiento}`
-              }
-            >
-              {pago.nombre}
-            </CeldaNombre>
-            <CeldaCifra className={pago.pagado ? 'text-texto-2 line-through' : ''}>
-              <Moneda centavos={pago.montoCents} />
-            </CeldaCifra>
-          </Fila>
-        ))}
-      </ListaSeccion>
-    </Hoja>
-  )
-}
-
 export function Dashboard({
   presupuesto,
   ir,
   alAnotar,
-  alMarcarPago,
   alCerrarSemana,
   alRevisar,
 }: {
@@ -653,12 +586,10 @@ export function Dashboard({
   ir: (destino: Ruta | Destino) => void
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
   alAnotar?: ((categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>) | undefined
-  alMarcarPago?: ((pago: Pago) => Promise<void>) | undefined
   alCerrarSemana?: ((r: RespuestaCierre) => Promise<void>) | undefined
   alRevisar?: ((ids: readonly string[], revisado: boolean) => Promise<void>) | undefined
 }) {
   const [anotando, setAnotando] = useState(false)
-  const [pagando, setPagando] = useState(false)
   const [cerrando, setCerrando] = useState(false)
 
   const semanaActual = presupuesto.semanas[presupuesto.semanaActiva]?.numero
@@ -677,7 +608,7 @@ export function Dashboard({
           <LaSemanaEnCurso
             presupuesto={presupuesto}
             alAbrirAnotar={alAnotar ? () => setAnotando(true) : undefined}
-            alAbrirPagos={() => setPagando(true)}
+            alAbrirPagos={verSemana}
             alAbrirCierre={alCerrarSemana ? () => setCerrando(true) : undefined}
             alVerSemana={verSemana}
           />
@@ -709,13 +640,6 @@ export function Dashboard({
           presupuesto={presupuesto}
           alCerrarSemana={alCerrarSemana}
           alCerrar={() => setCerrando(false)}
-        />
-      )}
-      {pagando && (
-        <HojaDePagos
-          presupuesto={presupuesto}
-          alMarcarPago={alMarcarPago}
-          alCerrar={() => setPagando(false)}
         />
       )}
     </>

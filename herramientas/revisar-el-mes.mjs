@@ -636,10 +636,9 @@ await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(600)
 
 // ---- Marcar y desmarcar un pago -------------------------------------------
-// Desde que el Dashboard es la pantalla de inicio, la checklist de pagos vive
-// en la hoja del chip "Pagué": la accion sigue a un toque, que era el punto.
-await p.getByRole('button', { name: /^Pagué/ }).first().click()
-await p.waitForTimeout(400)
+// La checklist vive en el detalle de la semana, en Presupuesto mensual.
+await p.goto(SITIO + '/#/mes?semana=1', { waitUntil: 'networkidle' })
+await p.waitForTimeout(800)
 // La semana 1 (del 1 al 7) trae renta (día 1) y servicios (día 5), ordenados
 // por su día: la primera casilla es la renta.
 const casilla = p.getByRole('checkbox').first()
@@ -656,9 +655,16 @@ await p.waitForTimeout(1200)
 ok(escrituras.some((e) => e.borrado), 'desmarcarlo lo borra en vez de dejar basura')
 ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'false',
    'y la casilla se apaga')
-// La hoja se cierra tocando el fondo oscuro; dejarla abierta tapa lo que sigue.
-await p.locator('div[role=presentation]').first().click({ position: { x: 5, y: 5 } })
-await p.waitForTimeout(300)
+
+// ---- El chip "Pague" lleva a la checklist ---------------------------------
+await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
+await p.waitForTimeout(600)
+await p.getByRole('button', { name: /^Pagué/ }).first().click()
+await p.waitForTimeout(600)
+ok(/#\/mes\?semana=\d/.test(await p.evaluate(() => location.hash)),
+   `"Pague" lleva al detalle de la semana (${await p.evaluate(() => location.hash)})`)
+ok(await p.getByRole('checkbox').first().isVisible(),
+   'y ahi esta la checklist, con el resto de lo que pesa esa semana')
 
 // ---- La accion de todos los dias, a un toque desde el inicio --------------
 await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })

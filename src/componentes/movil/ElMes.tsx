@@ -11,6 +11,7 @@ import {
   type ClaveGrupo,
 } from '../../lib/mes/grupos'
 import type { ClaveIcono } from '../../lib/iconos'
+import type { Pago } from '../../datos/tipos'
 import { semanaDeFijo } from '../../lib/semanas'
 import { cuantos, nombreDeMes } from '../textos'
 import {
@@ -18,6 +19,7 @@ import {
   CeldaNombre,
   CeldasDeAvance,
   CeldasDeTresCifras,
+  Casilla,
   ChipCategoria,
   Fila,
   FilaAgregar,
@@ -237,6 +239,7 @@ export function ElMes({
   presupuesto,
   alPonerMonto,
   alPonerSemana,
+  alMarcarPago,
   alRenombrar,
   alQuitar,
   alCrearCategoria,
@@ -249,6 +252,7 @@ export function ElMes({
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se edita. */
   alPonerMonto?: (categoriaId: string, montoCents: Centavos) => Promise<void>
   alPonerSemana?: (categoriaId: string, semana: number, montoCents: Centavos) => Promise<void>
+  alMarcarPago?: (pago: Pago) => Promise<void>
   alRenombrar?: (categoriaId: string, nombre: string) => Promise<void>
   alQuitar?: (categoriaId: string) => Promise<void>
   alCrearCategoria?: (
@@ -273,6 +277,9 @@ export function ElMes({
     semana: SemanaDelPresupuesto
   } | null>(null)
   const [creando, setCreando] = useState<'fijo' | 'variable' | null>(null)
+  // Cuál casilla está esperando al servidor. Se marca al volver, no al tocar:
+  // una palomita que aparece y se deshace sola es peor que una que tarda.
+  const [pagando, setPagando] = useState<string | null>(null)
   const [abiertos, setAbiertos] = useAbiertos()
   const [eje, setEje] = useEje(semanaPedida === undefined ? undefined : 'Semanas')
   // La semana en curso nace abierta: es a la que se viene. Si vienes del rail
@@ -383,11 +390,12 @@ export function ElMes({
           encabezadosPanel={['Semana', 'Planeado', null, 'Gastado', 'Queda']}
           {...TRES_CIFRAS}
         >
-          {presupuesto.semanas.map((semana) => {
+          {presupuesto.semanas.map((semana, i) => {
             const abierta = semanasAbiertas.includes(semana.numero)
             const fijosDeLaSemana = fijosYDeudas.filter(
               (l) => semanaDeFijo(l.diaVencimiento, presupuesto.semanas) === semana.numero,
             )
+            const pagosDeLaSemana = presupuesto.pagosPorSemana[i] ?? []
             return (
               <Fragment key={semana.numero}>
                 <Fila
@@ -427,22 +435,55 @@ export function ElMes({
                   />
                 </Fila>
 
-                {/* Lo fijo cae por fecha: se ve, no se toca. */}
+                {/*
+                  Lo fijo cae por fecha: su semana no se escoge. Lo que sí se
+                  hace aquí es **marcarlo pagado** — la checklist se mudó desde
+                  la pantalla de inicio, y este es su sitio: junto al resto de
+                  lo que pesa esa semana, no en una lista aparte que solo
+                  enseñaba la semana de hoy.
+                */}
                 {abierta &&
-                  fijosDeLaSemana.map((linea) => (
-                    <Fila key={`f-${linea.id}`}>
-                      <CeldaNombre
-                        className={HILO}
-                        icono={<IconoDeClave clave={linea.icono} tam={13} />}
-                        {...(linea.detalle ? { detalle: linea.detalle } : {})}
-                      >
-                        {linea.nombre}
-                      </CeldaNombre>
-                      <CeldaCifra apagada className={EN_LA_ULTIMA}>
-                        <Moneda centavos={linea.montoMensualCents} />
-                      </CeldaCifra>
-                    </Fila>
-                  ))}
+                  fijosDeLaSemana.map((linea) => {
+                    const pago = pagosDeLaSemana.find((p) => p.id === linea.id)
+                    return (
+                      <Fila key={`f-${linea.id}`}>
+                        <CeldaNombre
+                          className={HILO}
+                          icono={<IconoDeClave clave={linea.icono} tam={13} />}
+                          detalle={
+                            pago?.pagado
+                              ? `Venció el ${pago.diaVencimiento} · pagado`
+                              : (linea.detalle ?? '')
+                          }
+                        >
+                          {linea.nombre}
+                        </CeldaNombre>
+                        {pago && (
+                          <div className="col-start-2 flex justify-end panel:col-start-4">
+                            <Casilla
+                              marcada={pago.pagado}
+                              etiqueta={pago.nombre}
+                              ocupada={pagando === pago.id}
+                              {...(alMarcarPago
+                                ? {
+                                    alCambiar: () => {
+                                      setPagando(pago.id)
+                                      void alMarcarPago(pago).finally(() => setPagando(null))
+                                    },
+                                  }
+                                : {})}
+                            />
+                          </div>
+                        )}
+                        <CeldaCifra
+                          apagada
+                          className={`${EN_LA_ULTIMA} ${pago?.pagado ? 'line-through' : ''}`}
+                        >
+                          <Moneda centavos={linea.montoMensualCents} />
+                        </CeldaCifra>
+                      </Fila>
+                    )
+                  })}
 
                 {/* Los sobres sí se presupuestan por semana: aquí se decide. */}
                 {abierta &&

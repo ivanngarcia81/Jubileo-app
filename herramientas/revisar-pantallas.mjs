@@ -68,10 +68,10 @@ for (const ruta of ['resumen', 'mes', 'deudas', 'metas', 'aviso']) {
 await p.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 
 // Objetivos tocables: se mide el área que responde, no la caja visible. Las
-// casillas de pago viven en la hoja del chip "Pagué" desde que el Dashboard es
-// la pantalla de inicio, asi que primero se abre.
-await p.getByRole('button', { name: /^Pagué/ }).first().click()
-await p.waitForTimeout(300)
+// casillas de pago viven en el detalle de la semana desde que el Dashboard es
+// la pantalla de inicio.
+await p.goto(`${BASE}/#/mes?semana=1`, { waitUntil: 'networkidle' })
+await p.waitForTimeout(400)
 const toque = await p.evaluate(() => {
   const casilla = document.querySelector('[role=checkbox]')
   const c = casilla.getBoundingClientRect()
@@ -357,7 +357,7 @@ await dash.waitForTimeout(300)
 revisar(await dash.getByRole('button', { name: /^Anotar/ }).first().isDisabled(),
   'con datos de ejemplo, Anotar se ve pero no se toca')
 revisar(!(await dash.getByRole('button', { name: /^Pagué/ }).first().isDisabled()),
-  'y Pagué si abre: la hoja es la unica manera de VER los pagos de la semana')
+  'y Pagué si responde: lleva al detalle de la semana, donde vive la checklist')
 await dashCtx.close()
 
 // ---------- Las tres cifras de la vista por semanas ----------

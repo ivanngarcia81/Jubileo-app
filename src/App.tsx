@@ -33,14 +33,13 @@ import { Cabecera, Marco } from "./componentes/movil/Marco";
 import { Metas } from "./componentes/movil/Metas";
 import { Movimientos } from "./componentes/movil/Movimientos";
 import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
-import { MiSemana } from "./componentes/movil/MiSemana";
 import { useEsEscritorio } from "./componentes/pantalla";
 import { cuantos, fechaLarga } from "./componentes/textos";
 import type { ClaveIcono } from "./lib/iconos";
 import { type Centavos, centavos } from "./lib/dinero";
 import { fecha } from "./lib/fecha";
 import type { MesObjetivo } from "./lib/periodos";
-import { type Ruta, rutaEscritorio, rutaMovil, useRuta } from "./rutas";
+import { type Destino, type Ruta, rutaEscritorio, rutaMovil, useRuta } from "./rutas";
 
 type ComoMePaganCallback = (datos: DatosDePago) => Promise<void>;
 
@@ -184,11 +183,13 @@ function Contenido({
   ruta,
   presupuesto,
   acciones,
+  ir,
   semanaPedida,
 }: {
   ruta: Ruta;
   presupuesto: Presupuesto;
   acciones: Acciones;
+  ir: (destino: Ruta | Destino) => void;
   /** La semana que el rail del sidebar pidió abrir, si vino con una. */
   semanaPedida?: number | undefined;
 }) {
@@ -204,7 +205,6 @@ function Contenido({
     alCerrarSemana,
     alCerrarMes,
     alVerMes,
-    alVerMovimientos,
     alRevisar,
     alCrearDeuda,
     alGuardarSaldo,
@@ -221,6 +221,7 @@ function Contenido({
           presupuesto={presupuesto}
           {...(alPonerMonto ? { alPonerMonto } : {})}
           {...(alPonerSemana ? { alPonerSemana } : {})}
+          {...(alMarcarPago ? { alMarcarPago } : {})}
           {...(alRenombrar ? { alRenombrar } : {})}
           {...(alQuitar ? { alQuitar } : {})}
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
@@ -257,13 +258,16 @@ function Contenido({
         />
       );
     default:
+      // `resumen` — el Dashboard. Es el único que queda por descarte, y a
+      // propósito: es la pantalla de inicio y a donde caen las direcciones que
+      // no se reconocen.
       return (
-        <MiSemana
+        <Dashboard
           presupuesto={presupuesto}
+          ir={ir}
           {...(alAnotar ? { alAnotar } : {})}
-          {...(alMarcarPago ? { alMarcarPago } : {})}
           {...(alCerrarSemana ? { alCerrarSemana } : {})}
-          {...(alVerMovimientos ? { alVerMovimientos } : {})}
+          {...(alRevisar ? { alRevisar } : {})}
         />
       );
   }
@@ -825,16 +829,7 @@ export function App() {
           activa={enMovil}
           ir={ir}
         >
-          {enMovil === "resumen" ? (
-            <Dashboard
-              presupuesto={presupuesto}
-              ir={ir}
-              {...(acciones?.alAnotar ? { alAnotar: acciones.alAnotar } : {})}
-              {...(acciones?.alMarcarPago ? { alMarcarPago: acciones.alMarcarPago } : {})}
-              {...(acciones?.alCerrarSemana ? { alCerrarSemana: acciones.alCerrarSemana } : {})}
-              {...(acciones?.alRevisar ? { alRevisar: acciones.alRevisar } : {})}
-            />
-          ) : enMovil === "ajustes" ? (
+          {enMovil === "ajustes" ? (
             <Ajustes
               presupuesto={presupuesto}
               mes={mes}
@@ -850,6 +845,7 @@ export function App() {
               ruta={enMovil}
               presupuesto={presupuesto}
               acciones={acciones}
+              ir={ir}
               {...(destino.semana === undefined ? {} : { semanaPedida: destino.semana })}
             />
           )}
@@ -879,18 +875,7 @@ export function App() {
           </div>
         )}
 
-        {enEscritorio === "resumen" ? (
-          <div className="mx-auto max-w-contenido px-[22px] pt-3 pb-[22px]">
-            <Dashboard
-              presupuesto={presupuesto}
-              ir={ir}
-              {...(acciones?.alAnotar ? { alAnotar: acciones.alAnotar } : {})}
-              {...(acciones?.alMarcarPago ? { alMarcarPago: acciones.alMarcarPago } : {})}
-              {...(acciones?.alCerrarSemana ? { alCerrarSemana: acciones.alCerrarSemana } : {})}
-              {...(acciones?.alRevisar ? { alRevisar: acciones.alRevisar } : {})}
-            />
-          </div>
-        ) : (
+        {(
           <div className="mx-auto max-w-contenido p-[22px]">
             {enEscritorio === "ajustes" ? (
               <Ajustes
@@ -908,6 +893,7 @@ export function App() {
                 ruta={enEscritorio}
                 presupuesto={presupuesto}
                 acciones={acciones}
+                ir={ir}
                 {...(destino.semana === undefined ? {} : { semanaPedida: destino.semana })}
               />
             )}
