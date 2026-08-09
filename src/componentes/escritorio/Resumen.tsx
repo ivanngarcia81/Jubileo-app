@@ -165,7 +165,7 @@ export function Resumen({
   return (
     <div
       data-ancho="contenido"
-      className="bg-gris mx-auto grid max-w-app items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]"
+      className="bg-gris mx-auto grid max-w-contenido items-start gap-4 p-[22px] panel:grid-cols-[1fr_262px] ancho:grid-cols-[1fr_262px_262px]"
     >
       <div className="flex flex-col gap-4">
         <TarjetaEscritorio

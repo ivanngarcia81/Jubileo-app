@@ -51,6 +51,11 @@
 
   --color-texto: var(--texto);
   --color-texto-2: var(--texto-2);
+  --color-texto-claro: var(--texto-claro);
+  --color-texto-claro-2: var(--texto-claro-2);
+  --color-texto-claro-3: var(--texto-claro-3);
+  --color-carbon-realce: var(--carbon-realce);
+  --color-linea-oscura: var(--linea-oscura);
 
   /* Semántica de estado — preferir estas sobre los colores crudos */
   --color-estado-bien: var(--estado-bien);
@@ -78,5 +83,7 @@
 
   /* `--container-*` es lo que Tailwind convierte en `max-w-*`. */
   --container-app: var(--ancho-max);
+  --container-contenido: var(--ancho-contenido);
   --container-movil: var(--ancho-movil);
+  --spacing-sidebar: var(--ancho-sidebar);
 }

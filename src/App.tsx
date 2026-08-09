@@ -21,9 +21,10 @@ import { TuAviso, TuNombre } from "./componentes/Preferencias";
 import { type LoQueTrae, MesNuevo } from "./componentes/MesNuevo";
 import { PrimerMes } from "./componentes/PrimerMes";
 import {
-  BandaIndicadores,
-  BarraSuperior,
+  CabeceraDeContenido,
+  TarjetasDelMes,
 } from "./componentes/escritorio/Panel";
+import { Sidebar } from "./componentes/escritorio/Sidebar";
 import { Resumen } from "./componentes/escritorio/Resumen";
 import { Aviso } from "./componentes/movil/Aviso";
 import { Deudas } from "./componentes/movil/Deudas";
@@ -34,10 +35,9 @@ import { Movimientos } from "./componentes/movil/Movimientos";
 import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
 import { MiSemana } from "./componentes/movil/MiSemana";
 import { useEsEscritorio } from "./componentes/pantalla";
-import { mesYAnio } from "./componentes/textos";
+import { fechaLarga } from "./componentes/textos";
 import type { ClaveIcono } from "./lib/iconos";
-import { simular } from "./lib/deudas";
-import { type Centavos, centavos, suma } from "./lib/dinero";
+import { type Centavos, centavos } from "./lib/dinero";
 import { fecha } from "./lib/fecha";
 import type { MesObjetivo } from "./lib/periodos";
 import { type Ruta, rutaEscritorio, rutaMovil, useRuta } from "./rutas";
@@ -807,19 +807,6 @@ export function App() {
     );
   }
 
-  const extraActual = centavos(
-    suma(presupuesto.deudas.map((d) => d.pagoActualCents)) -
-      suma(presupuesto.deudas.map((d) => d.pagoMinimoCents)),
-  );
-  const plan = simular(
-    presupuesto.deudas,
-    extraActual,
-    presupuesto.inicioDeudas,
-  );
-  const fechaLibertad = plan.fechaLibertad
-    ? mesYAnio(plan.fechaLibertad)
-    : "sin fecha";
-
   return (
     <>
       {sinConexion && <SinConexion />}
@@ -859,16 +846,20 @@ export function App() {
 
           El árbol se escoge con lógica y no con `hidden`: ver `pantalla.ts`. */}
       {esEscritorio && (
-      <div className="bg-gris text-texto font-sans block min-h-dvh">
-        <BarraSuperior
-          presupuesto={presupuesto}
-          activa={enEscritorio}
-          ir={ir}
-        />
-        <BandaIndicadores
-          presupuesto={presupuesto}
-          fechaLibertad={fechaLibertad}
-        />
+      // El sidebar lleva el color de fondo, así que llega al borde izquierdo y
+      // al alto de la pantalla: no lleva tope de ancho. El que se detiene es el
+      // contenido. Ver `design/DECISIONES.md`.
+      <div className="bg-gris text-texto font-sans flex min-h-dvh">
+        <Sidebar presupuesto={presupuesto} activa={enEscritorio} ir={ir} />
+
+        <div className="min-w-0 flex-1">
+        <CabeceraDeContenido activa={enEscritorio} hoy={fechaLarga(hoy())} />
+
+        {(enEscritorio === "resumen" || enEscritorio === "mes") && (
+          <div className="mx-auto max-w-contenido px-[22px] pt-4">
+            <TarjetasDelMes presupuesto={presupuesto} />
+          </div>
+        )}
 
         {enEscritorio === "resumen" ? (
           <Resumen
@@ -876,10 +867,7 @@ export function App() {
             alVerMovimientos={() => ir("movimientos")}
           />
         ) : (
-          // 720px era la mitad del ancho disponible. Estas tres pantallas
-          // siguen siendo las del teléfono —darles composición propia de
-          // escritorio es otro trabajo— pero al menos respiran.
-          <div className="mx-auto max-w-[980px] p-[22px]">
+          <div className="mx-auto max-w-contenido p-[22px]">
             {enEscritorio === "ajustes" ? (
               <Ajustes
                 presupuesto={presupuesto}
@@ -900,6 +888,7 @@ export function App() {
             )}
           </div>
         )}
+        </div>
       </div>
       )}
     </>

@@ -42,6 +42,20 @@
   --texto:         #1C1E1F;
   --texto-2:       #6B7175;  /* etiquetas, texto secundario */
 
+  /* El texto **sobre carbón**, que no tenía nombre y por eso vivía como seis
+     hexes sueltos casi iguales. Tres niveles y no seis: entre `#B9C2BF` y
+     `#C9CCCA` no distingue nadie, y una escala que no se distingue no es una
+     escala. Ver `design/sidebar.html`. */
+  --texto-claro:   #E6E9E7;  /* principal: el nombre de la deuda, el tuyo */
+  --texto-claro-2: #C9CCCA;  /* secundario: renglones de navegación y de semana */
+  --texto-claro-3: #7C8483;  /* apagado: rótulos de sección y leyendas */
+
+  /* Las dos superficies del sidebar. El realce es más sutil que `--carbon-2`
+     a propósito: con `--carbon-2` un renglón al pasar el puntero se lee como
+     una tarjeta, y es solo un renglón. */
+  --carbon-realce: #232626;  /* un renglón oscuro bajo el puntero */
+  --linea-oscura:  #2E3232;  /* lo que `--linea` es en claro, pero sobre carbón */
+
   /* Semántica de estado — usar estos, no los colores crudos */
   --estado-bien:   var(--teal);
   --estado-ojo:    var(--ambar);
@@ -77,6 +91,12 @@
      él, en un monitor de 2560px la columna central se estira sin fin mientras
      las laterales siguen clavadas en 262px. */
   --ancho-max: 1420px;
+  /* El sidebar y lo que le queda al contenido. Los dos suman `--ancho-max`, que
+     es lo que mide la ventana del mockup: el sidebar llega al borde izquierdo
+     de la pantalla —lleva el color de fondo, así que no lleva tope— y el
+     contenido se detiene en lo suyo. Ver `design/sidebar.html`. */
+  --ancho-sidebar:   236px;
+  --ancho-contenido: 1184px;
   /* El ancho cómodo de una columna de teléfono. El mockup dibuja 352px porque
      está enseñando un iPhone; la app lo deja crecer un poco y ahí se detiene. */
   --ancho-movil: 440px;

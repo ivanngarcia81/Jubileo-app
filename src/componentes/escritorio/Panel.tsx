@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
-import { IconoAviso } from "../iconos";
 import type { Presupuesto } from "../../datos/tipos";
 import { type Centavos, formatearRedondo } from "../../lib/dinero";
-import { diaDe, mesDe } from "../../lib/fecha";
 import type { Ruta } from "../../rutas";
 import { Moneda } from "../base";
-import { nombreDeMes } from "../textos";
 
 /**
  * Todo lo que tiene una línea en el presupuesto del mes: los cuatro grupos que
@@ -23,81 +20,58 @@ function contarCategorias(p: Presupuesto): number {
 }
 
 /**
- * La carcasa del panel de computadora: barra carbón arriba y banda oscura de
- * indicadores con los cheques del mes a la derecha, tal como
- * `design/escritorio.html`. El mockup la dibuja dentro de una ventana con
- * esquinas redondeadas porque es un documento de presentación; en la app la
- * carcasa es la página.
+ * La carcasa del panel de computadora. La navegación se mudó al sidebar
+ * (`design/sidebar.html`); lo que queda arriba del contenido es la **cabecera
+ * de la pantalla**: dónde estás y qué día es.
+ *
+ * Nombrar la pantalla dejó de ser un adorno cuando la navegación se fue al
+ * costado: con los enlaces arriba, el que estaba subrayado decía dónde estabas.
  */
 
-const ENLACES: readonly { ruta: Ruta; texto: string }[] = [
-  { ruta: "resumen", texto: "Resumen" },
-  { ruta: "mes", texto: "Presupuesto" },
-  { ruta: "deudas", texto: "Deudas" },
-  { ruta: "metas", texto: "Metas" },
-  { ruta: "ajustes", texto: "Ajustes" },
-];
+const TITULOS: Partial<Record<Ruta, string>> = {
+  resumen: "Mi semana",
+  mes: "El mes",
+  deudas: "Deudas",
+  metas: "Metas",
+  movimientos: "Movimientos",
+  ajustes: "Ajustes",
+};
 
-export function BarraSuperior({
-  presupuesto,
+export function CabeceraDeContenido({
   activa,
-  ir,
+  hoy,
 }: {
-  presupuesto: Presupuesto;
   activa: Ruta;
-  ir: (ruta: Ruta) => void;
+  /** El día de hoy, ya en palabras. Entra hecho: esto no pregunta la hora. */
+  hoy: string;
 }) {
   return (
-    <div className="bg-carbon border-b border-[#262A2B] text-white">
-      {/* El tope de ancho va aquí, no en quien envuelve esta barra: el fondo
-          oscuro tiene que llegar al borde de la pantalla. Con el tope afuera, en
-          un monitor de 2560px quedaban dos bloques carbón de 1420 flotando
-          sobre franjas de gris claro de 570 — ni el mockup ni el patrón normal
-          de una app web, sino el intermedio, que se lee como un error. */}
-      <div
-        data-ancho="contenido"
-        className="mx-auto flex max-w-app items-center gap-[26px] px-[26px] py-[17px]"
-      >
-        <div className="font-serif flex items-center gap-2 text-titulo">
-          Jubileo<span className="text-teal">.</span>
-        </div>
-        <nav
-          aria-label="Navegación principal"
-          className="flex gap-5 text-cuerpo"
-        >
-          {ENLACES.map(({ ruta, texto }) => {
-            const activo = ruta === activa;
-            return (
-              <button
-                key={ruta}
-                type="button"
-                onClick={() => ir(ruta)}
-                aria-current={activo ? "page" : undefined}
-                className={`relative py-1 ${activo ? "font-semibold text-white" : "text-[#787E7D]"}`}
-              >
-                {texto}
-                {activo && (
-                  <span className="bg-teal absolute -bottom-[19px] right-0 left-0 h-[2px]" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="ml-auto flex items-center gap-[9px]">
-          <div className="bg-carbon-2 relative grid size-[35px] place-items-center rounded-full text-menor text-[#A7ACAB]">
-            <IconoAviso tam={17} />
-            <span className="bg-teal border-carbon-2 absolute top-[7px] right-2 size-[7px] rounded-full border-[1.5px]" />
-          </div>
-          <div className="bg-carbon-3 grid size-[35px] place-items-center rounded-full text-menor font-semibold text-white">
-            {presupuesto.usuario.iniciales}
-          </div>
-        </div>
-      </div>
+    <div
+      data-ancho="contenido"
+      className="mx-auto flex max-w-contenido items-baseline justify-between gap-4 px-[22px] pt-5"
+    >
+      <h1 className="font-serif text-cifra font-normal">{TITULOS[activa] ?? "Jubileo"}</h1>
+      <span className="text-texto-2 text-menor">{hoy}</span>
     </div>
   );
 }
 
-function Indicador({
+/**
+ * Las tres tarjetas de arriba del contenido: entra, sale, sin repartir.
+ *
+ * Antes eran una banda carbón a todo lo ancho con un degradado teal, cuatro
+ * indicadores y el riel de cheques. Esa banda existía para separar la
+ * navegación —que estaba arriba— del contenido; con la navegación al costado
+ * ya no separa nada, y un bloque oscuro entre el sidebar oscuro y el lienzo
+ * claro solo parte la pantalla en tres. El riel de cheques se fue con ella: el
+ * contexto permanente ahora es **el rail de semanas** del sidebar, y qué cubre
+ * cada cheque vive en El mes › Cheques, que es donde alguien va a buscarlo.
+ *
+ * Quedan tres y no cuatro. "A la deuda este mes" tenía su cifra repetida en la
+ * tarjeta de deudas de abajo, con su fecha de libertad al lado.
+ */
+
+function Tarjeta({
   titulo,
   valor,
   detalle,
@@ -109,172 +83,45 @@ function Indicador({
   teal?: boolean;
 }) {
   return (
-    <div>
-      <div className="text-menor text-[#787E7D]">{titulo}</div>
+    <div className="bg-blanco border-linea rounded-[13px] border px-[15px] py-[13px]">
+      <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
+        {titulo}
+      </div>
       <div
-        className={`mt-[3px] text-cifra font-semibold [font-variant-numeric:tabular-nums] ${teal ? "text-teal" : ""}`}
+        className={`font-serif mt-[5px] text-cifra [font-variant-numeric:tabular-nums] ${teal ? "text-teal-osc" : ""}`}
       >
         {formatearRedondo(valor)}
       </div>
-      <div className="mt-1 text-menor text-[#6E7473]">{detalle}</div>
+      <div className="text-texto-2 mt-1 text-menor">{detalle}</div>
     </div>
   );
 }
 
-export function BandaIndicadores({
-  presupuesto,
-  fechaLibertad,
-}: {
-  presupuesto: Presupuesto;
-  fechaLibertad: string;
-}) {
-  const { periodos, periodoActivo, libreporPeriodoCents } = presupuesto;
-  const hayExtra = periodos.some((p) => p.esExtra);
-
+export function TarjetasDelMes({ presupuesto }: { presupuesto: Presupuesto }) {
   return (
-    <div
-      className="bg-carbon text-white"
-      style={{
-        background:
-          "radial-gradient(900px 320px at 88% 120%, var(--brillo-teal), transparent 70%), var(--carbon)",
-      }}
-    >
-      {/* Igual que la barra: el degradado cubre la pantalla y el contenido se
-          detiene. Con el tope afuera, el brillo teal —posicionado al 88% del
-          ancho— caía en un punto fijo y dejaba de acompañar a la banda. */}
-      <div
-        data-ancho="contenido"
-        className="mx-auto grid max-w-app items-center gap-[34px] px-[26px] pt-[26px] pb-[30px] ancho:grid-cols-[1fr_500px]"
-      >
-        <div>
-          <div className="font-serif mb-5 text-cifra">
-            Buenos días, {presupuesto.usuario.nombre}
-            <span className="text-teal">.</span>
-            <div className="font-sans mt-[5px] text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
-              {presupuesto.mes.etiqueta} ·{" "}
-              {presupuesto.usuario.frecuencia.toLowerCase()} ·{" "}
-              {presupuesto.usuario.nivel === "premium" ? "Premium" : "Gratis"}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-[30px] gap-y-[22px]">
-            <Indicador
-              titulo="Entra este mes"
-              valor={presupuesto.entraCents}
-              detalle={
-                <>
-                  {periodos.length} cheques ·{" "}
-                  <b className="text-teal font-semibold">
-                    {presupuesto.variacionEntra}
-                  </b>{" "}
-                  vs julio
-                </>
-              }
-            />
-            <Indicador
-              titulo="Sale este mes"
-              valor={presupuesto.saleCents}
-              detalle={
-                <>
-                  {contarCategorias(presupuesto)} categorías ·{" "}
-                  <b className="text-ambar font-semibold">
-                    {presupuesto.variacionSale}
-                  </b>{" "}
-                  vs julio
-                </>
-              }
-            />
-            <Indicador
-              titulo="Sin repartir"
-              valor={presupuesto.sinRepartirCents}
-              teal
-              detalle={
-                presupuesto.sinRepartirCents === 0
-                  ? "Tu presupuesto cuadra"
-                  : "Te falta repartir este dinero"
-              }
-            />
-            <Indicador
-              titulo="A la deuda este mes"
-              valor={presupuesto.aLaDeudaCents}
-              detalle={
-                <>
-                  Fecha de libertad:{" "}
-                  <b className="text-teal font-semibold">{fechaLibertad}</b>
-                </>
-              }
-            />
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-[10px] text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
-            Tus cheques de {nombreDeMes(presupuesto.mes.mes)}
-          </div>
-          <div className="grid grid-cols-3 gap-[10px]">
-            {periodos.map((periodo, i) => {
-              const esActivo = i === periodoActivo;
-              const cerrado = i < periodoActivo;
-              return (
-                <div
-                  key={periodo.numero}
-                  className={`relative overflow-hidden rounded-[14px] p-[14px] ${
-                    periodo.esExtra
-                      ? "border-ambar border-[1.5px] border-dashed"
-                      : esActivo
-                        ? "bg-[linear-gradient(150deg,var(--color-teal-hondo),var(--color-teal))] text-tinta-heroe"
-                        : "bg-carbon-2"
-                  } ${cerrado ? "opacity-55" : ""}`}
-                >
-                  <div
-                    className={`text-rotulo font-semibold tracking-[.1em] uppercase ${
-                      esActivo && !periodo.esExtra
-                        ? "text-tinta-heroe/70"
-                        : "text-[#787E7D]"
-                    }`}
-                  >
-                    {periodo.esExtra ? "Extra" : `Cheque ${periodo.numero}`} ·{" "}
-                    {diaDe(periodo.fechaPago)}{" "}
-                    {nombreDeMes(mesDe(periodo.fechaPago)).slice(0, 3)}
-                  </div>
-                  <div
-                    className={`font-serif mt-[6px] mb-[2px] text-cifra leading-[1.1] [font-variant-numeric:tabular-nums] ${
-                      periodo.esExtra ? "text-ambar" : ""
-                    }`}
-                  >
-                    {formatearRedondo(libreporPeriodoCents[i]!)}
-                  </div>
-                  <div
-                    className={`text-rotulo leading-[1.35] ${
-                      esActivo && !periodo.esExtra
-                        ? "text-tinta-heroe/70"
-                        : "text-[#787E7D]"
-                    }`}
-                  >
-                    {periodo.esExtra
-                      ? "Tercer cheque"
-                      : cerrado
-                        ? "Repartido y cerrado"
-                        : "Te queda libre"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {hayExtra && (
-            <div className="mt-[10px] text-rotulo text-[#787E7D]">
-              Este mes te caen{" "}
-              <b className="text-ambar font-semibold">
-                {periodos.length} cheques
-              </b>
-              . El extra no se reparte en categorías: va completo a{" "}
-              {presupuesto.deudas.find((d) => d.esEnfoque)?.nombre ??
-                "tu fondo de emergencia"}
-              .
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="grid gap-3 sm:grid-cols-3">
+      <Tarjeta
+        titulo="Entra este mes"
+        valor={presupuesto.entraCents}
+        detalle={`${presupuesto.periodos.length} cheques`}
+      />
+      <Tarjeta
+        titulo="Sale este mes"
+        valor={presupuesto.saleCents}
+        detalle={`${contarCategorias(presupuesto)} categorías`}
+      />
+      <Tarjeta
+        titulo="Sin repartir"
+        valor={presupuesto.sinRepartirCents}
+        teal={presupuesto.sinRepartirCents === 0}
+        detalle={
+          presupuesto.sinRepartirCents === 0
+            ? "Tu presupuesto cuadra"
+            : presupuesto.sinRepartirCents > 0
+              ? "Te falta darle destino"
+              : "Te pasaste de lo que entra"
+        }
+      />
     </div>
   );
 }

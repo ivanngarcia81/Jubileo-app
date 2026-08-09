@@ -242,17 +242,21 @@ for (const { w, quien, arbol } of ANCHOS) {
   const tope = arbol === 'movil' ? 460 : 1440
   revisar(ancho <= tope, `${quien}: el contenido se detiene en ${Math.round(ancho)}px, no crece sin fin`)
   // Y el reverso, que es lo que se rompio al poner el tope en el lugar
-  // equivocado: el fondo oscuro TIENE que llegar al borde. Con el tope afuera
-  // quedaban dos bloques carbon flotando sobre franjas de gris claro.
+  // equivocado: la superficie oscura TIENE que llegar al borde. Antes era la
+  // barra de arriba y se medía a lo ancho; desde que la navegacion vive en el
+  // sidebar, el sidebar es esa superficie y lo que tiene que llegar al borde
+  // es el ALTO — y su izquierda tiene que estar pegada al cero.
   if (arbol !== 'movil') {
-    const fondo = await v.evaluate(() => {
-      for (const el of document.querySelectorAll('.bg-carbon')) {
-        const r = el.getBoundingClientRect()
-        if (r.width > 0) return r.width
-      }
-      return -1
+    const lado = await v.evaluate(() => {
+      const sb = document.querySelector('aside.bg-carbon')
+      if (!sb) return null
+      const r = sb.getBoundingClientRect()
+      return { izquierda: r.left, alto: r.height, ventana: window.innerHeight }
     })
-    revisar(fondo === w, `${quien}: el fondo oscuro llega al borde (${fondo} de ${w})`)
+    revisar(lado !== null && lado.izquierda === 0,
+      `${quien}: el sidebar arranca en el borde izquierdo (${lado?.izquierda})`)
+    revisar(lado !== null && lado.alto >= lado.ventana,
+      `${quien}: y llega hasta abajo (${Math.round(lado?.alto ?? 0)} de ${lado?.ventana})`)
   }
   await ctx.close()
 }

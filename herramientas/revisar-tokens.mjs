@@ -8,7 +8,7 @@
  * archivo. Era falso: llegó a haber 92 hexes crudos en `src/`. Un archivo que
  * declara una regla que nadie comprueba no es una regla, es una nota.
  *
- * Esto es un **trinquete**, no una limpieza: no exige cero hexes hoy —quedan 43
+ * Esto es un **trinquete**, no una limpieza: no exige cero hexes hoy —quedan 39
  * y sacarlos es una decisión de diseño pendiente, porque son ocho grises casi
  * iguales y colapsarlos mueve píxeles en casi toda la app—. Lo que hace es que
  * el número **solo pueda bajar**. Aparece un color nuevo, o sube la cuenta de
@@ -40,19 +40,17 @@ const EXENTOS = ['src/lib/aviso/correo.ts', 'src/lib/aviso/aviso.test.ts']
  */
 const INVENTARIO = {
   '#9AA09E': [17, 'marcador de posición en claro, y texto secundario sobre carbón'],
-  '#787E7D': [11, 'texto apagado sobre carbón: nav inactivo, rótulos'],
-  '#6E7473': [6, 'texto secundario, en claro y sobre carbón'],
+  '#787E7D': [4, 'texto apagado sobre carbón: rótulos de la banda vieja'],
+  '#6E7473': [5, 'texto secundario, en claro y sobre carbón'],
   '#C3C7C4': [4, 'marcador de posición del campo de dinero'],
   '#FBFCFB': [2, 'fondo de la fila que abre un grupo'],
   '#FAFBFA': [1, 'fondo de una fila al pasar el puntero'],
   '#C9CECC': [1, 'texto de la lista de premium sobre carbón'],
   '#C9CCCA': [1, 'la hora en la vista previa del aviso'],
   '#B9C2BF': [1, 'la barra de un mes que sí se alcanza, en el selector'],
-  '#A7ACAB': [1, 'iniciales del avatar sobre carbón-2'],
   '#8E9492': [1, 'texto del bloque oscuro de premium'],
   '#3E4342': [1, 'texto de un renglón dentro de la notificación'],
   '#3A2A08': [1, 'texto sobre la barra ámbar de "sin conexión"'],
-  '#262A2B': [1, 'el borde de abajo de la barra superior'],
 }
 
 const fallas = []
