@@ -1127,6 +1127,62 @@ ok(caido.includes('Sin conexión'), 'y lo dice, en vez de dejar creer que los n�
 await p.screenshot({ path: RAIZ + 'capturas/app-sin-conexion.png' })
 servidorCaido = false
 
+// ---- Una copia de una version anterior ------------------------------------
+// La falla de verdad, en agosto de 2026: el eje semanal le agrego `semanas` al
+// presupuesto, y como la copia se ensena ANTES que la respuesta del servidor,
+// los telefonos que traian una copia de la version anterior abrieron EN BLANCO.
+// La computadora no, porque ahi ya se habia recargado. Se planta a mano una
+// copia del formato viejo y se comprueba que la app abre igual.
+const llaveCopia = String(copiaGuardada[0])
+await p.evaluate(async (llave) => {
+  await new Promise((r) => {
+    const req = indexedDB.open('jubileo', 1)
+    req.onsuccess = () => {
+      const t = req.result.transaction('presupuestos', 'readwrite')
+      // Un presupuesto de antes del eje semanal: sin `semanas`, sin
+      // `semanaActiva`, sin `planSemanal`. Con esto el codigo de hoy revienta
+      // al dibujar si nadie lo descarta.
+      t.objectStore('presupuestos').put(
+        {
+          guardadoEn: Date.now(),
+          presupuesto: {
+            usuario: { nombre: 'Ivan', iniciales: 'IV', nivel: 'gratis', nivelVenceEn: null,
+                       onboardingTerminado: true, frecuencia: 'Semanal' },
+            mesId: null, hogarId: null,
+            mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
+            mesCerrado: false, periodos: [], periodoActivo: 0, periodoActivoId: null,
+            ingresoPorChequeCents: 0, libreporPeriodoCents: [],
+            entraCents: 0, saleCents: 0, sinRepartirCents: 0, aLaDeudaCents: 0,
+            variacionEntra: '', variacionSale: '',
+            pagos: [], sobres: [], fijos: [], variables: [], lineasDeuda: [],
+            mayordomia: { id: 'm', nombre: 'Mayordomía', icono: 'mayordomia', detalle: '',
+                          montoMensualCents: 0, gastadoCents: 0 },
+            fondos: [], deudas: [], movimientos: [], mesesPasados: [],
+            inicioDeudas: '2026-08-01',
+          },
+        },
+        llave,
+      )
+      t.oncomplete = () => r()
+      t.onerror = () => r()
+    }
+    req.onerror = () => r()
+  })
+}, llaveCopia)
+
+servidorCaido = true
+await p.reload({ waitUntil: 'domcontentloaded' })
+await p.waitForTimeout(1500)
+const conCopiaVieja = await p.locator('body').innerText()
+ok(conCopiaVieja.trim() !== '',
+   'una copia de otra version NO deja la pantalla en blanco')
+ok(!conCopiaVieja.includes('Algo se rompió'),
+   `y ni siquiera llega a la barrera: la copia se descarta antes (${conCopiaVieja.slice(0, 60).replace(/\n/g, ' ')})`)
+servidorCaido = false
+await p.reload({ waitUntil: 'networkidle' })
+await esperarA(async () =>
+  (await p.locator('body').innerText()).toLowerCase().includes('te queda esta semana'))
+
 // ---- Septiembre ----------------------------------------------------------
 // El reloj avanza: el mes en curso ya no existe en la base.
 const hoyDeSeptiembre = '2026-09-08'

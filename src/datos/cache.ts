@@ -23,12 +23,31 @@ const BASE = 'jubileo'
 const ALMACEN = 'presupuestos'
 const VERSION = 1
 
+/**
+ * El formato del objeto guardado.
+ *
+ * **Súbelo cada vez que `Presupuesto` gane un campo que las pantallas lean sin
+ * preguntar.** Una copia se escribió con el código de ayer y se lee con el de
+ * hoy; si el de hoy espera algo que el de ayer no guardaba, la pantalla revienta
+ * al dibujar — y como la copia se enseña *antes* que la respuesta del servidor,
+ * revienta antes de que nadie pueda arreglarlo. Eso pasó de verdad: el eje
+ * semanal agregó `semanas`, y los teléfonos que traían una copia anterior
+ * abrieron en blanco mientras las computadoras —que ya habían recargado— se
+ * veían bien.
+ *
+ * 2: el eje semanal (`semanas`, `semanaActiva`, `planSemanal`,
+ *    `cubrePorPeriodoCents`, y `diaVencimiento` en cada línea).
+ */
+const FORMATO = 2
+
 /** Cuánto vale una copia antes de dejar de enseñarse. Una semana. */
 export const VIGENCIA_MS = 7 * 24 * 60 * 60 * 1000
 
 export interface Copia {
   presupuesto: Presupuesto
   guardadoEn: number
+  /** Ausente en las copias anteriores a este campo, que por eso se descartan. */
+  formato?: number
 }
 
 export function llaveDe(usuarioId: string, mes: MesObjetivo): string {
@@ -36,12 +55,18 @@ export function llaveDe(usuarioId: string, mes: MesObjetivo): string {
 }
 
 /**
- * ¿Sigue sirviendo esta copia? Una vieja se descarta en vez de enseñar números
- * de hace un mes como si fueran de hoy: en un presupuesto, un dato viejo con
- * cara de fresco es peor que no tener dato.
+ * ¿Sigue sirviendo esta copia?
+ *
+ * Dos razones para tirarla, y las dos van aquí y no en quien la lee: **vieja**
+ * —un dato de hace un mes con cara de hoy es peor que no tener dato— y **de
+ * otro formato**, que es la que evita la pantalla en blanco. Descartar una copia
+ * no le cuesta nada al usuario: la siguiente respuesta del servidor la vuelve a
+ * escribir.
  */
 export function sirve(copia: Copia | null, ahora: number): boolean {
-  return copia !== null && ahora - copia.guardadoEn < VIGENCIA_MS
+  if (copia === null) return false
+  if (copia.formato !== FORMATO) return false
+  return ahora - copia.guardadoEn < VIGENCIA_MS
 }
 
 function abrir(): Promise<IDBDatabase | null> {
@@ -79,7 +104,10 @@ export async function guardar(
   try {
     await new Promise<void>((resolver) => {
       const t = db.transaction(ALMACEN, 'readwrite')
-      t.objectStore(ALMACEN).put({ presupuesto, guardadoEn: ahora }, llaveDe(usuarioId, mes))
+      t.objectStore(ALMACEN).put(
+        { presupuesto, guardadoEn: ahora, formato: FORMATO },
+        llaveDe(usuarioId, mes),
+      )
       t.oncomplete = () => resolver()
       t.onerror = () => resolver()
       t.onabort = () => resolver()

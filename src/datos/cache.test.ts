@@ -4,8 +4,18 @@ import type { Copia } from './cache'
 
 const AHORA = Date.UTC(2026, 7, 6)
 
-function copia(guardadoEn: number): Copia {
-  return { presupuesto: {} as Copia['presupuesto'], guardadoEn }
+/** El formato de hoy. Si sube en `cache.ts`, sube aquí y las pruebas lo dicen. */
+const FORMATO = 2
+
+// `null` y no `undefined` para decir "sin formato": pasarle `undefined` a un
+// parámetro con valor por omisión activa el valor por omisión, y la prueba
+// estaría comprobando lo contrario de lo que dice.
+function copia(guardadoEn: number, formato: number | null = FORMATO): Copia {
+  return {
+    presupuesto: {} as Copia['presupuesto'],
+    guardadoEn,
+    ...(formato === null ? {} : { formato }),
+  }
 }
 
 describe('la llave de la copia', () => {
@@ -48,5 +58,28 @@ describe('si una copia todavía sirve', () => {
     // Pasa de verdad cuando alguien corrige la hora del aparato. Tirar la copia
     // por eso dejaría al usuario sin nada, y el mal es menor al revés.
     expect(sirve(copia(AHORA + 60_000), AHORA)).toBe(true)
+  })
+})
+
+describe('el formato de la copia', () => {
+  // La falla de verdad, en agosto de 2026: el eje semanal agregó `semanas` al
+  // `Presupuesto`, y como la copia se enseña ANTES que la respuesta del
+  // servidor, los teléfonos que traían una copia anterior abrieron en blanco.
+  // La computadora no, porque ahí ya se había recargado. Una copia de otro
+  // formato se tira; no cuesta nada, la siguiente respuesta la reescribe.
+  it('una copia sin formato es de antes de que existiera: se descarta', () => {
+    expect(sirve(copia(AHORA, null), AHORA)).toBe(false)
+  })
+
+  it('una de un formato viejo también', () => {
+    expect(sirve(copia(AHORA, 1), AHORA)).toBe(false)
+  })
+
+  it('y una de un formato que este código no conoce: puede traer de más o de menos', () => {
+    expect(sirve(copia(AHORA, 99), AHORA)).toBe(false)
+  })
+
+  it('la del formato de hoy, fresca, sí sirve', () => {
+    expect(sirve(copia(AHORA, FORMATO), AHORA)).toBe(true)
   })
 })
