@@ -41,7 +41,12 @@ const MESES = [
   'diciembre',
 ]
 
-function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
+/**
+ * El héroe de la semana en curso. Vive aquí y lo usa también el Dashboard: es
+ * la misma pieza, no una copia parecida — el día que "te queda" cambie de
+ * cuenta, tiene que cambiar en los dos sitios a la vez.
+ */
+export function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
   const { semanas, semanaActiva, sobres } = presupuesto
   const semana = semanas[semanaActiva]
   // Lo que queda en los sobres de la semana: el presupuesto ya trae el

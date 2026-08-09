@@ -239,3 +239,36 @@ reabrirla por esto. Ahí salen Queda grande con Planeado de referencia debajo, y
 **Gastado aparece al abrir el renglón**, que es cuando ya hay sitio. La vista
 por cheques usa la misma pieza con otros tres rótulos —Entra, Cubre, Queda—
 porque mide otra cosa con la misma aritmética.
+
+**Por qué el Dashboard abre con la semana en curso y no con el patrimonio neto.**
+*(Agosto de 2026 — `DASHBOARD-JUBILEO.md`.)* Casi todas las apps de finanzas
+abren con el patrimonio neto, y es la cifra equivocada para este producto. El
+patrimonio neto cambia una vez al mes y no se puede hacer nada con él hoy;
+quien vive cheque a cheque no abre la app para saber cuánto vale, la abre para
+saber si le alcanza hasta el viernes. Por eso la primera tarjeta es **la semana
+en curso** —el héroe de "te queda", su rótulo con el rango— y por eso los chips
+de acción van **dentro** de ella: la pantalla anterior tenía una cosa buena, que
+anotar un gasto costaba un toque, y sacarlos a otra pantalla lo habría vuelto
+dos. Un dashboard que resume pero no despacha es un reporte.
+
+De la mudanza salieron tres cosas que no cabían en las seis tarjetas del
+documento, y ninguna se borró:
+
+- **Cerrar la semana** se quedó como tercer chip de la primera tarjeta. Es un
+  verbo del vocabulario y un flujo de tres preguntas; ninguna tarjeta era su
+  sitio y perderlo no era una opción.
+- **La invitación a premium** y **el coach** bajaron al final del Dashboard,
+  condicionadas: la primera solo si la cuenta es gratis, el segundo solo si lo
+  hay. Una cuenta premium con coach ve exactamente las seis tarjetas y ni una
+  más.
+- **La checklist de pagos** vive en la hoja del chip "Pagué", que abre siempre
+  —incluso sin poder marcar nada— porque es también la única manera de *ver* los
+  pagos de la semana desde el inicio.
+
+Lo que sí se retiró fue la gráfica de barras de planeado contra gastado: la
+reemplaza la tarjeta **Cómo va el reparto**, que mide contra el *ritmo* del plan
+y no contra el plan a secas. "Llevas $180 de $300" no dice nada — en martes va
+fatal y en domingo va perfecto. La cuenta vive en `lib/semanas/ritmo`, pura y
+con pruebas, y reparte parejo entre los días: cualquier curva más lista sería
+una suposición sobre la vida de alguien que no conocemos, y una suposición
+vestida de precisión es peor que un promedio honesto.

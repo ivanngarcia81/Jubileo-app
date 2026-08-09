@@ -16,3 +16,5 @@ export {
   presupuestoConArrastre,
   disponibleConArrastre,
 } from './numeros.js'
+
+export { ritmoDelPlan, type Ritmo } from './ritmo.js'

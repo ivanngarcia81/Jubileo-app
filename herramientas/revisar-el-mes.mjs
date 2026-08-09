@@ -636,6 +636,10 @@ await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
 await p.waitForTimeout(600)
 
 // ---- Marcar y desmarcar un pago -------------------------------------------
+// Desde que el Dashboard es la pantalla de inicio, la checklist de pagos vive
+// en la hoja del chip "Pagué": la accion sigue a un toque, que era el punto.
+await p.getByRole('button', { name: /^Pagué/ }).first().click()
+await p.waitForTimeout(400)
 // La semana 1 (del 1 al 7) trae renta (día 1) y servicios (día 5), ordenados
 // por su día: la primera casilla es la renta.
 const casilla = p.getByRole('checkbox').first()
@@ -652,6 +656,19 @@ await p.waitForTimeout(1200)
 ok(escrituras.some((e) => e.borrado), 'desmarcarlo lo borra en vez de dejar basura')
 ok(await p.getByRole('checkbox').first().getAttribute('aria-checked') === 'false',
    'y la casilla se apaga')
+// La hoja se cierra tocando el fondo oscuro; dejarla abierta tapa lo que sigue.
+await p.locator('div[role=presentation]').first().click({ position: { x: 5, y: 5 } })
+await p.waitForTimeout(300)
+
+// ---- La accion de todos los dias, a un toque desde el inicio --------------
+await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
+await p.waitForTimeout(600)
+await p.getByRole('button', { name: /^Anotar/ }).first().click()
+await p.waitForTimeout(400)
+ok(await p.getByRole('dialog').first().isVisible(),
+   'Anotar abre su hoja desde el Dashboard, sin pasar por otra pantalla')
+await p.locator('div[role=presentation]').first().click({ position: { x: 5, y: 5 } })
+await p.waitForTimeout(300)
 
 // ---- Crear, renombrar y quitar --------------------------------------------
 await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
@@ -735,9 +752,11 @@ ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000
 ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
 
 // ---- Cerrar la semana -----------------------------------------------------
-await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
+await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
 await p.waitForTimeout(700)
-await p.getByRole('button', { name: 'Semana' }).first().click()
+// El chip "Cerrar" del Dashboard: cerrar la semana no cabia en ninguna de las
+// seis tarjetas y sin el se perdia un verbo del vocabulario.
+await p.getByRole('button', { name: /^Cerrar$/ }).first().click()
 await p.getByRole('dialog').first().waitFor({ state: 'visible' })
 ok((await p.getByRole('dialog').first().innerText()).includes('¿Entró lo que esperabas?'),
    'cerrar la semana arranca preguntando qué entró')

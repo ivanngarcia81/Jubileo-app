@@ -25,7 +25,7 @@ import {
   TarjetasDelMes,
 } from "./componentes/escritorio/Panel";
 import { Sidebar } from "./componentes/escritorio/Sidebar";
-import { Resumen } from "./componentes/escritorio/Resumen";
+import { Dashboard } from "./componentes/Dashboard";
 import { Aviso } from "./componentes/movil/Aviso";
 import { Deudas } from "./componentes/movil/Deudas";
 import { ElMes } from "./componentes/movil/ElMes";
@@ -825,7 +825,16 @@ export function App() {
           activa={enMovil}
           ir={ir}
         >
-          {enMovil === "ajustes" ? (
+          {enMovil === "resumen" ? (
+            <Dashboard
+              presupuesto={presupuesto}
+              ir={ir}
+              {...(acciones?.alAnotar ? { alAnotar: acciones.alAnotar } : {})}
+              {...(acciones?.alMarcarPago ? { alMarcarPago: acciones.alMarcarPago } : {})}
+              {...(acciones?.alCerrarSemana ? { alCerrarSemana: acciones.alCerrarSemana } : {})}
+              {...(acciones?.alRevisar ? { alRevisar: acciones.alRevisar } : {})}
+            />
+          ) : enMovil === "ajustes" ? (
             <Ajustes
               presupuesto={presupuesto}
               mes={mes}
@@ -871,10 +880,16 @@ export function App() {
         )}
 
         {enEscritorio === "resumen" ? (
-          <Resumen
-            presupuesto={presupuesto}
-            alVerMovimientos={() => ir("movimientos")}
-          />
+          <div className="mx-auto max-w-contenido px-[22px] pt-3 pb-[22px]">
+            <Dashboard
+              presupuesto={presupuesto}
+              ir={ir}
+              {...(acciones?.alAnotar ? { alAnotar: acciones.alAnotar } : {})}
+              {...(acciones?.alMarcarPago ? { alMarcarPago: acciones.alMarcarPago } : {})}
+              {...(acciones?.alCerrarSemana ? { alCerrarSemana: acciones.alCerrarSemana } : {})}
+              {...(acciones?.alRevisar ? { alRevisar: acciones.alRevisar } : {})}
+            />
+          </div>
         ) : (
           <div className="mx-auto max-w-contenido p-[22px]">
             {enEscritorio === "ajustes" ? (

@@ -57,7 +57,7 @@ await contrato.close()
 const tel = await navegador.newContext({ viewport: { width: 352, height: 706 }, deviceScaleFactor: 2 })
 const p = vigilar(await tel.newPage())
 
-for (const ruta of ['semana', 'mes', 'deudas', 'metas', 'aviso']) {
+for (const ruta of ['resumen', 'mes', 'deudas', 'metas', 'aviso']) {
   await p.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
   await p.waitForTimeout(300)
   await p.screenshot({ path: `${SALIDA}/app-${ruta}.png` })
@@ -65,9 +65,13 @@ for (const ruta of ['semana', 'mes', 'deudas', 'metas', 'aviso']) {
   revisar(ancho <= 352, `${ruta}: no se barre de lado (scrollWidth ${ancho})`)
 }
 
-await p.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+await p.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 
-// Objetivos tocables: se mide el área que responde, no la caja visible.
+// Objetivos tocables: se mide el área que responde, no la caja visible. Las
+// casillas de pago viven en la hoja del chip "Pagué" desde que el Dashboard es
+// la pantalla de inicio, asi que primero se abre.
+await p.getByRole('button', { name: /^Pagué/ }).first().click()
+await p.waitForTimeout(300)
 const toque = await p.evaluate(() => {
   const casilla = document.querySelector('[role=checkbox]')
   const c = casilla.getBoundingClientRect()
@@ -92,7 +96,7 @@ revisar(toque, 'la casilla de pago responde en un área de 44px')
 const PERMITIDOS = ['11px', '12.5px', '14px', '17px', '26px', '38px']
 const colados = new Set()
 let medidos = 0
-for (const ruta of ['semana', 'mes', 'deudas', 'metas', 'movimientos']) {
+for (const ruta of ['resumen', 'mes', 'deudas', 'metas', 'movimientos']) {
   await p.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
   await p.waitForTimeout(250)
   const r = await p.evaluate((ok) => {
@@ -113,7 +117,7 @@ for (const ruta of ['semana', 'mes', 'deudas', 'metas', 'movimientos']) {
   medidos += r.cuantos
   r.malos.forEach((m) => colados.add(`${ruta}: ${m}`))
 }
-await p.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+await p.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 revisar(medidos > 100, `se midieron ${medidos} textos, no dos`)
 revisar(colados.size === 0,
   `la escala tipográfica sigue en seis tamaños${colados.size ? `: ${[...colados].slice(0, 6).join(' · ')}` : ''}`)
@@ -121,7 +125,7 @@ revisar(colados.size === 0,
 // Un campo de texto de menos de 16px hace que iOS le haga zoom a la página al
 // enfocarlo, y salir de ese zoom es cosa del usuario. Se mide en el navegador
 // porque en el código el tamaño puede venir heredado.
-for (const ruta of ['semana', 'mes', 'ajustes']) {
+for (const ruta of ['resumen', 'mes', 'ajustes']) {
   await p.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
   await p.waitForTimeout(250)
   const chicos = await p.evaluate(() =>
@@ -133,7 +137,7 @@ for (const ruta of ['semana', 'mes', 'ajustes']) {
   revisar(chicos.length === 0,
     `${ruta}: ningún campo de texto baja de 16px${chicos.length ? ` — ${chicos.map(([n, t]) => `${n} en ${t}px`).join(', ')}` : ''}`)
 }
-await p.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+await p.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 
 // Las cifras héroe dependen de Instrument Serif: sin ella el diseño se cae.
 const fuentes = await p.evaluate(async () => {
@@ -303,6 +307,59 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- El Dashboard: que cada tarjeta lleve a donde dice ----------
+// Un dashboard que resume pero no despacha es un reporte. Lo que se mide es
+// que cada tarjeta suelte al usuario en la seccion donde eso se arregla, y que
+// la accion de todos los dias siga estando a un toque.
+const dashCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const dash = vigilar(await dashCtx.newPage())
+await dash.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await dash.waitForTimeout(400)
+
+for (const titulo of [
+  'Cómo va el reparto',
+  'Por revisar',
+  'Lo que viene',
+  'Salir de deudas',
+  'Fondos de reserva',
+]) {
+  revisar((await dash.locator('main, body').first().innerText()).includes(titulo),
+    `el Dashboard trae la tarjeta "${titulo}"`)
+}
+
+for (const [enlace, destino] of [
+  ['Ver todos los movimientos →', 'movimientos'],
+  ['Ver todas tus deudas →', 'deudas'],
+  ['Ver todas tus metas →', 'metas'],
+  ['Ver el mes completo →', 'mes'],
+]) {
+  await dash.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+  await dash.waitForTimeout(300)
+  await dash.getByRole('button', { name: enlace }).first().click()
+  await dash.waitForTimeout(300)
+  const donde = await dash.evaluate(() => location.hash)
+  revisar(donde.includes(destino), `"${enlace}" lleva a #/${destino} (${donde})`)
+}
+
+// La semana en curso lleva al presupuesto CON su semana abierta, no al arbol.
+await dash.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await dash.waitForTimeout(300)
+await dash.getByRole('button', { name: 'Ver la semana en el presupuesto →' }).first().click()
+await dash.waitForTimeout(400)
+revisar(/#\/mes\?semana=\d/.test(await dash.evaluate(() => location.hash)),
+  `la semana en curso lleva al presupuesto con su semana (${await dash.evaluate(() => location.hash)})`)
+
+await dash.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await dash.waitForTimeout(300)
+// El chip de Anotar existe y esta apagado con los datos de ejemplo, que es la
+// promesa de la demostracion: se ve, no se toca. Que ABRA su hoja se comprueba
+// en `revisar-el-mes.mjs`, que si trae acciones.
+revisar(await dash.getByRole('button', { name: /^Anotar/ }).first().isDisabled(),
+  'con datos de ejemplo, Anotar se ve pero no se toca')
+revisar(!(await dash.getByRole('button', { name: /^Pagué/ }).first().isDisabled()),
+  'y Pagué si abre: la hoja es la unica manera de VER los pagos de la semana')
+await dashCtx.close()
+
 // ---------- Las tres cifras de la vista por semanas ----------
 // Planeado, Gastado y Queda. Lo que se mide no es que salgan las tres —eso lo
 // diria cualquier captura— sino que **se resten entre si**. Queda se calcula en
@@ -411,7 +468,7 @@ await inicio.waitForTimeout(400)
 revisar(/Dashboard/.test(await inicio.locator('h1').first().innerText()),
   `la app abre en el Dashboard (${await inicio.locator('h1').first().innerText()})`)
 
-await inicio.goto(`${BASE}/#/semana`, { waitUntil: 'networkidle' })
+await inicio.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 await inicio.waitForTimeout(400)
 revisar(/Dashboard/.test(await inicio.locator('h1').first().innerText()),
   '#/semana lleva al Dashboard en vez de caer por descarte')

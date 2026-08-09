@@ -39,8 +39,8 @@ const EXENTOS = ['src/lib/aviso/correo.ts', 'src/lib/aviso/aviso.test.ts']
  * el techo.
  */
 const INVENTARIO = {
-  '#9AA09E': [17, 'marcador de posición en claro, y texto secundario sobre carbón'],
-  '#787E7D': [4, 'texto apagado sobre carbón: rótulos de la banda vieja'],
+  '#9AA09E': [16, 'marcador de posición en claro, y texto secundario sobre carbón'],
+  '#787E7D': [3, 'texto apagado sobre carbón: rótulos de la banda vieja'],
   '#6E7473': [5, 'texto secundario, en claro y sobre carbón'],
   '#C3C7C4': [4, 'marcador de posición del campo de dinero'],
   '#FBFCFB': [2, 'fondo de la fila que abre un grupo'],
