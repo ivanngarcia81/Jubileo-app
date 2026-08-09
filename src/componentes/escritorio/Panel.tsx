@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Presupuesto } from "../../datos/tipos";
 import { type Centavos, formatearRedondo } from "../../lib/dinero";
 import type { Ruta } from "../../rutas";
+import { cuantos } from "../textos";
 
 /**
  * Todo lo que tiene una línea en el presupuesto del mes: los cuatro grupos que
@@ -102,12 +103,12 @@ export function TarjetasDelMes({ presupuesto }: { presupuesto: Presupuesto }) {
       <Tarjeta
         titulo="Entra este mes"
         valor={presupuesto.entraCents}
-        detalle={`${presupuesto.periodos.length} cheques`}
+        detalle={cuantos(presupuesto.periodos.length, "cheque", "cheques")}
       />
       <Tarjeta
         titulo="Sale este mes"
         valor={presupuesto.saleCents}
-        detalle={`${contarCategorias(presupuesto)} categorías`}
+        detalle={cuantos(contarCategorias(presupuesto), "categoría", "categorías")}
       />
       <Tarjeta
         titulo="Sin repartir"

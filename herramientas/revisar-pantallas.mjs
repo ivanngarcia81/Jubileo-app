@@ -303,6 +303,53 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- El sidebar en una pantalla baja ----------
+// Un mes de cinco semanas mas el enfoque no caben en una laptop de poco alto.
+// Cuando el `aside` entero se desplazaba, bajar un poco se llevaba la marca y
+// los cinco destinos fuera de la vista: quedarse sin manera de salir de la
+// pantalla no es un desplazamiento, es una trampa. Solo la zona de en medio
+// —el rail y el enfoque— se mueve; la navegacion y el pie se quedan.
+const bajoCtx = await navegador.newContext({ viewport: { width: 1280, height: 560 } })
+const bajo = vigilar(await bajoCtx.newPage())
+await bajo.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await bajo.waitForTimeout(400)
+
+// La zona de en medio tiene que ser la que se desborda, y no el `aside`.
+const desborde = await bajo.evaluate(() => {
+  const sb = document.querySelector('aside.bg-carbon')
+  if (!sb) return null
+  const medio = sb.querySelector('div.overflow-y-auto')
+  if (!medio) return null
+  return {
+    aside: sb.scrollHeight - sb.clientHeight,
+    medio: medio.scrollHeight - medio.clientHeight,
+  }
+})
+revisar(desborde !== null && desborde.medio > 0,
+  `en una pantalla baja la zona de en medio se desborda (${desborde?.medio}px)`)
+revisar(desborde !== null && desborde.aside === 0,
+  `y el sidebar entero no (${desborde?.aside}px)`)
+
+// Y al empujar esa zona hasta el fondo, la salida sigue ahi.
+// Se empuja lo que se pueda empujar: si un dia el desplazamiento vuelve al
+// `aside`, este mismo empujon se lo lleva la navegacion y las tres de abajo lo
+// dicen. Empujar solo la zona de en medio dejaria pasar justo esa regresion.
+await bajo.evaluate(() => {
+  const sb = document.querySelector('aside.bg-carbon')
+  if (!sb) return
+  for (const caja of [sb, ...sb.querySelectorAll('div')]) caja.scrollTop = caja.scrollHeight
+})
+await bajo.waitForTimeout(200)
+for (const destino of ['Mi semana', 'Movimientos', 'Ajustes']) {
+  const caja = await bajo
+    .getByRole('button', { name: destino, exact: true })
+    .first()
+    .boundingBox()
+  revisar(caja !== null && caja.y >= 0 && caja.y + caja.height <= 560,
+    `con el rail hasta el fondo, "${destino}" sigue en la pantalla`)
+}
+await bajoCtx.close()
+
 // ---------- El corte, medido justo en su borde ----------
 // Desde que el arbol se escoge con logica, el numero vive en dos mundos: la
 // media query de `tema.css` y el `matchMedia` de `pantalla.ts`, que lo lee de

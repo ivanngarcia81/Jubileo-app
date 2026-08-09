@@ -15,7 +15,7 @@ import {
   Vacio,
 } from '../base'
 import { IconoMovimientos } from '../iconos'
-import { etiquetaDeDia, fechaLarga } from '../textos'
+import { cuantos, etiquetaDeDia, fechaLarga } from '../textos'
 
 /**
  * Movimientos — todo lo que pasó en el mes, por día.
@@ -227,7 +227,7 @@ export function Movimientos({
     <ListaSeccion
       titulo={`Movimientos de ${presupuesto.mes.etiqueta.toLowerCase()}`}
       icono={<IconoMovimientos tam={15} />}
-      dato={`${presupuesto.movimientos.length} movimientos`}
+      dato={cuantos(presupuesto.movimientos.length, 'movimiento', 'movimientos')}
       {...COLUMNAS}
     >
       {/* La barra solo aparece cuando hay algo que hacer. Una que diga
@@ -236,7 +236,7 @@ export function Movimientos({
         <div className="bg-brillo-teal border-linea flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-[12px] py-[9px] text-menor panel:px-[18px]">
           <span>
             <b className="font-semibold">
-              {sinRevisar.length === 1 ? '1 movimiento' : `${sinRevisar.length} movimientos`}
+              {cuantos(sinRevisar.length, 'movimiento', 'movimientos')}
             </b>{' '}
             sin revisar
           </span>

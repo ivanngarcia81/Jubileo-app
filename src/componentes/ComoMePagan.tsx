@@ -5,7 +5,7 @@ import { fecha } from '../lib/fecha'
 import type { FrecuenciaPago, MesObjetivo, Periodo } from '../lib/periodos'
 import { generarPeriodos } from '../lib/periodos'
 import { Moneda } from './base'
-import { diaYMes } from './textos'
+import { cuantos, diaYMes } from './textos'
 
 /**
  * Cambiar cómo te pagan.
@@ -118,7 +118,7 @@ export function ComoMePagan({
           {presupuesto.usuario.frecuencia}
         </h2>
         <p className="text-texto-2 mt-2 text-cuerpo leading-[1.55]">
-          {presupuesto.periodos.length} cheques este mes
+          {cuantos(presupuesto.periodos.length, 'cheque', 'cheques')} este mes
           {cheque && ` · el primero el ${diaYMes(cheque.fechaPago)}`}
         </p>
         <button

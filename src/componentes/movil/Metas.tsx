@@ -4,7 +4,7 @@ import { type Centavos, centavos } from '../../lib/dinero'
 import { FONDOS_GRATIS, puede } from '../../lib/membresia'
 import { FilaAgregar, FilaFondo, ListaSeccion, Moneda, Seccion, Tarjeta, Vacio } from '../base'
 import { IconoMetas } from '../iconos'
-import { meses } from '../textos'
+import { cuantos, meses } from '../textos'
 import { EditarFondo } from './EditarFondo'
 
 /**
@@ -54,7 +54,7 @@ export function Metas({
       <ListaSeccion
         titulo="Fondos de reserva"
         icono={<IconoMetas tam={15} />}
-        dato={`${presupuesto.fondos.length} fondos`}
+        dato={cuantos(presupuesto.fondos.length, 'fondo', 'fondos')}
         encabezados={['Fondo', null, 'Llevas']}
         {...FONDOS}
       >

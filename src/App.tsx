@@ -35,7 +35,7 @@ import { Movimientos } from "./componentes/movil/Movimientos";
 import type { RespuestaCierre } from "./componentes/movil/CerrarSemana";
 import { MiSemana } from "./componentes/movil/MiSemana";
 import { useEsEscritorio } from "./componentes/pantalla";
-import { fechaLarga } from "./componentes/textos";
+import { cuantos, fechaLarga } from "./componentes/textos";
 import type { ClaveIcono } from "./lib/iconos";
 import { type Centavos, centavos } from "./lib/dinero";
 import { fecha } from "./lib/fecha";
@@ -64,7 +64,7 @@ function cabeceraDe(
           avatar={<IconoRegresar />}
           alTocarAvatar={() => ir("semana")}
           titulo={presupuesto.mes.etiqueta}
-          subtitulo={`${presupuesto.usuario.frecuencia} · ${presupuesto.periodos.length} cheques`}
+          subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
           accion={<IconoEditar tam={16} />}
         />
       );
@@ -73,7 +73,7 @@ function cabeceraDe(
         <Cabecera
           avatar={<IconoDeudas />}
           titulo="Salir de deudas"
-          subtitulo={`${pendientes} deudas pendientes`}
+          subtitulo={cuantos(pendientes, 'deuda pendiente', 'deudas pendientes')}
           accion={<IconoMas tam={16} />}
         />
       );
@@ -82,7 +82,7 @@ function cabeceraDe(
         <Cabecera
           avatar={<IconoMetas />}
           titulo="Tus metas"
-          subtitulo={`${presupuesto.fondos.length} fondos de reserva`}
+          subtitulo={cuantos(presupuesto.fondos.length, 'fondo de reserva', 'fondos de reserva')}
           accion={<IconoMas tam={16} />}
         />
       );
@@ -92,7 +92,7 @@ function cabeceraDe(
           avatar={<IconoRegresar />}
           alTocarAvatar={() => ir("semana")}
           titulo="Movimientos"
-          subtitulo={`${presupuesto.mes.etiqueta} · ${presupuesto.movimientos.length} en total`}
+          subtitulo={`${presupuesto.mes.etiqueta} · ${cuantos(presupuesto.movimientos.length, 'movimiento', 'movimientos')} en total`}
           accion={<IconoMovimientos tam={16} />}
         />
       );
@@ -102,7 +102,7 @@ function cabeceraDe(
           avatar={<IconoRegresar />}
           alTocarAvatar={() => ir("semana")}
           titulo="Ajustes"
-          subtitulo={`${presupuesto.usuario.frecuencia} · ${presupuesto.periodos.length} cheques`}
+          subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
           accion={<IconoAjustes tam={16} />}
         />
       );

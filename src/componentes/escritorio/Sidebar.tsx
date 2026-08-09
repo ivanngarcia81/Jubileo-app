@@ -209,7 +209,7 @@ export function Sidebar({
   ir: (destino: Ruta | Destino) => void
 }) {
   return (
-    <aside className="bg-carbon sticky top-0 flex h-dvh w-sidebar shrink-0 flex-col gap-[2px] overflow-y-auto px-3 pt-[18px] pb-[14px] text-white">
+    <aside className="bg-carbon sticky top-0 flex h-dvh w-sidebar shrink-0 flex-col px-3 pt-[18px] pb-[14px] text-white">
       <div className="flex items-center gap-[10px] px-[11px] pt-1 pb-4">
         <div className="bg-teal text-tinta-teal font-serif grid size-[30px] place-items-center rounded-[10px] text-titulo">
           J
@@ -217,7 +217,7 @@ export function Sidebar({
         <b className="font-serif text-titulo font-normal">Jubileo</b>
       </div>
 
-      <nav aria-label="Navegación principal" className="flex flex-col gap-[2px]">
+      <nav aria-label="Navegación principal" className="flex shrink-0 flex-col gap-[2px]">
         {DESTINOS.map(({ ruta, texto, Icono }) => (
           <Renglon key={ruta} texto={texto} activo={ruta === activa} alTocar={() => ir(ruta)}>
             <Icono tam={15} />
@@ -225,14 +225,23 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* El contexto permanente: dónde estás en el mes, y qué deuda atacas. */}
-      <RailDeSemanas
-        presupuesto={presupuesto}
-        alTocarSemana={(semana) => ir({ ruta: 'mes', semana })}
-      />
-      <Enfoque presupuesto={presupuesto} alTocar={() => ir('deudas')} />
+      {/*
+        El contexto permanente: dónde estás en el mes, y qué deuda atacas.
 
-      <div className="border-linea-oscura mt-auto flex flex-col gap-[2px] border-t pt-[10px]">
+        Solo esta zona se desplaza. Cuando el sidebar entero lo hacía, un mes de
+        cinco semanas más el enfoque empujaban la navegación fuera de la vista
+        en cuanto alguien bajaba un poco — y quedarse sin manera de salir de la
+        pantalla no es un desplazamiento, es una trampa.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col gap-[2px] overflow-y-auto">
+        <RailDeSemanas
+          presupuesto={presupuesto}
+          alTocarSemana={(semana) => ir({ ruta: 'mes', semana })}
+        />
+        <Enfoque presupuesto={presupuesto} alTocar={() => ir('deudas')} />
+      </div>
+
+      <div className="border-linea-oscura mt-auto flex shrink-0 flex-col gap-[2px] border-t pt-[10px]">
         <Renglon
           texto="Ajustes"
           activo={activa === 'ajustes'}

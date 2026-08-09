@@ -39,7 +39,19 @@ export function diaYMes(f: FechaCivil): string {
 
 /** "5 meses" / "1 mes" */
 export function meses(n: number): string {
-  return n === 1 ? '1 mes' : `${n} meses`
+  return cuantos(n, 'mes', 'meses')
+}
+
+/**
+ * Un conteo con su sustantivo, en singular cuando toca.
+ *
+ * "1 cheques" es de las cosas que hacen que una app se sienta hecha a medias, y
+ * pasa siempre: el plural se escribe una vez y el caso de uno aparece meses
+ * después, en el mes en que alguien cobra una sola vez. Media app ya lo cuidaba
+ * a mano y la otra media no; esto es para no volver a decidirlo en cada sitio.
+ */
+export function cuantos(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`
 }
 
 const DIAS = [

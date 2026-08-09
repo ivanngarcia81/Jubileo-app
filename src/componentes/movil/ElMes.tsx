@@ -12,7 +12,7 @@ import {
 } from '../../lib/mes/grupos'
 import type { ClaveIcono } from '../../lib/iconos'
 import { semanaDeFijo } from '../../lib/semanas'
-import { nombreDeMes } from '../textos'
+import { cuantos, nombreDeMes } from '../textos'
 import {
   CeldaCifra,
   CeldaNombre,
@@ -82,7 +82,7 @@ function SelectorDeMes({
                 ? 'Sin repartir — todavía falta darle destino'
                 : 'Te pasaste: repartiste más de lo que entra'
             : vista === 'Entra'
-              ? `Entra este mes · ${presupuesto.periodos.length} cheques`
+              ? `Entra este mes · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`
               : 'Sale este mes · repartido en tus cheques'}
         </div>
       </div>
@@ -366,7 +366,7 @@ export function ElMes({
         <ListaSeccion
           titulo={`Semanas de ${nombreDelMes}`}
           icono={<IconoDinero tam={15} />}
-          dato={`${presupuesto.semanas.length} semanas`}
+          dato={cuantos(presupuesto.semanas.length, 'semana', 'semanas')}
           encabezados={['Semana', 'Monto']}
           {...DOS_COLUMNAS}
         >
@@ -470,7 +470,7 @@ export function ElMes({
         <ListaSeccion
           titulo={`Cheques de ${nombreDelMes}`}
           icono={<IconoDinero tam={15} />}
-          dato={`${presupuesto.periodos.length} cheques`}
+          dato={cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}
           encabezados={['Cheque', 'Le queda']}
           {...DOS_COLUMNAS}
         >
@@ -508,7 +508,7 @@ export function ElMes({
       <ListaSeccion
         titulo={`Categorías de ${nombreDeMes(presupuesto.mes.mes).toLowerCase()}`}
         icono={<IconoDinero tam={15} />}
-        dato={`${cuantasCategorias} categorías`}
+        dato={cuantos(cuantasCategorias, 'categoría', 'categorías')}
         encabezados={['Categoría', null, 'Gastado']}
         encabezadosPanel={['Categoría', 'Gastado', null, 'Del mes']}
         {...CATEGORIAS}
