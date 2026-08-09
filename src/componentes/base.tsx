@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { type Centavos, formatear, formatearRedondo } from '../lib/dinero'
+import { type Centavos, centavos, formatear, formatearRedondo } from '../lib/dinero'
 import { IconoDeClave, type ClaveIcono } from './iconos'
 
 /**
@@ -90,6 +90,25 @@ export function colorDeSobre(gastado: Centavos, presupuesto: Centavos): string {
   if (parte > 1) return 'var(--rojo)'
   if (parte >= 0.8 && parte < 1) return 'var(--ambar)'
   return 'var(--teal)'
+}
+
+/**
+ * El color de la cifra que **queda**, derivado del de la barra.
+ *
+ * Se deriva y no se escribe aparte a propósito: son la misma regla dicha en
+ * dos lenguajes —la barra pinta en `var(--…)`, el texto en clase de Tailwind—
+ * y dos copias de un umbral acaban discrepando el día que alguien mueve el
+ * 80%. Aquí solo puede cambiar en un sitio.
+ *
+ * Queda es la única cifra de la fila que lleva color. Planeado y Gastado se
+ * quedan en el color de texto normal: dos cifras de color en un renglón
+ * compiten y ninguna gana, y la que la persona busca de verdad es esta.
+ */
+export function claseDeQueda(gastado: Centavos, planeado: Centavos): string {
+  const color = colorDeSobre(gastado, planeado)
+  if (color === 'var(--rojo)') return 'text-rojo'
+  if (color === 'var(--ambar)') return 'text-ambar'
+  return 'text-teal-osc'
 }
 
 export function porcentaje(parte: Centavos, total: Centavos): number {
@@ -517,6 +536,65 @@ export function CeldasDeAvance({
         <Moneda centavos={gastadoCents} />
         <div className="text-texto-2 text-rotulo font-normal">
           de <Moneda centavos={delMesCents} />
+        </div>
+      </CeldaCifra>
+    </>
+  )
+}
+
+/**
+ * Las tres cifras de una fila de semana o de cheque: **Planeado, Gastado y
+ * Queda**, con la barra en su carril.
+ *
+ * La vista por semanas —la que más se va a usar— daba una sola cifra, cuando
+ * el árbol del mes ya daba dos. Con una sola, la pregunta que la persona trae
+ * ("¿me alcanza?") se contesta restando de cabeza.
+ *
+ * En el teléfono no caben tres columnas de dinero en 380px: ahí salen Queda
+ * grande y Planeado como referencia debajo, con la barra. **Gastado aparece
+ * al abrir el renglón** (`gastadoEnMovil`), donde ya hay espacio porque el
+ * renglón se desplegó. No son dos filas distintas — eso se despareja en tres
+ * meses— son las mismas celdas, y las que sobran salen con `display:none`.
+ * Por eso el orden en el código es el del escritorio.
+ *
+ * Queda no se recibe: se calcula aquí, de Planeado − Gastado. Recibirla
+ * abriría la puerta a que una pantalla mande tres números que no se restan
+ * entre sí, y una app de presupuesto que no cuadra en la pantalla no vale
+ * nada.
+ */
+export function CeldasDeTresCifras({
+  planeadoCents,
+  gastadoCents,
+  gastadoEnMovil = false,
+}: {
+  planeadoCents: Centavos
+  gastadoCents: Centavos
+  /** En el teléfono, enseñar también lo gastado. Se usa al abrir el renglón. */
+  gastadoEnMovil?: boolean
+}) {
+  const queda = centavos(planeadoCents - gastadoCents)
+  const claseQueda = claseDeQueda(gastadoCents, planeadoCents)
+  return (
+    <>
+      <CeldaCifra apagada className="hidden panel:block">
+        <Moneda centavos={planeadoCents} />
+      </CeldaCifra>
+      <Barra porcentaje={porcentaje(gastadoCents, planeadoCents)} color={colorDeSobre(gastadoCents, planeadoCents)} />
+      <CeldaCifra apagada className="hidden panel:block">
+        <Moneda centavos={gastadoCents} />
+      </CeldaCifra>
+      <CeldaCifra className={`hidden panel:block ${claseQueda}`}>
+        <Moneda centavos={queda} />
+      </CeldaCifra>
+      <CeldaCifra className={`panel:hidden ${claseQueda}`}>
+        <Moneda centavos={queda} />
+        <div className="text-texto-2 text-rotulo font-normal">
+          {gastadoEnMovil && (
+            <>
+              gastado <Moneda centavos={gastadoCents} /> ·{' '}
+            </>
+          )}
+          de <Moneda centavos={planeadoCents} />
         </div>
       </CeldaCifra>
     </>

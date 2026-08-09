@@ -303,6 +303,56 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- Las tres cifras de la vista por semanas ----------
+// Planeado, Gastado y Queda. Lo que se mide no es que salgan las tres —eso lo
+// diria cualquier captura— sino que **se resten entre si**. Queda se calcula en
+// el componente justo para que no puedan separarse; esto lo comprueba en el
+// navegador, contra el DOM de verdad, en las dos vistas que la usan.
+const cifrasCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const cifras = vigilar(await cifrasCtx.newPage())
+const dinero = (t) => Number(String(t).replace(/[^0-9.-]/g, ''))
+
+for (const [eje, rotulos] of [
+  ['Semanas', ['Planeado', 'Gastado', 'Queda']],
+  ['Cheques', ['Entra', 'Cubre', 'Queda']],
+]) {
+  await cifras.goto(`${BASE}/#/mes`, { waitUntil: 'networkidle' })
+  await cifras.waitForTimeout(400)
+  await cifras.getByRole('button', { name: eje, exact: true }).first().click()
+  await cifras.waitForTimeout(300)
+
+  const encabezados = await cifras.evaluate((eje) => {
+    const seccion = [...document.querySelectorAll('section, div')].find((e) =>
+      /^(Semanas|Cheques) de /.test(e.textContent ?? ''))
+    return seccion ? [...seccion.querySelectorAll('*')].map((e) => e.textContent) : []
+  }, eje)
+  revisar(rotulos.every((r) => encabezados.some((t) => t === r)),
+    `${eje}: los encabezados dicen ${rotulos.join(', ')}`)
+
+  // La primera fila de la lista: sus cuatro cifras visibles en escritorio son
+  // Planeado, Gastado, Queda y —oculta— la version de telefono.
+  const fila = await cifras.evaluate(() => {
+    const boton = [...document.querySelectorAll('button')].find((b) =>
+      /^(Abrir|Cerrar) la semana /.test(b.getAttribute('aria-label') ?? ''))
+      ?? [...document.querySelectorAll('div')].find((d) => /^Cheque 1/.test(d.textContent ?? ''))
+    if (!boton) return null
+    const caja = boton.closest('[style*="--cols"]') ? boton : boton
+    const celdas = [...caja.querySelectorAll('div')]
+      // `-$919` y `-US$919` existen: una semana se puede pasar de lo planeado.
+      .filter((e) => getComputedStyle(e).display !== 'none' && /^-?[A-Z]*\$[\d,.]+$/.test(e.textContent?.trim() ?? ''))
+      .map((e) => e.textContent.trim())
+    return celdas
+  })
+  revisar(fila !== null && fila.length >= 3,
+    `${eje}: la primera fila trae sus tres cifras (${fila?.join(' · ') ?? 'ninguna'})`)
+  if (fila && fila.length >= 3) {
+    const [planeado, gastado, queda] = fila.map(dinero)
+    revisar(Math.abs(planeado - gastado - queda) <= 1,
+      `${eje}: ${rotulos[0]} − ${rotulos[1]} = ${rotulos[2]} (${planeado} − ${gastado} = ${queda})`)
+  }
+}
+await cifrasCtx.close()
+
 // ---------- El sidebar en una pantalla baja ----------
 // Un mes de cinco semanas mas el enfoque no caben en una laptop de poco alto.
 // Cuando el `aside` entero se desplazaba, bajar un poco se llevaba la marca y

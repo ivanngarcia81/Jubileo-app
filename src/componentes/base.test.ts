@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { centavos } from '../lib/dinero'
-import { colorDeSobre, porcentaje } from './base'
+import { claseDeQueda, colorDeSobre, porcentaje } from './base'
 
 /**
  * La regla 4 de los tokens escrita como prueba. Es una regla de las que se
@@ -45,5 +45,48 @@ describe('el porcentaje que dibuja la barra', () => {
     expect(porcentaje(centavos(4020), centavos(4500))).toBe(89)
     expect(porcentaje(centavos(0), centavos(4500))).toBe(0)
     expect(porcentaje(centavos(4500), centavos(0))).toBe(0)
+  })
+})
+
+/**
+ * La cifra que queda es la única con color. Su regla se deriva de la de las
+ * barras, así que lo que se prueba aquí es la traducción: que los tres estados
+ * lleguen enteros al texto y que ninguno se quede sin clase.
+ */
+describe('el color de la cifra que queda', () => {
+  const clase = (gastado: number, planeado: number) =>
+    claseDeQueda(centavos(gastado), centavos(planeado))
+
+  it('teal mientras vas bien', () => {
+    expect(clase(0, 20000)).toBe('text-teal-osc')
+    expect(clase(15199, 20000)).toBe('text-teal-osc')
+  })
+
+  it('ámbar del 80% para arriba, mientras no llegues', () => {
+    expect(clase(16000, 20000)).toBe('text-ambar')
+    expect(clase(19999, 20000)).toBe('text-ambar')
+  })
+
+  it('cuadrar al centavo sigue siendo acertar', () => {
+    expect(clase(20000, 20000)).toBe('text-teal-osc')
+  })
+
+  it('rojo solo cuando ya te pasaste', () => {
+    expect(clase(20001, 20000)).toBe('text-rojo')
+  })
+
+  it('dice lo mismo que la barra, siempre', () => {
+    // La prueba de que no se pueden separar: si alguien mueve el 80% en una
+    // sola de las dos, esto revienta.
+    const equivalente: Record<string, string> = {
+      'var(--teal)': 'text-teal-osc',
+      'var(--ambar)': 'text-ambar',
+      'var(--rojo)': 'text-rojo',
+    }
+    for (let gastado = 0; gastado <= 30000; gastado += 137) {
+      expect(clase(gastado, 20000)).toBe(
+        equivalente[colorDeSobre(centavos(gastado), centavos(20000))],
+      )
+    }
   })
 })

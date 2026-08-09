@@ -198,3 +198,44 @@ ediciones que le hiciera después un cliente viejo no contarían — el contador
 abajo**, que es justo la mentira peligrosa: retiraría el puente antes de tiempo. Contar de más solo
 retrasa. Se eligió una columna y no un RPC porque es lo único que PostgREST deja mandar sin
 inventar un camino nuevo, y el cliente viejo no puede mandar una columna que no sabe que existe.
+
+**Por qué las pantallas se llaman como se llaman.** *(Agosto de 2026 —
+`RENOMBRAR-Y-TRES-CIFRAS.md`.)* "Mi semana" y "El mes" eran nombres de casa:
+descriptivos, pero nadie llega a Jubileo sabiéndolos. **Dashboard** y
+**Presupuesto mensual** son el vocabulario común de las apps de presupuesto
+—EveryDollar, MoneyWiz y el resto usan esas dos palabras para esas dos cosas—
+y eso vale más que la originalidad en los dos únicos rótulos que alguien lee
+antes de entender el producto. Lo que sí es de Jubileo se queda tal cual:
+semana, sobre, apretada, repartir, fondo de reserva, fecha de libertad. La
+dirección no cambió —`#/resumen`, `#/mes`—: renombrar es cómo se lee, no a
+dónde se va.
+
+Los nombres viven en `src/componentes/rotulos.ts`, en dos formas por ruta:
+`pantalla` para el sidebar y la cabecera, `pildora` para los cuatro botones del
+teléfono, donde "Presupuesto mensual" simplemente no cabe. Estaban escritos
+tres veces —Sidebar, el mapa `TITULOS` de Panel, la píldora de Marco— que es
+exactamente cómo dos pantallas acaban llamándole distinto a lo mismo.
+
+**Por qué la cifra con color es la que queda.** La vista por semanas daba una
+sola cifra cuando el árbol del mes ya daba dos, y era la vista que más se usa.
+Ahora da tres: **Planeado, Gastado y Queda**. De las tres, solo Queda lleva
+color —teal, ámbar del 80% para arriba, rojo pasado el 100%, la regla 4 de los
+tokens— porque es la única que contesta la pregunta con la que la persona abre
+la app. Planeado y Gastado son el trabajo que ya hizo; Queda es la decisión que
+tiene enfrente. Dos cifras de color en un mismo renglón compiten y ninguna
+gana, y el color deja de querer decir algo — que es la misma razón por la que
+el rojo no aparece como advertencia preventiva.
+
+Queda no se recibe: se calcula dentro del componente, de Planeado − Gastado.
+Recibirla dejaría que una pantalla mandara tres números que no se restan entre
+sí, y una app de presupuesto que no cuadra en su propia pantalla no vale nada.
+La regla de color se deriva de la de las barras (`claseDeQueda` llama a
+`colorDeSobre`), así que el 80% solo existe en un sitio; hay una prueba que
+recorre el rango entero comparando las dos.
+
+En el teléfono no caben tres columnas de dinero en 380px sin dejarle cuarenta
+píxeles al nombre — la escala de tipografía costó demasiado como para
+reabrirla por esto. Ahí salen Queda grande con Planeado de referencia debajo, y
+**Gastado aparece al abrir el renglón**, que es cuando ya hay sitio. La vista
+por cheques usa la misma pieza con otros tres rótulos —Entra, Cubre, Queda—
+porque mide otra cosa con la misma aritmética.

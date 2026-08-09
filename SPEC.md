@@ -199,8 +199,10 @@ El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, e
 
 ### Móvil
 
-1. **Mi semana** *(inicio)* — Anclada a la semana del mes en curso. Héroe turquesa con lo que queda en los sobres de la semana (con su arrastre), el rótulo que dice cuál es —"Semana 2 · del 8 al 14"— y el riel de semanas dentro. Debajo, chips de acción rápida: *Anotar · Pagué · Semana*. Luego los pagos que vencen en la semana con casilla de marcado, y los sobres con barra de progreso. *(Cuando llegue el Panel, esta pantalla muere como destino y sus piezas se mudan ahí.)*
-2. **El mes** — Base cero. Selector de mes con barras (entra / sale / sobró) y el segmentado **Semanas · Cheques · Mes**. En Semanas, las 4–5 del calendario con su monto y su bandera de apretada: adentro los fijos que caen por fecha (solo lectura) y los sobres editables por semana. En Cheques, la vista derivada: qué cubre cada uno y cuánto le queda. En Mes, el árbol por grupos: mayordomía, fijos con su día, variables, deudas, y los fondos de reserva.
+1. **Dashboard** *(inicio, ruta `#/resumen`)* — Resume y despacha, con la acción diaria adentro. Héroe turquesa con lo que queda en los sobres de la semana (con su arrastre), el rótulo que dice cuál es —"Semana 2 · del 8 al 14"— y los chips de *Anotar* y *Pagué* dentro de la primera tarjeta, para que meter un gasto no cueste dos toques. *(La dirección vieja `#/semana` redirige aquí.)*
+2. **Presupuesto mensual** *(ruta `#/mes`)* — Base cero. Selector de mes con barras (entra / sale / sobró) y el segmentado **Semanas · Cheques · Mes**. En Semanas, las 4–5 del calendario con **Planeado, Gastado y Queda** y su bandera de apretada: adentro los fijos que caen por fecha (solo lectura) y los sobres editables por semana. En Cheques, la vista derivada con las mismas tres cifras bajo otros rótulos —**Entra, Cubre, Queda**—. En Mes, el árbol por grupos: mayordomía, fijos con su día, variables, deudas, y los fondos de reserva.
+
+   De las tres cifras, **solo Queda lleva color** (teal · ámbar del 80% · rojo pasado el 100%): es la que contesta la pregunta con la que se abre la app. En el teléfono salen Queda y Planeado con la barra, y Gastado aparece al abrir el renglón.
 3. **Deudas** — Héroe carbón con la fecha de libertad. Deslizador de "¿y si mandas un pago extra?" que recalcula la fecha en vivo. Lista en orden de saldo, menor primero, con la de enfoque marcada.
 4. **Metas** — Los fondos de reserva, con su barra y para cuándo se necesitan.
 5. **Movimientos** — Todo lo del mes agrupado por día, con lo que entró y lo que
@@ -209,10 +211,15 @@ El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, e
    faltan N por revisar" con la acción en bloque.
 6. **El aviso** — No es una pantalla de la app: es la notificación. Ver sección 9.
 
-Navegación flotante en píldora oscura, cuatro destinos: Semana · Mes · Deudas ·
-Metas. **Ajustes y Movimientos viven fuera de la píldora** —son cuatro y así lo
-dibuja el mockup—: a Ajustes se llega tocando el avatar y a Movimientos desde el
-pie de Mi semana.
+Navegación flotante en píldora oscura, cuatro destinos: **Inicio · Presupuesto ·
+Deudas · Metas**. **Ajustes y Movimientos viven fuera de la píldora** —son
+cuatro y así lo dibuja el mockup—: a Ajustes se llega tocando el avatar y a
+Movimientos desde el Dashboard.
+
+Los nombres de los destinos salen de un solo módulo, `src/componentes/rotulos.ts`,
+en dos formas: la larga para el sidebar y la cabecera de escritorio, la corta
+para la píldora, donde "Presupuesto mensual" no cabe. El resto —Deudas, Metas,
+Movimientos, Ajustes— usa la misma palabra en los dos sitios.
 
 El detalle de un movimiento es **un solo componente** para los dos lados: en la
 computadora es la columna de la derecha que sigue a la fila escogida; en el
@@ -222,7 +229,7 @@ teléfono sube desde abajo en una hoja.
 
 **Sidebar carbón al costado**, desde el corte `panel` (880px) — contrato: `/design/sidebar.html`. Tres zonas:
 
-1. **Navegación:** Mi semana · El mes · Deudas · Metas · Movimientos, con Ajustes y el avatar al pie. *(El renglón "Panel" del mockup entra cuando esa pantalla exista, y ahí se despide Mi semana.)*
+1. **Navegación:** Dashboard · Presupuesto mensual · Deudas · Metas · Movimientos, con Ajustes y el avatar al pie. El Dashboard es el primero y es la pantalla de inicio.
 2. **El mes por semanas** — el contexto permanente del producto, donde otras apps ponen las cuentas conectadas. Las 4–5 semanas con su rango; las pasadas atenuadas, la actual en teal, la apretada con punto y monto en ámbar, y la quinta solo cuando el mes la tiene, rotulada con sus días. El número es **lo que te toca esa semana**, el mismo de El mes › Semanas. Tocar una abre El mes en el eje Semanas con esa semana desplegada.
 3. **Tu enfoque** — la deuda que se está atacando, con su saldo y una barra que mide lo **pagado**. Sin deudas, la zona no aparece.
 
@@ -324,7 +331,7 @@ Notas de implementación: empezar en sandbox; el producto que se necesita es Tra
 ## 12. Fases de entrega
 
 **Fase 1 — El núcleo (PWA)**
-Autenticación, onboarding de 6 pasos, motor de periodos con sus pruebas, presupuesto base cero, asignación por periodo con la invariante, sobres, captura manual, pantalla Mi semana, pantalla El mes, deudas con fecha de libertad, fondos de reserva, resumen semanal por correo, Stripe con los dos niveles.
+Autenticación, onboarding de 6 pasos, motor de periodos con sus pruebas, presupuesto base cero, asignación por periodo con la invariante, sobres, captura manual, Dashboard, Presupuesto mensual, deudas con fecha de libertad, fondos de reserva, resumen semanal por correo, Stripe con los dos niveles.
 *Criterio de aceptación:* un usuario nuevo cobra cada dos semanas, se registra, arma su mes, y recibe el correo del domingo con los números correctos, incluido el mes de 3 cheques.
 
 **Fase 2 — Envoltura Tauri para iOS y iPadOS**

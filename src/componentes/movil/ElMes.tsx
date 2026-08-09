@@ -17,6 +17,7 @@ import {
   CeldaCifra,
   CeldaNombre,
   CeldasDeAvance,
+  CeldasDeTresCifras,
   ChipCategoria,
   Fila,
   FilaAgregar,
@@ -159,11 +160,22 @@ const HILO =
   " after:absolute after:left-[5px] after:top-1/2 after:h-px after:w-[6px] after:bg-linea after:content-['']" +
   ' panel:before:left-[11px] panel:after:left-[11px] panel:after:w-[9px]'
 
-/** Las dos columnas de las vistas por semana y por cheque: nombre y cifra. */
-const DOS_COLUMNAS = {
-  columnas: 'minmax(0,1fr) 104px',
-  columnasPanel: 'minmax(150px,1fr) 150px',
+/**
+ * Las tres cifras de las vistas por semana y por cheque.
+ *
+ * En el panel caben las tres con su barra: nombre · Planeado · barra ·
+ * Gastado · Queda. En el teléfono no —tres columnas de dinero en 380px le
+ * dejan cuarenta píxeles al nombre—, así que ahí van la barra y Queda con
+ * Planeado de referencia debajo. Las columnas que sobran salen de la rejilla
+ * con `display:none`; ver `CeldasDeTresCifras`.
+ */
+const TRES_CIFRAS = {
+  columnas: 'minmax(0,1fr) 36px 104px',
+  columnasPanel: 'minmax(150px,1fr) 92px minmax(80px,240px) 92px 100px',
 }
+
+/** Una cifra suelta de fila hija: va en la columna de Queda, no en la primera. */
+const EN_LA_ULTIMA = 'col-start-3 panel:col-start-5'
 
 /** El eje que se está mirando, recordado entre visitas. */
 const EJES = ['Semanas', 'Cheques', 'Mes'] as const
@@ -367,8 +379,9 @@ export function ElMes({
           titulo={`Semanas de ${nombreDelMes}`}
           icono={<IconoDinero tam={15} />}
           dato={cuantos(presupuesto.semanas.length, 'semana', 'semanas')}
-          encabezados={['Semana', 'Monto']}
-          {...DOS_COLUMNAS}
+          encabezados={['Semana', null, 'Queda']}
+          encabezadosPanel={['Semana', 'Planeado', null, 'Gastado', 'Queda']}
+          {...TRES_CIFRAS}
         >
           {presupuesto.semanas.map((semana) => {
             const abierta = semanasAbiertas.includes(semana.numero)
@@ -407,12 +420,11 @@ export function ElMes({
                       </div>
                     </div>
                   </div>
-                  <CeldaCifra>
-                    <Moneda centavos={semana.totalCents} />
-                    <div className="text-texto-2 text-rotulo font-normal">
-                      gastado <Moneda centavos={semana.gastadoCents} />
-                    </div>
-                  </CeldaCifra>
+                  <CeldasDeTresCifras
+                    planeadoCents={semana.totalCents}
+                    gastadoCents={semana.gastadoCents}
+                    gastadoEnMovil={abierta}
+                  />
                 </Fila>
 
                 {/* Lo fijo cae por fecha: se ve, no se toca. */}
@@ -426,7 +438,7 @@ export function ElMes({
                       >
                         {linea.nombre}
                       </CeldaNombre>
-                      <CeldaCifra apagada>
+                      <CeldaCifra apagada className={EN_LA_ULTIMA}>
                         <Moneda centavos={linea.montoMensualCents} />
                       </CeldaCifra>
                     </Fila>
@@ -454,7 +466,7 @@ export function ElMes({
                         >
                           {sobre.nombre}
                         </CeldaNombre>
-                        <CeldaCifra>
+                        <CeldaCifra className={EN_LA_ULTIMA}>
                           <Moneda centavos={asignado} />
                         </CeldaCifra>
                       </Fila>
@@ -471,10 +483,22 @@ export function ElMes({
           titulo={`Cheques de ${nombreDelMes}`}
           icono={<IconoDinero tam={15} />}
           dato={cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}
-          encabezados={['Cheque', 'Le queda']}
-          {...DOS_COLUMNAS}
+          // Para un cheque las tres cifras se llaman distinto porque miden
+          // otra cosa: lo que entra, lo que ya tiene comprometido y lo que le
+          // sobra. La aritmética es la misma —Entra − Cubre = Queda— y por eso
+          // usan la misma pieza.
+          encabezados={['Cheque', null, 'Queda']}
+          encabezadosPanel={['Cheque', 'Entra', null, 'Cubre', 'Queda']}
+          {...TRES_CIFRAS}
         >
-          {presupuesto.periodos.map((periodo, i) => (
+          {presupuesto.periodos.map((periodo, i) => {
+            // Lo que entra se reconstruye de las dos cifras que el mapeo ya
+            // publica —`libre = entra − cubre`— en vez de volver a leer el
+            // ingreso del periodo. Así Entra − Cubre = Queda no es una promesa
+            // de la vista: es cómo se armó el número.
+            const cubre = presupuesto.cubrePorPeriodoCents[i] ?? centavos(0)
+            const queda = presupuesto.libreporPeriodoCents[i] ?? centavos(0)
+            return (
             <Fila key={periodo.numero}>
               <div className="flex min-w-0 items-center gap-2 py-[7px]">
                 <div className="min-w-0">
@@ -485,18 +509,17 @@ export function ElMes({
                     {periodo.esExtra && <ChipCategoria tono="teal">Extra</ChipCategoria>}
                   </div>
                   <div className="text-texto-2 mt-[1px] truncate text-rotulo">
-                    Llega el {diaDe(periodo.fechaPago)} · cubre{' '}
-                    {formatearRedondo(presupuesto.cubrePorPeriodoCents[i] ?? centavos(0))}
+                    Llega el {diaDe(periodo.fechaPago)}
                   </div>
                 </div>
               </div>
-              <CeldaCifra
-                className={(presupuesto.libreporPeriodoCents[i] ?? 0) < 0 ? 'text-rojo' : ''}
-              >
-                <Moneda centavos={presupuesto.libreporPeriodoCents[i] ?? centavos(0)} />
-              </CeldaCifra>
+              <CeldasDeTresCifras
+                planeadoCents={centavos(cubre + queda)}
+                gastadoCents={cubre}
+              />
             </Fila>
-          ))}
+            )
+          })}
           <Vacio>
             Esta vista se deriva sola de las fechas: cada cheque cubre lo que se vence hasta que
             llega el siguiente, y el extra llega entero. Lo que se presupuesta son las semanas.
