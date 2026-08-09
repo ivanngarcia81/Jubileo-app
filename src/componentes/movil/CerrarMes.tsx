@@ -49,7 +49,7 @@ export function CerrarMes({
 
   if (yaCerrado) {
     return (
-      <div className="bg-blanco border-linea mt-4 rounded-[15px] border p-5">
+      <div className="bg-blanco border-linea mt-4 rounded-card border p-5">
         <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
           {presupuesto.mes.etiqueta}
         </div>
@@ -62,7 +62,7 @@ export function CerrarMes({
   }
 
   return (
-    <div className="bg-blanco border-linea mt-4 rounded-[15px] border p-5">
+    <div className="bg-blanco border-linea mt-4 rounded-card border p-5">
       <h2 className="font-serif text-titulo leading-tight">Cerrar el mes</h2>
 
       {cuadrado ? (
@@ -96,7 +96,7 @@ export function CerrarMes({
         type="button"
         onClick={() => void cerrar()}
         disabled={!cuadrado || cerrando}
-        className="bg-teal mt-4 min-h-11 w-full rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-40"
+        className="bg-teal mt-4 min-h-11 w-full rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-40"
       >
         {cerrando ? 'Cerrando…' : 'Cerrar el mes'}
       </button>

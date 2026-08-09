@@ -39,7 +39,7 @@ export function Cabecera({
         type="button"
         onClick={alTocarAvatar}
         disabled={!alTocarAvatar}
-        className="bg-carbon text-teal font-serif relative grid size-9 shrink-0 place-items-center rounded-full text-cuerpo enabled:before:absolute enabled:before:top-1/2 enabled:before:left-1/2 enabled:before:size-11 enabled:before:-translate-x-1/2 enabled:before:-translate-y-1/2 enabled:before:content-['']"
+        className="bg-carbon text-teal font-serif relative grid size-9 shrink-0 place-items-center rounded-chip text-cuerpo enabled:before:absolute enabled:before:top-1/2 enabled:before:left-1/2 enabled:before:size-11 enabled:before:-translate-x-1/2 enabled:before:-translate-y-1/2 enabled:before:content-['']"
       >
         {avatar}
       </button>
@@ -49,9 +49,9 @@ export function Cabecera({
           {subtitulo}
         </div>
       </div>
-      <div className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-full border text-menor">
+      <div className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-chip border text-menor">
         {accion}
-        {conAviso && <span className="bg-teal absolute top-2 right-[9px] size-[6px] rounded-full" />}
+        {conAviso && <span className="bg-teal absolute top-2 right-[9px] size-[6px] rounded-chip" />}
       </div>
     </header>
   )
@@ -77,7 +77,7 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
       // En un iPhone instalado en la pantalla de inicio, la página llega hasta
       // el borde: sin el área segura la píldora queda debajo de la barra del
       // sistema y los botones dejan de responder.
-      className="bg-carbon fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-full p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
+      className="bg-carbon fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 gap-[5px] rounded-chip p-[6px] shadow-[0_12px_28px_rgba(0,0,0,.38)]"
     >
       {DESTINOS_MOVIL.map((ruta) => {
         const Icono = ICONO[ruta]
@@ -90,8 +90,8 @@ export function NavFlotante({ activa, ir }: { activa: Ruta; ir: (ruta: Ruta) => 
             onClick={() => ir(ruta)}
             aria-current={activo ? 'page' : undefined}
             aria-label={nombre}
-            className={`grid size-[48px] place-items-center rounded-full ${
-              activo ? 'bg-teal text-tinta-teal' : 'text-[#787E7D]'
+            className={`grid size-[48px] place-items-center rounded-chip ${
+              activo ? 'bg-teal text-tinta-teal' : 'text-texto-claro-3'
             }`}
           >
             <Icono tam={19} />

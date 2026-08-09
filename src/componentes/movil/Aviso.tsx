@@ -19,7 +19,7 @@ import { Moneda } from '../base'
 
 function Notificacion({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-texto rounded-[17px] bg-white/95 px-[14px] py-[13px] shadow-[0_10px_26px_rgba(0,0,0,.3)]">
+    <div className="text-texto rounded-card bg-white/95 px-[14px] py-[13px] shadow-[0_10px_26px_rgba(0,0,0,.3)]">
       {children}
     </div>
   )
@@ -28,7 +28,7 @@ function Notificacion({ children }: { children: React.ReactNode }) {
 function Encabezado({ cuando }: { cuando: string }) {
   return (
     <div className="mb-[9px] flex items-center gap-2">
-      <div className="bg-carbon text-teal font-serif grid size-[19px] place-items-center rounded-[5px] text-menor">
+      <div className="bg-carbon text-teal font-serif grid size-[22px] place-items-center rounded-btn text-menor">
         J
       </div>
       <div className="flex-1 text-rotulo font-bold tracking-[.03em] uppercase">Jubileo</div>
@@ -40,7 +40,7 @@ function Encabezado({ cuando }: { cuando: string }) {
 function Renglon({ texto, monto }: { texto: string; monto: Centavos }) {
   return (
     <li className="flex justify-between gap-[10px]">
-      <span className="text-[#3E4342]">{texto}</span>
+      <span className="text-texto">{texto}</span>
       <b className="font-semibold">
         <Moneda centavos={monto} />
       </b>
@@ -56,7 +56,7 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
   const libre = presupuesto.libreporPeriodoCents[presupuesto.periodoActivo]!
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[linear-gradient(170deg,var(--color-carbon)_0%,#31302B_58%,#4A4238_100%)] px-[15px] pt-4 pb-[22px] text-white">
+    <div className="flex min-h-dvh flex-col bg-[image:var(--degradado-bloqueo)] px-[15px] pt-4 pb-[22px] text-white">
       <div className="flex items-center justify-end gap-1 px-2 text-menor font-semibold">
         <IconoSenal tam={13} />
         <IconoBateria tam={15} />
@@ -64,7 +64,7 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
       </div>
 
       <div className="mt-[26px] mb-6 text-center">
-        <div className="text-menor text-[#C9CCCA]">domingo, 2 de agosto</div>
+        <div className="text-menor text-texto-claro-2">domingo, 2 de agosto</div>
         <div className="font-serif text-heroe leading-none [font-variant-numeric:tabular-nums]">
           8:00
         </div>
@@ -130,7 +130,7 @@ export function Aviso({ presupuesto }: { presupuesto: Presupuesto }) {
         </Notificacion>
       </div>
 
-      <p className="mt-auto pt-8 text-center text-menor leading-[1.5] text-[#9AA09E]">
+      <p className="mt-auto pt-8 text-center text-menor leading-[1.5] text-texto-claro-3">
         El usuario ya sabe su semana sin abrir la app.
         <br />
         Entra solo a verificar.

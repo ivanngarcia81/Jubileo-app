@@ -79,7 +79,7 @@ export function CerrarSemana({
       role="presentation"
     >
       <div
-        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Cerrar la semana"
@@ -98,7 +98,7 @@ export function CerrarSemana({
                 ? 'Tu ingreso es variable, así que aquí va lo que entró de verdad.'
                 : `Tenías apuntado ${formatear(esperado)}. Si entró otra cosa, corrígelo.`}
             </div>
-            <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
+            <div className="border-linea mt-4 flex items-center gap-2 rounded-card border px-4">
               <span className="text-texto-2 font-serif text-cifra">$</span>
               <input
                 type="text"
@@ -108,7 +108,7 @@ export function CerrarSemana({
                 onChange={(e) => setIngreso(e.target.value)}
                 placeholder="0.00"
                 aria-label="Cuánto entró de verdad"
-                className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+                className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-tenue focus:outline-none"
               />
             </div>
           </>
@@ -127,7 +127,7 @@ export function CerrarSemana({
               {presupuesto.sobres.map((sobre) => (
                 <div
                   key={sobre.id}
-                  className="border-linea flex items-center justify-between gap-3 rounded-[11px] border px-4 py-2"
+                  className="border-linea flex items-center justify-between gap-3 rounded-btn border px-4 py-2"
                 >
                   <div className="min-w-0">
                     <div className="text-texto truncate text-cuerpo">{sobre.nombre}</div>
@@ -170,7 +170,7 @@ export function CerrarSemana({
               {pendientes.map((pago) => (
                 <div
                   key={pago.id}
-                  className="border-linea flex items-center gap-3 rounded-[11px] border px-4 py-3"
+                  className="border-linea flex items-center gap-3 rounded-btn border px-4 py-3"
                 >
                   <Casilla
                     marcada={pagados[pago.id] ?? false}
@@ -200,7 +200,7 @@ export function CerrarSemana({
             type="button"
             onClick={() => (paso === 1 ? alCerrar() : setPaso(paso - 1))}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
           >
             {paso === 1 ? 'Ahora no' : 'Atrás'}
           </button>
@@ -208,7 +208,7 @@ export function CerrarSemana({
             type="button"
             onClick={() => (paso === PASOS ? void terminar() : setPaso(paso + 1))}
             disabled={guardando || (paso === 1 && ingresoCents === null && ingreso.trim() !== '')}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Cerrando…' : paso === PASOS ? 'Cerrar la semana' : 'Siguiente'}
           </button>

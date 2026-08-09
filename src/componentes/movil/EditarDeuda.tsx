@@ -89,7 +89,7 @@ export function EditarDeuda({
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Capital One"
             aria-label="Nombre de la deuda"
-            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+            className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
           />
 
           <Rotulo>¿Cuánto debes?</Rotulo>
@@ -109,7 +109,7 @@ export function EditarDeuda({
           />
 
           <Rotulo>¿Qué tasa de interés tiene? (opcional)</Rotulo>
-          <div className="border-linea mt-2 flex w-32 items-center gap-1 rounded-[11px] border px-4">
+          <div className="border-linea mt-2 flex w-32 items-center gap-1 rounded-btn border px-4">
             <input
               type="text"
               inputMode="decimal"
@@ -118,7 +118,7 @@ export function EditarDeuda({
               onChange={(e) => setTasa(e.target.value)}
               placeholder="24.9"
               aria-label="Tasa de interés anual"
-              className="text-texto min-h-11 w-full bg-transparent text-titulo [font-variant-numeric:tabular-nums] placeholder:text-[#9AA09E] focus:outline-none"
+              className="text-texto min-h-11 w-full bg-transparent text-titulo [font-variant-numeric:tabular-nums] placeholder:text-texto-claro-3 focus:outline-none"
             />
             <span className="text-texto-2 text-titulo">%</span>
           </div>
@@ -204,7 +204,7 @@ export function EditarDeuda({
               type="button"
               onClick={() => setConfirmando(false)}
               disabled={guardando}
-              className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+              className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
             >
               Mejor no
             </button>
@@ -212,7 +212,7 @@ export function EditarDeuda({
               type="button"
               onClick={() => void intentar(alBorrar)}
               disabled={guardando}
-              className="bg-carbon min-h-11 flex-1 rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
+              className="bg-carbon min-h-11 flex-1 rounded-btn text-cuerpo font-bold text-white disabled:opacity-50"
             >
               Borrarla
             </button>

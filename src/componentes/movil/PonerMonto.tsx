@@ -110,7 +110,7 @@ export function PonerMonto({
       role="presentation"
     >
       <div
-        className="bg-blanco w-full rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco w-full rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={`Monto de ${linea.nombre}`}
@@ -123,7 +123,7 @@ export function PonerMonto({
             disabled={guardando}
             onChange={(e) => setNombre(e.target.value)}
             aria-label={`Nombre de ${linea.nombre}`}
-            className="border-linea text-texto font-serif min-h-11 w-full rounded-[11px] border px-3 text-titulo focus:outline-none"
+            className="border-linea text-texto font-serif min-h-11 w-full rounded-btn border px-3 text-titulo focus:outline-none"
           />
         ) : (
           <>
@@ -134,7 +134,7 @@ export function PonerMonto({
           </>
         )}
 
-        <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
+        <div className="border-linea mt-4 flex items-center gap-2 rounded-card border px-4">
           <span className="text-texto-2 font-serif text-cifra">$</span>
           <input
             ref={campo}
@@ -146,7 +146,7 @@ export function PonerMonto({
             onKeyDown={(e) => e.key === 'Enter' && void guardar()}
             placeholder="0.00"
             aria-label={`Monto mensual de ${linea.nombre}`}
-            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-tenue focus:outline-none"
           />
         </div>
 
@@ -188,7 +188,7 @@ export function PonerMonto({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -196,7 +196,7 @@ export function PonerMonto({
             type="button"
             onClick={() => void guardar()}
             disabled={monto === null || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
@@ -249,7 +249,7 @@ export function PonerMonto({
                 type="button"
                 onClick={() => setConfirmandoQuitar(false)}
                 disabled={guardando}
-                className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+                className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
               >
                 Mejor no
               </button>
@@ -257,7 +257,7 @@ export function PonerMonto({
                 type="button"
                 onClick={() => void intentar(alQuitar)}
                 disabled={guardando}
-                className="bg-carbon min-h-11 flex-1 rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
+                className="bg-carbon min-h-11 flex-1 rounded-btn text-cuerpo font-bold text-white disabled:opacity-50"
               >
                 Quitar del mes
               </button>

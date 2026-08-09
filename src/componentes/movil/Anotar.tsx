@@ -56,14 +56,14 @@ export function Anotar({
       role="presentation"
     >
       <div
-        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Anotar un gasto"
       >
         <div className="text-texto font-serif text-titulo leading-tight">Anotar un gasto</div>
 
-        <div className="border-linea mt-4 flex items-center gap-2 rounded-[13px] border px-4">
+        <div className="border-linea mt-4 flex items-center gap-2 rounded-card border px-4">
           <span className="text-texto-2 font-serif text-cifra">$</span>
           <input
             ref={campo}
@@ -74,7 +74,7 @@ export function Anotar({
             onChange={(e) => setTexto(e.target.value)}
             placeholder="0.00"
             aria-label="Cuánto gastaste"
-            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+            className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-tenue focus:outline-none"
           />
         </div>
 
@@ -88,7 +88,7 @@ export function Anotar({
           // 17px y no 14: iOS hace zoom a la página al enfocar un campo de
           // menos de 16px, y salir de ese zoom es cosa del usuario. Todos los
           // campos de texto de la app van en `text-titulo` por lo mismo.
-          className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+          className="border-linea text-texto mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
         />
 
         <div className="text-texto-2 mt-5 mb-2 text-menor font-bold tracking-[.06em] uppercase">
@@ -104,7 +104,7 @@ export function Anotar({
                 type="button"
                 onClick={() => setCategoria(sobre.id)}
                 aria-pressed={elegido}
-                className={`flex min-h-11 items-center justify-between rounded-[11px] border px-4 py-3 text-left ${
+                className={`flex min-h-11 items-center justify-between rounded-btn border px-4 py-3 text-left ${
                   elegido ? 'border-teal border-2' : 'border-linea'
                 }`}
               >
@@ -139,7 +139,7 @@ export function Anotar({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -147,7 +147,7 @@ export function Anotar({
             type="button"
             onClick={() => void guardar()}
             disabled={!listo || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Anotando…' : 'Anotar'}
           </button>

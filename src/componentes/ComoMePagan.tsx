@@ -110,7 +110,7 @@ export function ComoMePagan({
 
   if (!abierto) {
     return (
-      <div className="bg-blanco border-linea rounded-[15px] border p-5">
+      <div className="bg-blanco border-linea rounded-card border p-5">
         <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cómo te pagan
         </div>
@@ -124,7 +124,7 @@ export function ComoMePagan({
         <button
           type="button"
           onClick={() => setAbierto(true)}
-          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold"
+          className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border text-cuerpo font-semibold"
         >
           Cambiar cómo me pagan
         </button>
@@ -133,7 +133,7 @@ export function ComoMePagan({
   }
 
   return (
-    <div className="bg-blanco border-linea rounded-[15px] border p-5">
+    <div className="bg-blanco border-linea rounded-card border p-5">
       <h2 className="font-serif text-titulo leading-tight">Cómo te pagan</h2>
       <p className="text-texto-2 mt-1 text-menor leading-[1.5]">
         Cambiar esto vuelve a armar tus cheques, pero <b>no rehace tu presupuesto</b>: los montos
@@ -148,7 +148,7 @@ export function ComoMePagan({
           {FRECUENCIAS.map((f) => (
             <label
               key={f.valor}
-              className={`flex min-h-11 items-center gap-3 rounded-[11px] border px-4 py-3 ${
+              className={`flex min-h-11 items-center gap-3 rounded-btn border px-4 py-3 ${
                 frecuencia === f.valor ? 'border-teal border-2' : 'border-linea'
               }`}
             >
@@ -182,7 +182,7 @@ export function ComoMePagan({
                 const n = Math.min(31, Math.max(1, Number(e.target.value.replace(/\D/g, '')) || 1))
                 setDias((d) => (i === 0 ? [n, d[1]] : [d[0], n]))
               }}
-              className="border-linea text-texto min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-titulo"
+              className="border-linea text-texto min-h-11 w-20 rounded-btn border px-3 py-2 text-center text-titulo"
             />
           ))}
           <span className="text-texto-2 text-menor">días del mes</span>
@@ -200,7 +200,7 @@ export function ComoMePagan({
         type="date"
         value={ancla}
         onChange={(e) => setAncla(e.target.value)}
-        className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo"
+        className="border-linea text-texto mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo"
       />
 
       {!esVariable && (
@@ -211,7 +211,7 @@ export function ComoMePagan({
           >
             ¿Cuánto entra en cada cheque?
           </label>
-          <div className="border-linea mt-2 flex items-center gap-2 rounded-[11px] border px-4">
+          <div className="border-linea mt-2 flex items-center gap-2 rounded-btn border px-4">
             <span className="text-texto-2 text-titulo">$</span>
             <input
               id="ingreso-ajustes"
@@ -226,7 +226,7 @@ export function ComoMePagan({
       )}
 
       {previa.length > 0 && (
-        <div className="bg-gris mt-5 rounded-[11px] p-4">
+        <div className="bg-gris mt-5 rounded-btn p-4">
           <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
             Tus cheques quedarían así
           </div>
@@ -263,7 +263,7 @@ export function ComoMePagan({
           type="button"
           onClick={() => setAbierto(false)}
           disabled={guardando}
-          className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+          className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
         >
           Cancelar
         </button>
@@ -271,7 +271,7 @@ export function ComoMePagan({
           type="button"
           onClick={() => void guardar()}
           disabled={!listo || guardando}
-          className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+          className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
         >
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>

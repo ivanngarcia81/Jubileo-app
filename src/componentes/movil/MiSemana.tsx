@@ -56,8 +56,8 @@ export function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
   )
 
   return (
-    <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,var(--color-teal-hondo)_0%,var(--color-teal)_100%)] px-[18px] pt-[17px] pb-4 text-tinta-heroe">
-      <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
+    <div className="relative overflow-hidden rounded-card bg-[linear-gradient(152deg,var(--color-teal-hondo)_0%,var(--color-teal)_100%)] px-[18px] pt-[17px] pb-4 text-tinta-heroe">
+      <div className="absolute -right-10 -bottom-14 size-[150px] rounded-chip bg-white/[.12]" />
       <div className="relative">
         <div className="text-rotulo font-bold tracking-[.12em] text-tinta-heroe/60 uppercase">
           Te queda esta semana
@@ -78,7 +78,7 @@ export function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
             return (
               <div
                 key={s.numero}
-                className={`flex-1 rounded-[8px] px-[5px] py-[6px] text-center ${fondo}`}
+                className={`flex-1 rounded-btn px-[5px] py-[6px] text-center ${fondo}`}
               >
                 {/* La bandera de apretada vive en El mes, con espacio para
                     explicarse: aquí un signo suelto solo asustaría. */}
@@ -98,7 +98,7 @@ export function Hero({ presupuesto }: { presupuesto: Presupuesto }) {
 }
 
 /** Las columnas de las dos listas. Ver el comentario de `ListaSeccion`. */
-const PAGOS = { columnas: '21px minmax(0,1fr) 84px', columnasPanel: '21px minmax(150px,1fr) 120px' }
+const PAGOS = { columnas: '30px minmax(0,1fr) 84px', columnasPanel: '30px minmax(150px,1fr) 120px' }
 const SOBRES = {
   columnas: 'minmax(0,1fr) 36px 84px',
   columnasPanel: 'minmax(150px,1fr) 88px minmax(90px,300px) 88px',
@@ -152,11 +152,11 @@ export function MiSemana({
             disabled={
               (texto === 'Anotar' && !alAnotar) || (texto === 'Semana' && !alCerrarSemana)
             }
-            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-full border px-1 py-[9px] text-menor font-semibold disabled:opacity-50"
+            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-chip border px-1 py-[9px] text-menor font-semibold disabled:opacity-50"
           >
             {/* El círculo sube a 20 y el icono baja a 12: a 15 dentro de 17
                 quedaba pegado al borde por los cuatro lados. */}
-            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-full text-tinta-teal">
+            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-chip text-tinta-teal">
               <Icono tam={12} />
             </span>
             {texto}
@@ -242,7 +242,7 @@ export function MiSemana({
         <button
           type="button"
           onClick={alVerMovimientos}
-          className="bg-blanco border-linea text-texto mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[15px] border text-menor font-semibold"
+          className="bg-blanco border-linea text-texto mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-card border text-menor font-semibold"
         >
           <IconoMovimientos tam={15} />
           Ver todos los movimientos

@@ -40,7 +40,7 @@ export function RejillaDeIconos({
             // El borde de 2px lo dibujan los dos estados, elegido y no: si solo
             // lo trajera el elegido, la rejilla entera se movería un píxel al
             // escoger.
-            className={`grid aspect-square place-items-center rounded-[10px] border-2 disabled:opacity-50 ${
+            className={`grid aspect-square place-items-center rounded-btn border-2 disabled:opacity-50 ${
               activo
                 ? 'border-teal bg-brillo-teal text-teal-osc'
                 : 'border-linea text-texto-2'

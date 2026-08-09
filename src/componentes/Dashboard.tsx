@@ -77,9 +77,9 @@ function Tarjeta({
   children: React.ReactNode
 }) {
   return (
-    <section className="bg-blanco border-linea rounded-[15px] border p-[15px] panel:p-[18px]">
+    <section className="bg-blanco border-linea rounded-card border p-[15px] panel:p-[18px]">
       <div className="mb-[13px] flex items-center gap-[10px]">
-        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-[9px] text-cuerpo">
+        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-btn text-cuerpo">
           {icono}
         </div>
         <h3 className="font-serif min-w-0 flex-1 truncate text-titulo font-normal">{titulo}</h3>
@@ -139,7 +139,7 @@ function LaSemanaEnCurso({
     { Icono: IconoReloj, texto: 'Cerrar', ...(alAbrirCierre ? { alTocar: alAbrirCierre } : {}) },
   ]
   return (
-    <section className="bg-blanco border-linea rounded-[15px] border p-[15px] panel:p-[18px]">
+    <section className="bg-blanco border-linea rounded-card border p-[15px] panel:p-[18px]">
       <Hero presupuesto={presupuesto} />
       <div className="mt-[13px] flex gap-[7px]">
         {CHIPS.map(({ Icono, texto, alTocar }) => (
@@ -148,9 +148,9 @@ function LaSemanaEnCurso({
             type="button"
             onClick={alTocar}
             disabled={!alTocar}
-            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[6px] rounded-full border px-1 py-[9px] text-menor font-semibold disabled:opacity-50"
+            className="bg-blanco border-linea flex min-h-11 flex-1 items-center justify-center gap-[6px] rounded-chip border px-1 py-[9px] text-menor font-semibold disabled:opacity-50"
           >
-            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-full text-tinta-teal">
+            <span className="bg-teal grid size-[20px] shrink-0 place-items-center rounded-chip text-tinta-teal">
               <Icono tam={12} />
             </span>
             {texto}
@@ -213,7 +213,7 @@ function ComoVaElReparto({
       titulo="Cómo va el reparto"
       derecha={
         <span
-          className={`shrink-0 rounded-full px-[9px] py-[4px] text-rotulo font-bold ${
+          className={`shrink-0 rounded-chip px-[9px] py-[4px] text-rotulo font-bold ${
             porEncima ? 'bg-brillo-ambar text-ambar-osc' : 'bg-brillo-teal text-teal-osc'
           }`}
         >
@@ -309,7 +309,7 @@ function PorRevisar({
                 true,
               ).finally(() => setOcupado(false))
             }}
-            className="border-linea text-texto-2 shrink-0 rounded-[9px] border px-[10px] py-[6px] text-menor font-semibold disabled:opacity-50"
+            className="border-linea text-texto-2 shrink-0 rounded-btn border px-[10px] py-[6px] text-menor font-semibold disabled:opacity-50"
           >
             {ocupado
               ? 'Marcando…'
@@ -332,7 +332,7 @@ function PorRevisar({
               key={m.id}
               className="border-linea flex items-center gap-[10px] border-b py-[9px] last:border-b-0"
             >
-              <div className="bg-gris border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-[8px] border">
+              <div className="bg-gris border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-btn border">
                 <IconoDeClave clave={m.icono} tam={13} />
               </div>
               <div className="min-w-0 flex-1">
@@ -542,8 +542,8 @@ function Fondos({
  */
 function Premium() {
   return (
-    <div className="bg-carbon rounded-[15px] p-[18px] text-white">
-      <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-[8px] text-menor text-tinta-teal">
+    <div className="bg-carbon rounded-card p-[18px] text-white">
+      <div className="bg-teal mb-3 grid size-[26px] place-items-center rounded-btn text-menor text-tinta-teal">
         <IconoEnfoque tam={12} />
       </div>
       <h4 className="font-serif mb-2 text-titulo leading-[1.15] font-normal">Conecta tu banco</h4>
@@ -553,7 +553,7 @@ function Premium() {
       </p>
       <button
         type="button"
-        className="bg-teal min-h-11 rounded-[10px] px-[15px] py-[10px] text-menor font-bold text-tinta-teal"
+        className="bg-teal min-h-11 rounded-btn px-[15px] py-[10px] text-menor font-bold text-tinta-teal"
       >
         Hazte Premium
       </button>
@@ -566,7 +566,7 @@ function Coach({ coach }: { coach: NonNullable<Presupuesto['coach']> }) {
   return (
     <Tarjeta icono={<IconoCoach tam={16} />} titulo="Tu coach">
       <div className="flex items-center gap-[11px]">
-        <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-full text-titulo">
+        <div className="bg-carbon text-teal font-serif grid size-[38px] shrink-0 place-items-center rounded-chip text-titulo">
           {coach.iniciales}
         </div>
         <div>
@@ -598,8 +598,8 @@ function HojaDePagos({
         icono={<IconoPalomita tam={15} />}
         dato={`${hechos} de ${presupuesto.pagos.length} hechos`}
         encabezados={[null, 'Pago', 'Monto']}
-        columnas="21px minmax(0,1fr) 84px"
-        columnasPanel="21px minmax(150px,1fr) 120px"
+        columnas="30px minmax(0,1fr) 84px"
+        columnasPanel="30px minmax(150px,1fr) 120px"
       >
         {presupuesto.pagos.length === 0 && (
           <Vacio>

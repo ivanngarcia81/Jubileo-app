@@ -70,7 +70,7 @@ export function NuevaCategoria({
       role="presentation"
     >
       <div
-        className="bg-blanco w-full rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco w-full rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={esFija ? 'Nuevo gasto fijo' : 'Nuevo sobre'}
@@ -93,7 +93,7 @@ export function NuevaCategoria({
           onKeyDown={(e) => e.key === 'Enter' && !esFija && void crear()}
           placeholder={esFija ? 'Seguro del carro' : 'Comida'}
           aria-label="Nombre de la categoría"
-          className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+          className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
         />
 
         <RotuloDeIconos>Su icono</RotuloDeIconos>
@@ -116,7 +116,7 @@ export function NuevaCategoria({
               onChange={(e) => setDia(e.target.value.replace(/\D/g, '').slice(0, 2))}
               onKeyDown={(e) => e.key === 'Enter' && void crear()}
               placeholder="15"
-              className="border-linea text-texto min-h-11 w-24 rounded-[11px] border px-4 py-3 text-center text-titulo [font-variant-numeric:tabular-nums] placeholder:text-[#9AA09E] focus:outline-none"
+              className="border-linea text-texto min-h-11 w-24 rounded-btn border px-4 py-3 text-center text-titulo [font-variant-numeric:tabular-nums] placeholder:text-texto-claro-3 focus:outline-none"
             />
             <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
               Con esto la app sabe con qué cheque se paga, y el aviso del domingo puede
@@ -136,7 +136,7 @@ export function NuevaCategoria({
             type="button"
             onClick={alCerrar}
             disabled={guardando}
-            className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+            className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
           >
             Cancelar
           </button>
@@ -144,7 +144,7 @@ export function NuevaCategoria({
             type="button"
             onClick={() => void crear()}
             disabled={!listo || guardando}
-            className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Creando…' : 'Crear'}
           </button>

@@ -84,7 +84,7 @@ export function EditarFondo({
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Llantas"
             aria-label="Nombre del fondo"
-            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+            className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
           />
 
           <Rotulo>¿Cuánto necesitas juntar?</Rotulo>
@@ -110,7 +110,7 @@ export function EditarFondo({
             disabled={guardando}
             onChange={(e) => setCuando(e.target.value)}
             aria-label="Para cuándo lo necesitas"
-            className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo focus:outline-none"
+            className="border-linea text-texto mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo focus:outline-none"
           />
           <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             Con una fecha, la app te dice cuánto apartar en cada cheque. Sin ella, el fondo se
@@ -185,7 +185,7 @@ export function EditarFondo({
               type="button"
               onClick={() => setConfirmando(false)}
               disabled={guardando}
-              className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+              className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
             >
               Mejor no
             </button>
@@ -193,7 +193,7 @@ export function EditarFondo({
               type="button"
               onClick={() => void intentar(alBorrar)}
               disabled={guardando}
-              className="bg-carbon min-h-11 flex-1 rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
+              className="bg-carbon min-h-11 flex-1 rounded-btn text-cuerpo font-bold text-white disabled:opacity-50"
             >
               Borrarlo
             </button>

@@ -60,7 +60,7 @@ export function MesNuevo({
         </p>
 
         {trae.cuantasLineas > 0 && (
-          <div className="bg-blanco border-linea mt-6 rounded-[15px] border p-5">
+          <div className="bg-blanco border-linea mt-6 rounded-card border p-5">
             <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
               Lo que se arrastra de {mesPasado}
             </div>
@@ -96,7 +96,7 @@ export function MesNuevo({
           type="button"
           onClick={() => void abrir()}
           disabled={abriendo}
-          className="bg-teal mt-7 min-h-12 w-full rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+          className="bg-teal mt-7 min-h-12 w-full rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
         >
           {abriendo ? 'Armando…' : `Armar ${esteMes}`}
         </button>

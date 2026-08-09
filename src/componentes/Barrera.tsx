@@ -58,7 +58,7 @@ export class Barrera extends Component<
           <button
             type="button"
             onClick={() => void this.empezarDeNuevo()}
-            className="bg-teal text-tinta-teal mt-6 min-h-11 w-full rounded-[11px] text-cuerpo font-bold"
+            className="bg-teal text-tinta-teal mt-6 min-h-11 w-full rounded-btn text-cuerpo font-bold"
           >
             Borrar la copia y volver a abrir
           </button>

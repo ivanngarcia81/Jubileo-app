@@ -39,6 +39,7 @@
   --color-teal-hondo: var(--teal-hondo);
   --color-tinta-teal: var(--tinta-teal);
   --color-tinta-heroe: var(--tinta-heroe);
+  --color-tinta-ambar: var(--tinta-ambar);
   --color-ambar: var(--ambar);
   --color-rojo: var(--rojo);
 
@@ -51,6 +52,8 @@
 
   --color-texto: var(--texto);
   --color-texto-2: var(--texto-2);
+  --color-tenue: var(--tenue);
+  --color-blanco-2: var(--blanco-2);
   --color-texto-claro: var(--texto-claro);
   --color-texto-claro-2: var(--texto-claro-2);
   --color-texto-claro-3: var(--texto-claro-3);

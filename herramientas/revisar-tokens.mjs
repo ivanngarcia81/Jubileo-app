@@ -8,16 +8,21 @@
  * archivo. Era falso: llegó a haber 92 hexes crudos en `src/`. Un archivo que
  * declara una regla que nadie comprueba no es una regla, es una nota.
  *
- * Esto es un **trinquete**, no una limpieza: no exige cero hexes hoy —quedan 39
- * y sacarlos es una decisión de diseño pendiente, porque son ocho grises casi
- * iguales y colapsarlos mueve píxeles en casi toda la app—. Lo que hace es que
- * el número **solo pueda bajar**. Aparece un color nuevo, o sube la cuenta de
- * uno viejo, y esto truena. Baja, y también truena, pidiendo que se actualice
- * el inventario: un trinquete que se afloja solo no es un trinquete.
+ * Empezó como un **trinquete** —el número solo podía bajar— porque quedaban
+ * doce grises casi iguales y colapsarlos movía píxeles en casi toda la app.
+ * Ya se colapsaron: el inventario está vacío y la regla es la que el archivo
+ * de tokens decía desde el principio, cero hexes crudos. La maquinaria del
+ * trinquete se queda por si algún día vuelve a hacer falta.
  *
- * Y de paso cierra la escala tipográfica en el código fuente. Ya está cerrada
- * en el navegador —`revisar-pantallas.mjs` recorre los nodos de texto— pero eso
- * exige compilar y levantar la app. Aquí se ve al escribirlo.
+ * Cierra además otras dos escalas en el código fuente:
+ *
+ * - **La tipografía.** Seis tamaños. Ya está cerrada en el navegador
+ *   —`revisar-pantallas.mjs` recorre los nodos de texto— pero eso exige
+ *   compilar y levantar la app. Aquí se ve al escribirlo.
+ * - **Los radios.** Tres: chip, botón, tarjeta. Llegó a haber trece valores en
+ *   147 lugares, con diferencias —7 contra 8 contra 9— que no distingue nadie.
+ *   Este es el que más falta hacía: un radio suelto es lo más fácil de escribir
+ *   sin pensarlo y lo más difícil de ver en una revisión.
  */
 import { readFileSync } from 'node:fs'
 import { globSync } from 'node:fs'
@@ -39,18 +44,11 @@ const EXENTOS = ['src/lib/aviso/correo.ts', 'src/lib/aviso/aviso.test.ts']
  * el techo.
  */
 const INVENTARIO = {
-  '#9AA09E': [16, 'marcador de posición en claro, y texto secundario sobre carbón'],
-  '#787E7D': [3, 'texto apagado sobre carbón: rótulos de la banda vieja'],
-  '#6E7473': [5, 'texto secundario, en claro y sobre carbón'],
-  '#C3C7C4': [4, 'marcador de posición del campo de dinero'],
-  '#FBFCFB': [2, 'fondo de la fila que abre un grupo'],
-  '#FAFBFA': [1, 'fondo de una fila al pasar el puntero'],
-  '#C9CECC': [1, 'texto de la lista de premium sobre carbón'],
-  '#C9CCCA': [1, 'la hora en la vista previa del aviso'],
-  '#B9C2BF': [1, 'la barra de un mes que sí se alcanza, en el selector'],
-  '#8E9492': [1, 'texto del bloque oscuro de premium'],
-  '#3E4342': [1, 'texto de un renglón dentro de la notificación'],
-  '#3A2A08': [1, 'texto sobre la barra ámbar de "sin conexión"'],
+  // Vacío, y así se queda. Los doce que había salieron a token: los ocho tonos
+  // sobre carbón se doblaron en los tres niveles de `--texto-claro*`, los dos
+  // blancos casi iguales en `--blanco-2`, el marcador de posición y la barra
+  // tenue en `--tenue`, y la tinta de la barra ámbar en `--tinta-ambar`.
+  // Agregar una entrada aquí es declarar una deuda: que quede escrito por qué.
 }
 
 const fallas = []
@@ -68,7 +66,11 @@ const cuenta = new Map()
 const donde = new Map()
 for (const f of archivos) {
   const texto = readFileSync(RAIZ + f, 'utf8')
-  for (const m of texto.matchAll(/#[0-9A-Fa-f]{3,8}\b/g)) {
+  // Sin `\b` al final: en `#31302B_58%` —una parada de degradado— el guion
+  // bajo es carácter de palabra, así que `\b` no cerraba y el hex pasaba
+  // invisible. El candado decía cero teniendo dos. La condición correcta es que
+  // no siga otro dígito hexadecimal.
+  for (const m of texto.matchAll(/#[0-9A-Fa-f]{3,8}(?![0-9A-Fa-f])/g)) {
     const hex = m[0].toUpperCase()
     cuenta.set(hex, (cuenta.get(hex) ?? 0) + 1)
     if (!donde.has(hex)) donde.set(hex, f)
@@ -99,6 +101,31 @@ ok(bajaron.length === 0, bajaron.length === 0
 
 const total = [...cuenta.values()].reduce((a, b) => a + b, 0)
 console.log(`\n  ${total} colores crudos en ${archivos.length} archivos. El techo solo baja.`)
+
+// ---- Radios -----------------------------------------------------------------
+// Tres y nada más: `rounded-chip`, `rounded-btn`, `rounded-card`, con sus
+// variantes direccionales (`rounded-t-card`). Cualquier otra cosa —un
+// `rounded-[7px]` copiado de un mockup, un `rounded-full`, un `rounded-lg` de
+// Tailwind— es un cuarto valor, y con cuatro ya no hay escala.
+//
+// La regla es de forma, no de píxeles: lo redondo del todo es chip, lo que se
+// toca es botón, lo que contiene es tarjeta. Si un diseño pide un cuarto, la
+// pregunta es qué papel nuevo cumple.
+//
+// Ojo con las cajas chicas: CSS **recorta** el radio cuando dos esquinas suman
+// más que el lado, así que `rounded-btn` sobre una caja de 21px sale círculo.
+// La solución es subir la caja a 22 o más, no agregar un radio.
+const RADIOS = new Set(['chip', 'btn', 'card'])
+const radiosSueltos = []
+for (const f of archivos) {
+  const texto = readFileSync(RAIZ + f, 'utf8')
+  for (const m of texto.matchAll(/\brounded(?:-[trblse]{1,2})?-([a-z0-9[\]().%-]+)/g)) {
+    if (!RADIOS.has(m[1])) radiosSueltos.push(`${m[0]} en ${f}`)
+  }
+}
+ok(radiosSueltos.length === 0, radiosSueltos.length === 0
+  ? 'los radios cierran en tres: chip, botón y tarjeta'
+  : `radios sueltos: ${radiosSueltos.slice(0, 8).join(', ')}${radiosSueltos.length > 8 ? ` y ${radiosSueltos.length - 8} más` : ''}`)
 
 // ---- Tipografía -------------------------------------------------------------
 // La escala son seis tamaños y viven en tokens. Un `text-[13.5px]` escrito

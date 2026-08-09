@@ -75,7 +75,7 @@ function Tarjeta({
   teal?: boolean;
 }) {
   return (
-    <div className="bg-blanco border-linea rounded-[13px] border px-[15px] py-[13px]">
+    <div className="bg-blanco border-linea rounded-card border px-[15px] py-[13px]">
       <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
         {titulo}
       </div>
@@ -133,10 +133,10 @@ export function TarjetaEscritorio({
 }) {
   return (
     <section
-      className={`bg-blanco border-linea rounded-[15px] border p-[18px] ${className}`}
+      className={`bg-blanco border-linea rounded-card border p-[18px] ${className}`}
     >
       <div className="mb-[15px] flex items-center gap-[10px]">
-        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-[9px] text-cuerpo">
+        <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-btn text-cuerpo">
           {icono}
         </div>
         <h3 className="font-serif flex-1 text-titulo font-normal">{titulo}</h3>

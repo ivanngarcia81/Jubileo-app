@@ -107,7 +107,7 @@ export function PrimerMes({
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Iván"
           autoComplete="given-name"
-          className="border-linea bg-blanco text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+          className="border-linea bg-blanco text-texto mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
         />
 
         <fieldset className="mt-7">
@@ -118,7 +118,7 @@ export function PrimerMes({
             {FRECUENCIAS.map((f) => (
               <label
                 key={f.valor}
-                className={`bg-blanco flex min-h-11 cursor-pointer items-center gap-3 rounded-[13px] border px-[14px] py-3 ${
+                className={`bg-blanco flex min-h-11 cursor-pointer items-center gap-3 rounded-card border px-[14px] py-3 ${
                   frecuencia === f.valor ? 'border-teal border-2' : 'border-linea'
                 }`}
               >
@@ -157,7 +157,7 @@ export function PrimerMes({
                     setDias((d) => (i === 0 ? [v, d[1]] : [d[0], v]))
                   }}
                   aria-label={i === 0 ? 'Primer día de pago' : 'Segundo día de pago'}
-                  className="bg-blanco border-linea min-h-11 w-20 rounded-[11px] border px-3 py-2 text-center text-titulo"
+                  className="bg-blanco border-linea min-h-11 w-20 rounded-btn border px-3 py-2 text-center text-titulo"
                 />
               ))}
               <span className="text-texto-2 text-menor">Si te pagan el último, pon 31.</span>
@@ -178,7 +178,7 @@ export function PrimerMes({
             required
             value={ancla}
             onChange={(e) => setAncla(e.target.value)}
-            className="bg-blanco border-linea mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo"
+            className="bg-blanco border-linea mt-3 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo"
           />
           <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             Con una fecha basta. De ahí sale todo tu calendario.
@@ -193,7 +193,7 @@ export function PrimerMes({
             >
               ¿Cuánto entra en cada cheque?
             </label>
-            <div className="bg-blanco border-linea mt-3 flex items-center rounded-[11px] border px-4">
+            <div className="bg-blanco border-linea mt-3 flex items-center rounded-btn border px-4">
               <span className="text-texto-2 text-titulo">$</span>
               <input
                 id="ingreso"
@@ -215,8 +215,8 @@ export function PrimerMes({
         )}
 
         {previa.length > 0 && (
-          <div className="bg-carbon mt-7 rounded-[15px] p-[18px] text-white">
-            <div className="text-rotulo font-semibold tracking-[.14em] text-[#787E7D] uppercase">
+          <div className="bg-carbon mt-7 rounded-card p-[18px] text-white">
+            <div className="text-rotulo font-semibold tracking-[.14em] text-texto-claro-3 uppercase">
               Tus cheques de {nombreDeMes(mes.mes)}
             </div>
             <div className="mt-3 flex flex-col gap-2">
@@ -237,13 +237,13 @@ export function PrimerMes({
               ))}
             </div>
             {previa.some((p) => p.esExtra) && (
-              <p className="mt-3 text-menor leading-[1.5] text-[#9AA09E]">
+              <p className="mt-3 text-menor leading-[1.5] text-texto-claro-3">
                 Este mes te caen <b className="text-ambar">{previa.length} cheques</b>. El extra no
                 se reparte entre categorías: llega completo.
               </p>
             )}
             {esVariable && (
-              <p className="mt-3 text-menor leading-[1.5] text-[#9AA09E]">
+              <p className="mt-3 text-menor leading-[1.5] text-texto-claro-3">
                 Como tu ingreso es variable, cada semana capturas lo que entró y ahí se reparte.
               </p>
             )}
@@ -259,7 +259,7 @@ export function PrimerMes({
         <button
           type="submit"
           disabled={!listo || guardando}
-          className="bg-carbon mt-6 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-white disabled:opacity-40"
+          className="bg-carbon mt-6 min-h-11 w-full rounded-btn py-3 text-cuerpo font-bold text-white disabled:opacity-40"
         >
           {guardando ? 'Armando tu mes…' : 'Armar mi mes'}
         </button>

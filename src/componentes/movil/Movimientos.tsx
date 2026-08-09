@@ -31,8 +31,8 @@ import { cuantos, etiquetaDeDia, fechaLarga } from '../textos'
  */
 
 const COLUMNAS = {
-  columnas: '21px minmax(0,1fr) 92px',
-  columnasPanel: '21px minmax(150px,1fr) 190px 110px',
+  columnas: '30px minmax(0,1fr) 92px',
+  columnasPanel: '30px minmax(150px,1fr) 190px 110px',
 }
 
 /**
@@ -245,7 +245,7 @@ export function Movimientos({
               type="button"
               onClick={() => marcar(sinRevisar.map((m) => m.id), true)}
               disabled={ocupados.length > 0}
-              className="bg-teal ml-auto min-h-11 rounded-full px-[14px] text-menor font-bold text-tinta-teal disabled:opacity-50"
+              className="bg-teal ml-auto min-h-11 rounded-chip px-[14px] text-menor font-bold text-tinta-teal disabled:opacity-50"
             >
               {sinRevisar.length === 1
                 ? 'Marcarlo como revisado'
@@ -301,7 +301,7 @@ export function Movimientos({
       <div className="grid items-start gap-4 panel:grid-cols-[minmax(0,1fr)_340px]">
         {lista}
         {detalle && (
-          <aside className="bg-blanco border-linea hidden rounded-[15px] border p-[18px] panel:block">
+          <aside className="bg-blanco border-linea hidden rounded-card border p-[18px] panel:block">
             {detalle}
           </aside>
         )}
@@ -314,7 +314,7 @@ export function Movimientos({
             <button
               type="button"
               onClick={() => setEscogido(null)}
-              className="border-linea text-texto-2 mt-5 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold"
+              className="border-linea text-texto-2 mt-5 min-h-11 w-full rounded-btn border text-cuerpo font-semibold"
             >
               Cerrar
             </button>

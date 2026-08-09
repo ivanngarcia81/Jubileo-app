@@ -66,7 +66,7 @@ function SelectorDeMes({
     vista === 'Entra' ? presupuesto.entraCents : vista === 'Sale' ? presupuesto.saleCents : sobra
 
   return (
-    <div className="bg-blanco border-linea rounded-[15px] border px-[14px] pt-[15px] pb-3">
+    <div className="bg-blanco border-linea rounded-card border px-[14px] pt-[15px] pb-3">
       <div className="mb-[14px] text-center">
         <div
           className={`font-serif text-heroe leading-none [font-variant-numeric:tabular-nums] ${
@@ -110,13 +110,13 @@ function SelectorDeMes({
               aria-current={activo ? 'true' : undefined}
               className="flex h-full flex-1 flex-col items-center justify-end gap-[7px]"
             >
-              <div className="bg-gris relative h-full w-full max-w-[24px] rounded-[7px]">
+              <div className="bg-gris relative h-full w-full max-w-[24px] rounded-btn">
                 <div
-                  className={`absolute bottom-0 left-0 w-full rounded-[7px] ${
+                  className={`absolute bottom-0 left-0 w-full rounded-btn ${
                     activo
                       ? 'bg-[linear-gradient(180deg,var(--color-teal),var(--color-teal-hondo))]'
                       : m.alcanzable
-                        ? 'bg-[#B9C2BF]'
+                        ? 'bg-tenue'
                         : 'bg-linea'
                   }`}
                   style={{ height: `${altos[i] ?? 0}%` }}
@@ -400,7 +400,7 @@ export function ElMes({
                     )
                   }
                   etiqueta={`${abierta ? 'Cerrar' : 'Abrir'} la semana ${semana.numero}`}
-                  className="bg-[#FBFCFB]"
+                  className="bg-blanco-2"
                 >
                   <div className="flex min-w-0 items-center gap-[9px]">
                     <IconoAbrir
@@ -547,14 +547,14 @@ export function ElMes({
                 abierta={abierto}
                 alTocar={() => setAbiertos(alternar(abiertos, grupo.clave))}
                 etiqueta={`${abierto ? 'Cerrar' : 'Abrir'} ${grupo.titulo}`}
-                className="bg-[#FBFCFB]"
+                className="bg-blanco-2"
               >
                 <div className="flex min-w-0 items-center gap-[9px]">
                   <IconoAbrir
                     tam={14}
                     className={`text-texto-2 shrink-0 ${abierto ? 'rotate-90' : ''}`}
                   />
-                  <span className="bg-gris border-linea text-texto-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-[5px] border px-[5px] text-rotulo font-bold">
+                  <span className="bg-gris border-linea text-texto-2 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-chip border px-[5px] text-rotulo font-bold">
                     {grupo.lineas.length}
                   </span>
                   <span className="truncate text-cuerpo font-semibold">{grupo.titulo}</span>

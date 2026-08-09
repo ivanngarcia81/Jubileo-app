@@ -33,7 +33,7 @@ export function Tarjeta({
   className?: string
 }) {
   return (
-    <div className={`bg-blanco border-linea rounded-[13px] border p-[13px_14px] ${className}`}>
+    <div className={`bg-blanco border-linea rounded-card border p-[13px_14px] ${className}`}>
       {children}
     </div>
   )
@@ -59,9 +59,9 @@ export function Seccion({ children, dato }: { children: ReactNode; dato?: ReactN
  */
 export function Barra({ porcentaje, color }: { porcentaje: number; color: string }) {
   return (
-    <div className="bg-gris h-[5px] overflow-hidden rounded-full">
+    <div className="bg-gris h-[5px] overflow-hidden rounded-chip">
       <div
-        className="h-full rounded-full"
+        className="h-full rounded-chip"
         style={{ width: `${Math.min(100, Math.max(0, porcentaje))}%`, background: color }}
       />
     </div>
@@ -182,7 +182,7 @@ export function ChipCategoria({
     // categoría largo se corta dentro de ella en vez de empujar al cheque
     // fuera de la fila.
     <span
-      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-full px-2 text-rotulo font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
+      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-chip px-2 text-rotulo font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
     >
       {clave !== undefined && <IconoDeClave clave={clave} tam={11} className="shrink-0" />}
       <span className="truncate">{children}</span>
@@ -203,7 +203,7 @@ export function Segmentado({
   className?: string
 }) {
   return (
-    <div className={`bg-gris flex gap-[2px] rounded-full p-[3px] ${className}`}>
+    <div className={`bg-gris flex gap-[2px] rounded-chip p-[3px] ${className}`}>
       {opciones.map((opcion) => {
         const activo = opcion === activa
         return (
@@ -212,7 +212,7 @@ export function Segmentado({
             type="button"
             onClick={() => alElegir(opcion)}
             aria-pressed={activo}
-            className={`flex-1 rounded-full px-[13px] py-[6px] text-menor ${
+            className={`flex-1 rounded-chip px-[13px] py-[6px] text-menor ${
               activo
                 ? 'bg-blanco text-texto font-semibold shadow-[0_1px_3px_rgba(0,0,0,.09)]'
                 : 'text-texto-2 font-medium'
@@ -249,7 +249,7 @@ export function Casilla({
       disabled={!alCambiar || ocupada}
       aria-label={marcada ? `Desmarcar ${etiqueta}` : `Marcar ${etiqueta} como pagado`}
       onClick={alCambiar}
-      className={`relative size-[21px] shrink-0 rounded-[6px] border-[1.5px] before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ${
+      className={`relative size-[30px] shrink-0 rounded-btn border-[1.5px] before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ${
         ocupada ? 'opacity-50' : ''
       } ${marcada ? 'bg-teal border-teal' : 'border-linea'}`}
     >
@@ -353,12 +353,12 @@ export function ListaSeccion({
   return (
     <section
       style={estiloDeColumnas(columnas, columnasPanel)}
-      className={`bg-blanco border-linea overflow-hidden rounded-[15px] border ${className}`}
+      className={`bg-blanco border-linea overflow-hidden rounded-card border ${className}`}
     >
       {titulo !== undefined && (
         <div className="flex items-center gap-[11px] px-[14px] pt-[15px] pb-[13px] panel:px-[18px]">
           {icono !== undefined && (
-            <div className="bg-carbon text-teal grid size-7 shrink-0 place-items-center rounded-[9px]">
+            <div className="bg-carbon text-teal grid size-7 shrink-0 place-items-center rounded-btn">
               {icono}
             </div>
           )}
@@ -412,7 +412,7 @@ export function Fila({
       disabled={!alTocar}
       aria-label={etiqueta}
       aria-expanded={abierta}
-      className={`${comun} enabled:hover:bg-[#FAFBFA] disabled:opacity-60`}
+      className={`${comun} enabled:hover:bg-blanco-2 disabled:opacity-60`}
     >
       {children}
     </button>
@@ -467,7 +467,7 @@ export function CeldaNombre({
   return (
     <div className={`flex min-w-0 items-center gap-[9px] py-[7px] ${className}`}>
       {icono !== undefined && (
-        <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-[7px] border">
+        <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-btn border">
           {icono}
         </div>
       )}
@@ -660,7 +660,7 @@ export function Hoja({
       role="presentation"
     >
       <div
-        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-[20px] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={etiqueta}
@@ -686,7 +686,7 @@ export function CampoDinero({
   desactivado?: boolean
 }) {
   return (
-    <div className="border-linea mt-2 flex items-center gap-2 rounded-[13px] border px-4">
+    <div className="border-linea mt-2 flex items-center gap-2 rounded-card border px-4">
       <span className="text-texto-2 font-serif text-cifra">$</span>
       <input
         type="text"
@@ -697,7 +697,7 @@ export function CampoDinero({
         onChange={(e) => alCambiar(e.target.value)}
         placeholder="0.00"
         aria-label={etiqueta}
-        className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-[#C3C7C4] focus:outline-none"
+        className="text-texto font-serif min-h-14 w-full bg-transparent text-cifra [font-variant-numeric:tabular-nums] placeholder:text-tenue focus:outline-none"
       />
     </div>
   )
@@ -725,7 +725,7 @@ export function PieDeHoja({
         type="button"
         onClick={alCancelar}
         disabled={ocupado}
-        className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+        className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
       >
         {cancelar}
       </button>
@@ -733,7 +733,7 @@ export function PieDeHoja({
         type="button"
         onClick={alConfirmar}
         disabled={!listo || ocupado}
-        className="bg-teal min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+        className="bg-teal min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
       >
         {ocupado ? 'Guardando…' : confirmar}
       </button>

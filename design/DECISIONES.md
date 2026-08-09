@@ -272,3 +272,46 @@ fatal y en domingo va perfecto. La cuenta vive en `lib/semanas/ritmo`, pura y
 con pruebas, y reparte parejo entre los días: cualquier curva más lista sería
 una suposición sobre la vida de alguien que no conocemos, y una suposición
 vestida de precisión es peor que un promedio honesto.
+
+**Los doce grises y los trece radios: la misma deuda que la escala tipográfica.**
+*(Agosto de 2026.)* El archivo de tokens decía desde el principio que era "la
+única fuente de verdad para color y tipo", y no lo era: quedaban doce hexes
+crudos y trece valores de radio repartidos en 147 lugares. Un archivo que
+declara una regla que nadie comprueba no es una regla, es una nota.
+
+**Los grises.** Once de los doce vivían **sobre carbón** —el login, la
+membresía, el aviso, la píldora del teléfono— donde ya existía una escala de
+tres niveles que nunca los absorbió. El movimiento de fondo fue subir
+`--texto-claro-3` de `#7C8483` a `#9AA09E`: era el valor que quince sitios ya
+usaban a mano y el único del grupo que cruza AA. Antes los rótulos del sidebar y
+la navegación inactiva iban a 4.4:1 y los marcadores de posición del login a
+3.5:1 — la regla 5 de este mismo archivo no admite eso. Ahora todo va a 6.3:1.
+Tres tokens nuevos recogieron el resto: `--tenue` (lo que está ahí pero no
+reclama atención: texto de ejemplo, barras sin llenar), `--blanco-2` (dos
+blancos casi iguales que no distingue nadie) y `--tinta-ambar` (el papel de
+`--tinta-teal` sobre la barra ámbar, al que solo le faltaba el nombre).
+
+De paso apareció que el candado **decía cero teniendo dos**: su expresión
+terminaba en `\b`, y en `#31302B_58%` —una parada de degradado— el guion bajo es
+carácter de palabra, así que el hex pasaba invisible. Un candado con un agujero
+es peor que ninguno, porque se confía en él.
+
+**Los radios.** Trece valores con diferencias —7 contra 8 contra 9— que no
+distingue nadie. Cierran en tres, como manda el contrato: **chip** lo redondo
+del todo, **botón** lo que se toca, **tarjeta** lo que contiene. La regla de
+migración fue de forma, no de píxeles: 13px o más es tarjeta, menos es botón, y
+lo que ya era pastilla o círculo es chip. Ningún elemento se movió más de 6px.
+
+Lo que **no** era obvio: CSS **recorta** el radio cuando dos esquinas suman más
+que el lado, así que `rounded-btn` (11px) sobre una caja de 21px no da un
+cuadrado de esquinas suaves — da un **círculo**. La casilla de marcado se
+convirtió en un radio button, y un círculo dice "escoge una" donde un cuadro
+dice "marca cada una". La salida no fue un cuarto radio: fue **subir la caja**.
+La casilla pasa de 21 a 30px (con su columna), la insignia del rail y el
+mosaico del aviso a 24 y 22. El contador de una lista pasó a `chip`, que es su
+forma correcta de todos modos. Cuando un token no cabe, lo que se cambia es la
+caja, no la escala.
+
+Las tres reglas —color, tipo y radio— las comprueba `revisar-tokens.mjs` en cada
+empujón. El inventario de colores quedó **vacío**, que es la primera vez que el
+archivo de tokens dice la verdad.

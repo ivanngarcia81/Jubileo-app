@@ -57,7 +57,7 @@ function Renglon({
       type="button"
       onClick={alTocar}
       aria-current={activo ? 'page' : undefined}
-      className={`flex min-h-11 w-full items-center gap-[10px] rounded-[10px] px-[11px] text-left text-cuerpo font-medium ${
+      className={`flex min-h-11 w-full items-center gap-[10px] rounded-btn px-[11px] text-left text-cuerpo font-medium ${
         activo
           ? 'bg-brillo-teal [&_svg]:text-teal text-white'
           : 'text-texto-claro-2 hover:bg-carbon-realce'
@@ -122,12 +122,12 @@ function RailDeSemanas({
             // El mínimo tocable solo con dedo: el corte `panel` empieza en
             // 880px, así que un iPad horizontal recibe este marco sin ratón. En
             // una laptop estirarlo a 44 dejaría el rail más alto que el mes.
-            className={`grid grid-cols-[auto_1fr_auto] items-center gap-[9px] rounded-[9px] px-[11px] py-[7px] text-left text-menor pointer-coarse:min-h-11 ${
+            className={`grid grid-cols-[auto_1fr_auto] items-center gap-[9px] rounded-btn px-[11px] py-[7px] text-left text-menor pointer-coarse:min-h-11 ${
               actual ? 'bg-brillo-teal' : 'hover:bg-carbon-realce'
             } ${pasada ? 'opacity-[.42]' : ''}`}
           >
             <span
-              className={`grid size-[21px] shrink-0 place-items-center rounded-[6px] text-rotulo font-bold ${
+              className={`grid size-[24px] shrink-0 place-items-center rounded-btn text-rotulo font-bold ${
                 actual ? 'bg-teal text-tinta-teal' : 'bg-carbon-2 text-texto-claro-3'
               }`}
             >
@@ -140,7 +140,7 @@ function RailDeSemanas({
                 <span className="text-texto-claro-3"> · {s.dias} días</span>
               )}
               {/* El punto ámbar: se vence más de lo que hay. */}
-              {s.apretada && <span className="bg-ambar size-[6px] shrink-0 rounded-full" />}
+              {s.apretada && <span className="bg-ambar size-[6px] shrink-0 rounded-chip" />}
             </span>
             <span
               className={`font-semibold [font-variant-numeric:tabular-nums] ${
@@ -180,7 +180,7 @@ function Enfoque({ presupuesto, alTocar }: { presupuesto: Presupuesto; alTocar: 
         type="button"
         onClick={alTocar}
         aria-label={`Ver ${deuda.nombre} en Deudas`}
-        className="hover:bg-carbon-realce flex flex-col gap-[7px] rounded-[10px] px-[11px] py-[9px] text-left pointer-coarse:min-h-11"
+        className="hover:bg-carbon-realce flex flex-col gap-[7px] rounded-btn px-[11px] py-[9px] text-left pointer-coarse:min-h-11"
       >
         <span className="flex items-baseline justify-between gap-2 text-menor">
           <b className="text-texto-claro truncate font-semibold">{deuda.nombre}</b>
@@ -188,9 +188,9 @@ function Enfoque({ presupuesto, alTocar }: { presupuesto: Presupuesto; alTocar: 
             {formatearRedondo(deuda.saldoCents)}
           </span>
         </span>
-        <span className="bg-carbon-2 block h-1 overflow-hidden rounded-full">
+        <span className="bg-carbon-2 block h-1 overflow-hidden rounded-chip">
           <i
-            className="bg-teal block h-full rounded-full"
+            className="bg-teal block h-full rounded-chip"
             style={{ width: `${Math.min(100, Math.max(0, avance))}%` }}
           />
         </span>
@@ -211,7 +211,7 @@ export function Sidebar({
   return (
     <aside className="bg-carbon sticky top-0 flex h-dvh w-sidebar shrink-0 flex-col px-3 pt-[18px] pb-[14px] text-white">
       <div className="flex items-center gap-[10px] px-[11px] pt-1 pb-4">
-        <div className="bg-teal text-tinta-teal font-serif grid size-[30px] place-items-center rounded-[10px] text-titulo">
+        <div className="bg-teal text-tinta-teal font-serif grid size-[30px] place-items-center rounded-btn text-titulo">
           J
         </div>
         <b className="font-serif text-titulo font-normal">Jubileo</b>
@@ -258,7 +258,7 @@ export function Sidebar({
           <IconoAjustes tam={15} />
         </Renglon>
         <div className="flex items-center gap-[10px] px-[11px] py-2">
-          <span className="bg-carbon-2 text-texto-claro-2 grid size-[26px] shrink-0 place-items-center rounded-full text-rotulo font-bold">
+          <span className="bg-carbon-2 text-texto-claro-2 grid size-[26px] shrink-0 place-items-center rounded-chip text-rotulo font-bold">
             {presupuesto.usuario.iniciales}
           </span>
           <b className="text-texto-claro truncate text-menor font-semibold">

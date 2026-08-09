@@ -95,16 +95,16 @@ export function Entrar() {
         <h1 className="font-serif text-cifra leading-[1.1]">
           Jubileo<span className="text-teal">.</span>
         </h1>
-        <p className="mt-2 text-cuerpo leading-[1.6] text-[#9AA09E]">
+        <p className="mt-2 text-cuerpo leading-[1.6] text-texto-claro-3">
           Tu presupuesto ajustado a cómo te pagan de verdad.
         </p>
 
         {pidiendoCodigo ? (
           <div className="mt-8">
-            <label htmlFor="codigo" className="block text-menor font-semibold text-[#9AA09E]">
+            <label htmlFor="codigo" className="block text-menor font-semibold text-texto-claro-3">
               Tu código
             </label>
-            <p className="mt-1 text-menor leading-[1.55] text-[#6E7473]">
+            <p className="mt-1 text-menor leading-[1.55] text-texto-claro-3">
               Le mandamos un código a <b className="text-white">{correo}</b>. Tecléalo aquí.
             </p>
 
@@ -120,11 +120,11 @@ export function Entrar() {
               onChange={(e) => alEscribirCodigo(e.target.value)}
               placeholder="······"
               aria-label="Código del correo"
-              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-[11px] border py-3 text-center text-cifra tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-neutro-osc focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
+              className="bg-carbon-2 border-carbon-3 mt-3 min-h-11 w-full rounded-btn border py-3 text-center text-cifra tracking-[.4em] text-white [font-variant-numeric:tabular-nums] placeholder:tracking-[.3em] placeholder:text-neutro-osc focus:border-[color:var(--teal)] focus:outline-none disabled:opacity-60"
             />
 
             {estado.paso === 'verificando' && (
-              <p className="mt-3 text-menor text-[#9AA09E]">Entrando…</p>
+              <p className="mt-3 text-menor text-texto-claro-3">Entrando…</p>
             )}
 
             {error && (
@@ -139,7 +139,7 @@ export function Entrar() {
               type="button"
               onClick={() => void verificar(codigo)}
               disabled={codigo.length < MINIMO || estado.paso === 'verificando'}
-              className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+              className="bg-teal mt-4 min-h-11 w-full rounded-btn py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
             >
               Entrar
             </button>
@@ -158,19 +158,19 @@ export function Entrar() {
                   setEstado({ paso: 'correo' })
                   setError(null)
                 }}
-                className="min-h-11 text-left text-cuerpo text-[#6E7473]"
+                className="min-h-11 text-left text-cuerpo text-texto-claro-3"
               >
                 Usar otro correo
               </button>
             </div>
 
-            <p className="mt-6 text-menor leading-[1.55] text-[#6E7473]">
+            <p className="mt-6 text-menor leading-[1.55] text-texto-claro-3">
               Si no llega en un minuto, revisa la carpeta de correo no deseado.
             </p>
           </div>
         ) : (
           <form onSubmit={mandar} className="mt-8">
-            <label htmlFor="correo" className="block text-menor font-semibold text-[#9AA09E]">
+            <label htmlFor="correo" className="block text-menor font-semibold text-texto-claro-3">
               Tu correo
             </label>
             <input
@@ -182,13 +182,13 @@ export function Entrar() {
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               placeholder="tu@correo.com"
-              className="bg-carbon-2 border-carbon-3 mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo text-white placeholder:text-[#6E7473] focus:border-[color:var(--teal)] focus:outline-none"
+              className="bg-carbon-2 border-carbon-3 mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo text-white placeholder:text-texto-claro-3 focus:border-[color:var(--teal)] focus:outline-none"
             />
 
             <button
               type="submit"
               disabled={estado.paso === 'mandando' || correo.trim() === ''}
-              className="bg-teal mt-3 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+              className="bg-teal mt-3 min-h-11 w-full rounded-btn py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
             >
               {estado.paso === 'mandando' ? 'Mandando…' : 'Mándame el código'}
             </button>
@@ -199,7 +199,7 @@ export function Entrar() {
               </p>
             )}
 
-            <p className="mt-4 text-menor leading-[1.55] text-[#6E7473]">
+            <p className="mt-4 text-menor leading-[1.55] text-texto-claro-3">
               Si es tu primera vez, con esto se crea tu cuenta. No hay contraseña que recordar.
             </p>
           </form>

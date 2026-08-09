@@ -91,10 +91,10 @@ export function Deudas({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-[19px] bg-[linear-gradient(152deg,var(--color-carbon-2)_0%,var(--color-carbon)_100%)] px-[18px] pt-[17px] pb-4 text-white">
-        <div className="absolute -right-10 -bottom-14 size-[150px] rounded-full bg-white/[.12]" />
+      <div className="relative overflow-hidden rounded-card bg-[linear-gradient(152deg,var(--color-carbon-2)_0%,var(--color-carbon)_100%)] px-[18px] pt-[17px] pb-4 text-white">
+        <div className="absolute -right-10 -bottom-14 size-[150px] rounded-chip bg-white/[.12]" />
         <div className="relative">
-          <div className="text-rotulo font-bold tracking-[.12em] text-[#787E7D] uppercase">
+          <div className="text-rotulo font-bold tracking-[.12em] text-texto-claro-3 uppercase">
             Tu fecha de libertad
           </div>
           <div className="font-serif mt-[6px] mb-[3px] text-heroe leading-none">
@@ -114,9 +114,9 @@ export function Deudas({
         </label>
 
         <div className="relative mx-1 mt-5 mb-4 h-[5px]">
-          <div className="bg-gris absolute inset-0 rounded-full" />
+          <div className="bg-gris absolute inset-0 rounded-chip" />
           <div
-            className="bg-teal absolute top-0 left-0 h-full rounded-full"
+            className="bg-teal absolute top-0 left-0 h-full rounded-chip"
             style={{ width: `${(extra / EXTRA_MAXIMO) * 100}%` }}
           />
           <div
@@ -126,7 +126,7 @@ export function Deudas({
             +{formatearRedondo(centavos(extra))}
           </div>
           <div
-            className="border-teal pointer-events-none absolute top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white shadow-[0_2px_6px_rgba(0,0,0,.16)]"
+            className="border-teal pointer-events-none absolute top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 rounded-chip border-2 bg-white shadow-[0_2px_6px_rgba(0,0,0,.16)]"
             style={{ left: `${(extra / EXTRA_MAXIMO) * 100}%` }}
           />
           <input

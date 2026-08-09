@@ -64,7 +64,7 @@ export function Membresia({
 
   if (nivel === 'premium') {
     return (
-      <div className="bg-blanco border-linea rounded-[15px] border p-5">
+      <div className="bg-blanco border-linea rounded-card border p-5">
         <div className="text-teal-osc text-menor font-bold tracking-[.06em] uppercase">
           Cuenta Premium
         </div>
@@ -79,7 +79,7 @@ export function Membresia({
             type="button"
             onClick={() => void intentar(alAdministrar)}
             disabled={ocupado}
-            className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold disabled:opacity-50"
+            className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border text-cuerpo font-semibold disabled:opacity-50"
           >
             {ocupado ? 'Abriendo…' : 'Administrar mi membresía'}
           </button>
@@ -102,7 +102,7 @@ export function Membresia({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-blanco border-linea rounded-[15px] border p-5">
+      <div className="bg-blanco border-linea rounded-card border p-5">
         <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cuenta gratis
         </div>
@@ -125,12 +125,12 @@ export function Membresia({
         </p>
       </div>
 
-      <div className="bg-carbon rounded-[15px] p-5 text-white">
+      <div className="bg-carbon rounded-card p-5 text-white">
         <div className="text-teal text-menor font-bold tracking-[.06em] uppercase">Premium</div>
         <h2 className="font-serif mt-1 text-titulo leading-tight">Lo que agrega</h2>
         <ul className="mt-3 flex flex-col gap-2">
           {LO_QUE_AGREGA.map((t) => (
-            <li key={t} className="flex gap-2 text-cuerpo leading-[1.5] text-[#C9CECC]">
+            <li key={t} className="flex gap-2 text-cuerpo leading-[1.5] text-texto-claro-2">
               <span className="text-teal">+</span>
               {t}
             </li>
@@ -144,7 +144,7 @@ export function Membresia({
               type="button"
               onClick={() => setPlan(p)}
               aria-pressed={plan === p}
-              className={`flex-1 rounded-[11px] border-2 px-3 py-3 text-left ${
+              className={`flex-1 rounded-btn border-2 px-3 py-3 text-left ${
                 plan === p ? 'border-teal bg-carbon-2' : 'border-carbon-3'
               }`}
             >
@@ -163,7 +163,7 @@ export function Membresia({
             type="button"
             onClick={() => void intentar(() => alPagar(plan))}
             disabled={ocupado}
-            className="bg-teal mt-4 min-h-11 w-full rounded-[11px] py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal mt-4 min-h-11 w-full rounded-btn py-3 text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {ocupado ? 'Abriendo…' : `Hacerme Premium · ${PRECIOS[plan].etiqueta}`}
           </button>
@@ -175,14 +175,14 @@ export function Membresia({
           </p>
         )}
 
-        <p className="mt-3 text-menor leading-[1.5] text-[#8E9492]">
+        <p className="mt-3 text-menor leading-[1.5] text-texto-claro-3">
           El pago se hace en Stripe. Puedes cancelar cuando quieras desde tu cuenta, y si cancelas
           no se borra nada.
         </p>
       </div>
 
       {alCanjear && (
-        <div className="bg-blanco border-linea rounded-[15px] border p-5">
+        <div className="bg-blanco border-linea rounded-card border p-5">
           {canjeando ? (
             <>
               <label
@@ -199,14 +199,14 @@ export function Membresia({
                 autoCapitalize="characters"
                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                 placeholder="COACH2026"
-                className="border-linea text-texto mt-2 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo tracking-[.12em] placeholder:tracking-normal placeholder:text-[#9AA09E] focus:outline-none"
+                className="border-linea text-texto mt-2 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo tracking-[.12em] placeholder:tracking-normal placeholder:text-texto-claro-3 focus:outline-none"
               />
               <div className="mt-3 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setCanjeando(false)}
                   disabled={ocupado}
-                  className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+                  className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
                 >
                   Cancelar
                 </button>
@@ -214,7 +214,7 @@ export function Membresia({
                   type="button"
                   onClick={() => void intentar(() => alCanjear(codigo))}
                   disabled={ocupado || codigo.trim() === ''}
-                  className="bg-carbon min-h-11 flex-[1.6] rounded-[11px] text-cuerpo font-bold text-white disabled:opacity-50"
+                  className="bg-carbon min-h-11 flex-[1.6] rounded-btn text-cuerpo font-bold text-white disabled:opacity-50"
                 >
                   {ocupado ? 'Canjeando…' : 'Canjear'}
                 </button>

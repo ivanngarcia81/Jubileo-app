@@ -13,14 +13,14 @@ import type { Presupuesto } from '../datos/tipos'
  */
 
 const ETIQUETA = 'text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase'
-const TARJETA = 'bg-blanco border-linea rounded-[15px] border p-5'
+const TARJETA = 'bg-blanco border-linea rounded-card border p-5'
 
 function Guardar({ listo, guardando, children }: { listo: boolean; guardando: boolean; children: string }) {
   return (
     <button
       type="submit"
       disabled={!listo || guardando}
-      className="border-linea text-texto mt-4 min-h-11 w-full rounded-[11px] border text-cuerpo font-semibold disabled:opacity-40"
+      className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border text-cuerpo font-semibold disabled:opacity-40"
     >
       {guardando ? 'Guardando…' : children}
     </button>
@@ -69,7 +69,7 @@ export function TuNombre({
         aria-label="Tu nombre"
         placeholder="Iván García"
         autoComplete="name"
-        className="border-linea text-texto mt-3 min-h-11 w-full rounded-[11px] border px-4 py-3 text-titulo placeholder:text-[#9AA09E] focus:outline-none"
+        className="border-linea text-texto mt-3 min-h-11 w-full rounded-btn border px-4 py-3 text-titulo placeholder:text-texto-claro-3 focus:outline-none"
       />
       {error && (
         <p className="text-ambar mt-3 text-menor leading-[1.5]" role="alert">
@@ -129,7 +129,7 @@ export function TuAviso({
         cuánto queda libre.
       </p>
 
-      <label className="border-linea mt-4 flex min-h-11 items-center gap-3 rounded-[11px] border px-4 py-3">
+      <label className="border-linea mt-4 flex min-h-11 items-center gap-3 rounded-btn border px-4 py-3">
         <input
           type="checkbox"
           checked={activo}
@@ -149,7 +149,7 @@ export function TuAviso({
             type="time"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
-            className="border-linea text-texto mt-2 min-h-11 rounded-[11px] border px-4 py-3 text-titulo"
+            className="border-linea text-texto mt-2 min-h-11 rounded-btn border px-4 py-3 text-titulo"
           />
           <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
             En tu reloj, no en el del servidor.

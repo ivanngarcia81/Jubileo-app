@@ -22,6 +22,7 @@
      botón usa el teal plano y el héroe un degradado más oscuro. */
   --tinta-teal:    #043432;  /* sobre `bg-teal`: botones, chips, iconos */
   --tinta-heroe:   #022B29;  /* sobre el degradado del héroe */
+  --tinta-ambar:   #3A2A08;  /* sobre `bg-ambar`: la barra de aviso */
   /* El brillo del degradado de la banda. Venía del mockup como
      `rgba(18,194,160,.14)` — un segundo teal (#12C2A0) que nunca se declaró y
      que no es el de la marca. Se recalculó con el teal oficial. */
@@ -41,6 +42,15 @@
 
   --texto:         #1C1E1F;
   --texto-2:       #6B7175;  /* etiquetas, texto secundario */
+  /* Lo que está ahí pero no reclama atención: el texto de ejemplo dentro de un
+     campo y el fondo de una barra que todavía no se llena. No pasa AA a
+     propósito —1.7:1— y por eso NUNCA lleva información: un marcador de
+     posición se acompaña siempre de su etiqueta. */
+  --tenue:         #C3C7C4;
+  /* Un blanco apenas sucio, para lo que se posa sobre `--blanco`: el renglón
+     bajo el puntero, la fila de encabezado de una semana. Eran dos hexes
+     —#FAFBFA y #FBFCFB— que no distingue nadie. */
+  --blanco-2:      #FAFBFA;
 
   /* El texto **sobre carbón**, que no tenía nombre y por eso vivía como seis
      hexes sueltos casi iguales. Tres niveles y no seis: entre `#B9C2BF` y
@@ -48,11 +58,23 @@
      escala. Ver `design/sidebar.html`. */
   --texto-claro:   #E6E9E7;  /* principal: el nombre de la deuda, el tuyo */
   --texto-claro-2: #C9CCCA;  /* secundario: renglones de navegación y de semana */
-  --texto-claro-3: #7C8483;  /* apagado: rótulos de sección y leyendas */
+  /* Apagado: rótulos de sección, leyendas, navegación inactiva, marcadores de
+     posición sobre carbón. Subió de #7C8483 a #9AA09E, que es el valor que ya
+     usaban quince sitios a mano y el único del grupo que cruza AA: 6.3:1 sobre
+     carbón contra los 4.4:1 de antes. El nivel viejo no pasaba, y la regla 5
+     de este archivo no admite excepciones para el texto apagado. */
+  --texto-claro-3: #9AA09E;
 
   /* Las dos superficies del sidebar. El realce es más sutil que `--carbon-2`
      a propósito: con `--carbon-2` un renglón al pasar el puntero se lee como
      una tarjeta, y es solo un renglón. */
+  /* El fondo de la pantalla de bloqueo que dibuja la vista previa del aviso.
+     Es un decorado —el papel tapiz de un teléfono imaginario, no una superficie
+     del producto— pero sus dos paradas eran los últimos hexes sueltos del
+     código. Va entero como token: así el degradado se decide en un sitio y el
+     componente lo nombra. */
+  --degradado-bloqueo: linear-gradient(170deg, var(--carbon) 0%, #31302B 58%, #4A4238 100%);
+
   --carbon-realce: #232626;  /* un renglón oscuro bajo el puntero */
   --linea-oscura:  #2E3232;  /* lo que `--linea` es en claro, pero sobre carbón */
 

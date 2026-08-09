@@ -120,7 +120,7 @@ export function Onboarding({
                   key={f.id}
                   type="button"
                   onClick={() => setPoniendoMonto(f)}
-                  className="bg-blanco border-linea flex min-h-11 items-center justify-between gap-3 rounded-[13px] border px-[14px] py-3 text-left"
+                  className="bg-blanco border-linea flex min-h-11 items-center justify-between gap-3 rounded-card border px-[14px] py-3 text-left"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-cuerpo font-medium">{f.nombre}</span>
@@ -140,7 +140,7 @@ export function Onboarding({
               <button
                 type="button"
                 onClick={() => setCreandoFijo(true)}
-                className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-[13px] border border-dashed px-[14px] py-3 text-left text-cuerpo"
+                className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-card border border-dashed px-[14px] py-3 text-left text-cuerpo"
               >
                 <span className="text-teal-osc text-titulo leading-none">+</span>
                 Agregar un gasto fijo
@@ -170,7 +170,7 @@ export function Onboarding({
               {deudas.map((d) => (
                 <div
                   key={d.id}
-                  className="bg-blanco border-linea flex items-center justify-between gap-3 rounded-[13px] border px-[14px] py-3"
+                  className="bg-blanco border-linea flex items-center justify-between gap-3 rounded-card border px-[14px] py-3"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-cuerpo font-medium">{d.nombre}</span>
@@ -186,7 +186,7 @@ export function Onboarding({
               <button
                 type="button"
                 onClick={() => setCreandoDeuda(true)}
-                className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-[13px] border border-dashed px-[14px] py-3 text-left text-cuerpo"
+                className="border-linea text-texto-2 flex min-h-11 items-center gap-2 rounded-card border border-dashed px-[14px] py-3 text-left text-cuerpo"
               >
                 <span className="text-teal-osc text-titulo leading-none">+</span>
                 Agregar una deuda
@@ -203,7 +203,7 @@ export function Onboarding({
               va a cada sobre y cuánto te queda libre. Es la parte que más sirve.
             </p>
 
-            <label className="bg-blanco border-linea mt-6 flex min-h-11 items-center justify-between gap-3 rounded-[13px] border px-[14px] py-3">
+            <label className="bg-blanco border-linea mt-6 flex min-h-11 items-center justify-between gap-3 rounded-card border px-[14px] py-3">
               <span className="text-cuerpo font-medium">Quiero el aviso</span>
               <input
                 type="checkbox"
@@ -223,7 +223,7 @@ export function Onboarding({
                   value={hora}
                   onChange={(e) => setHora(e.target.value)}
                   aria-label="A qué hora quieres el aviso"
-                  className="border-linea bg-blanco text-texto min-h-11 rounded-[11px] border px-4 py-3 text-titulo"
+                  className="border-linea bg-blanco text-texto min-h-11 rounded-btn border px-4 py-3 text-titulo"
                 />
                 <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
                   En tu hora, no en la del servidor.
@@ -260,7 +260,7 @@ export function Onboarding({
                       ]
                   ).map((texto, i) => (
                     <li key={texto} className="flex gap-3">
-                      <span className="bg-teal text-tinta-teal grid size-6 shrink-0 place-items-center rounded-full text-menor font-bold">
+                      <span className="bg-teal text-tinta-teal grid size-6 shrink-0 place-items-center rounded-chip text-menor font-bold">
                         {i + 1}
                       </span>
                       {texto}
@@ -284,7 +284,7 @@ export function Onboarding({
               type="button"
               onClick={() => setPaso(paso - 1)}
               disabled={guardando}
-              className="border-linea text-texto-2 min-h-11 flex-1 rounded-[11px] border text-cuerpo font-semibold"
+              className="border-linea text-texto-2 min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold"
             >
               Atrás
             </button>
@@ -293,7 +293,7 @@ export function Onboarding({
             type="button"
             onClick={() => void siguiente()}
             disabled={guardando}
-            className="bg-teal min-h-11 flex-[2] rounded-[11px] text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
+            className="bg-teal min-h-11 flex-[2] rounded-btn text-cuerpo font-bold text-tinta-teal disabled:opacity-50"
           >
             {guardando ? 'Guardando…' : paso === PASOS ? 'Ver mi primera semana' : 'Siguiente'}
           </button>
