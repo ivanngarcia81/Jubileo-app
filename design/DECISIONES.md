@@ -443,3 +443,21 @@ De paso se fue el punto teal de "hay algo nuevo": nada lo calculaba.
 La comprobación de navegador recorre las seis cabeceras y falla si encuentra un
 círculo con borde que no sea `button` ni `a`. Es una regla que se rompe sola: el
 siguiente mockup va a traer su adorno en esa misma esquina.
+
+**El deslizador prometía un extra que la lista no sabía dónde poner.** *(Agosto
+de 2026. El usuario lo dijo así: "no cuadra el pago extra con el orden de
+saldo".)* La pantalla de Deudas decía "+$350" en el deslizador y, diez
+centímetros más abajo, "Solo el mínimo · $50" en la única deuda. Las dos frases
+eran ciertas —una simula, la otra es lo que se paga de verdad— pero juntas no se
+distinguen, y faltaba lo único que de verdad importa: **a dónde iría ese
+dinero**.
+
+Va **completo a la deuda de menor saldo**, no repartido entre todas. Eso *es* el
+método, y era justo lo que la pantalla no enseñaba. Ahora el encabezado de la
+lista dice a cuál va —"el extra va a Capital One"— y esa fila, y solo esa, dice
+"con el extra, $500". Las demás siguen en su mínimo, que es la verdad y además
+es la lección: ver caer todo el dinero en una sola fila explica el método sin
+un párrafo que lo explique.
+
+El nombre sale de `conExtra.enfoqueId`, o sea del propio simulador, para que la
+fila que se anota y la deuda que el cálculo ataca no puedan ser distintas.

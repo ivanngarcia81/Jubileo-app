@@ -307,6 +307,36 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- El extra del deslizador cae en UNA deuda, y se ve ----------
+// El deslizador decia "+$350" y la lista, a diez centimetros, "Solo el minimo
+// · $50". Las dos ciertas —una simula, la otra es lo que pagas— pero juntas no
+// se distinguen, y faltaba lo unico que importa: que el extra va COMPLETO a la
+// de menor saldo, no repartido. Eso es el metodo, y verlo caer en una sola
+// fila es lo que lo ensena sin explicarlo.
+const extraCtx = await navegador.newContext({ viewport: { width: 1100, height: 900 } })
+const ex = vigilar(await extraCtx.newPage())
+await ex.goto(`${BASE}/#/deudas`, { waitUntil: 'networkidle' })
+await ex.waitForTimeout(500)
+await ex.getByLabel('Pago extra cada mes').first().fill('35000')
+await ex.waitForTimeout(400)
+const filas = await ex.evaluate(() =>
+  [...document.querySelectorAll('[style*="--cols"] > div')]
+    .map((e) => e.innerText)
+    .filter((t) => /Minimo|mínimo/i.test(t)),
+)
+const conExtra = filas.filter((t) => /con el extra/.test(t))
+revisar(conExtra.length === 1,
+  `el extra cae en UNA sola deuda, no repartido (${conExtra.length} filas lo dicen)`)
+revisar(/enfoque/i.test(conExtra[0] ?? ''),
+  'y es la de enfoque, que es la de menor saldo')
+revisar((await ex.locator('body').innerText()).includes('el extra va a'),
+  'la lista dice a cual va antes de que la leas fila por fila')
+await ex.getByLabel('Pago extra cada mes').first().fill('0')
+await ex.waitForTimeout(400)
+revisar(!(await ex.locator('body').innerText()).includes('con el extra'),
+  'y sin extra no promete nada')
+await extraCtx.close()
+
 // ---------- Ningun boton de mentira en la cabecera del telefono ----------
 // La cabecera dibujaba un circulo con borde, del tamano de un pulgar, en la
 // esquina donde toda app pone su accion — y era un `div`. Seis pantallas con

@@ -88,6 +88,10 @@ export function Deudas({
       : null
 
   const pendientes = [...presupuesto.deudas].sort((a, b) => a.saldoCents - b.saldoCents)
+  // A dónde caería el extra del deslizador: a la de menor saldo, completo. Es
+  // la misma que el simulador ataca primero, y se toma de él para que las dos
+  // no puedan discrepar.
+  const enfoqueDelExtra = pendientes.find((d) => d.id === conExtra.enfoqueId) ?? null
 
   return (
     <>
@@ -159,10 +163,20 @@ export function Deudas({
         )}
       </Tarjeta>
 
+      {/*
+        El deslizador de arriba dice "+$350" y esta lista decía "Solo el
+        mínimo · $50" a diez centímetros. Las dos eran ciertas —una simula, la
+        otra es lo que pagas de verdad— pero juntas no se distinguen, y faltaba
+        lo que de verdad importa: **a dónde iría ese extra**.
+
+        Va completo a la deuda de menor saldo, no repartido entre todas. Eso es
+        el método, y verlo caer en una sola fila es lo que lo enseña sin
+        explicarlo. Por eso la anotación va en esa fila y no en el encabezado.
+      */}
       <ListaSeccion
         titulo="En orden de saldo"
         icono={<IconoDeudas tam={15} />}
-        dato="menor primero"
+        dato={extra > 0 ? `el extra va a ${enfoqueDelExtra?.nombre ?? 'la menor'}` : 'menor primero'}
         encabezados={['Deuda', 'Pagado', 'Saldo']}
         className="mt-3"
         {...DEUDAS}
@@ -182,16 +196,28 @@ export function Deudas({
           >
             <CeldaNombre
               detalle={
-                deuda.pagoActualCents > deuda.pagoMinimoCents ? (
-                  <>
-                    Mínimo <Moneda centavos={deuda.pagoMinimoCents} /> · pagas{' '}
-                    <Moneda centavos={deuda.pagoActualCents} />
-                  </>
-                ) : (
-                  <>
-                    Solo el mínimo · <Moneda centavos={deuda.pagoMinimoCents} />
-                  </>
-                )
+                <>
+                  {deuda.pagoActualCents > deuda.pagoMinimoCents ? (
+                    <>
+                      Mínimo <Moneda centavos={deuda.pagoMinimoCents} /> · pagas{' '}
+                      <Moneda centavos={deuda.pagoActualCents} />
+                    </>
+                  ) : (
+                    <>
+                      Solo el mínimo · <Moneda centavos={deuda.pagoMinimoCents} />
+                    </>
+                  )}
+                  {/* Lo que pagarías aquí si mandaras el extra del deslizador.
+                      Solo en la de enfoque: el extra no se reparte. */}
+                  {extra > 0 && deuda.id === enfoqueDelExtra?.id && (
+                    <>
+                      {' · '}
+                      <b className="text-teal-osc font-semibold">
+                        con el extra, <Moneda centavos={centavos(deuda.pagoActualCents + extra)} />
+                      </b>
+                    </>
+                  )}
+                </>
               }
             >
               {deuda.nombre} {deuda.esEnfoque && <ChipCategoria tono="teal">enfoque</ChipCategoria>}
