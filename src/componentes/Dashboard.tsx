@@ -10,6 +10,7 @@ import {
   Barra,
   ChipCategoria,
   FilaFondo,
+  IconoDeCategoria,
   ListaSeccion,
   Moneda,
   Vacio,
@@ -18,7 +19,6 @@ import {
 } from './base'
 import {
   IconoAnotar,
-  IconoDeClave,
   IconoCoach,
   IconoDeudas,
   IconoDinero,
@@ -333,9 +333,7 @@ function PorRevisar({
               key={m.id}
               className="border-linea flex items-center gap-[10px] border-b py-[9px] last:border-b-0"
             >
-              <div className="bg-gris border-linea text-texto-2 grid size-[26px] shrink-0 place-items-center rounded-btn border">
-                <IconoDeClave clave={m.icono} tam={13} />
-              </div>
+              <IconoDeCategoria clave={m.icono} size="size-[26px]" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-menor font-medium">{m.nombre}</div>
                 <div className="text-texto-2 mt-[1px] truncate text-rotulo">{m.categoria}</div>

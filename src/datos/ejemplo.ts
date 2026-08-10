@@ -238,9 +238,17 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   //
   // Los tres traen a propósito un avance distinto —63%, 88% y pasado— para que
   // la demostración enseñe los tres colores de la regla 4 de los tokens.
+  //
+  // Sus iconos son los que la siembra del servidor les pondría de verdad:
+  // "Comida" cae en `comida` y "Gasolina" en `transporte` por sus palabras.
+  // "Personal" no se parece a ninguna, así que manda su grupo — y esa es la
+  // razón de que salga con el rombo genérico: no es un olvido, es lo que le
+  // pasa a una categoría con nombre propio. Estaban los tres en `variable`
+  // escrito a mano, y la demostración enseñaba una app más gris que la de
+  // verdad.
   variables: [
-    { id: 'comida', nombre: 'Comida', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
-    { id: 'gasolina', nombre: 'Gasolina', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
+    { id: 'comida', nombre: 'Comida', icono: 'comida', detalle: '', diaVencimiento: null, montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
+    { id: 'gasolina', nombre: 'Gasolina', icono: 'transporte', detalle: '', diaVencimiento: null, montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
     { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
   ],
 

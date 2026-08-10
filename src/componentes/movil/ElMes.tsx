@@ -29,7 +29,7 @@ import {
   Segmentado,
   Vacio,
 } from '../base'
-import { IconoAbrir, IconoDeClave, IconoDinero, IconoMetas } from '../iconos'
+import { IconoAbrir, IconoDinero, IconoMetas } from '../iconos'
 import { CerrarMes } from './CerrarMes'
 import { NuevaCategoria } from './NuevaCategoria'
 import { PonerMonto } from './PonerMonto'
@@ -325,7 +325,7 @@ export function ElMes({
     >
       <CeldaNombre
         className={HILO}
-        icono={<IconoDeClave clave={linea.icono} tam={13} />}
+        clave={linea.icono}
         {...(linea.detalle ? { detalle: linea.detalle } : {})}
       >
         {linea.nombre}
@@ -449,7 +449,7 @@ export function ElMes({
                       <Fila key={`f-${linea.id}`}>
                         <CeldaNombre
                           className={HILO}
-                          icono={<IconoDeClave clave={linea.icono} tam={13} />}
+                          clave={linea.icono}
                           detalle={
                             pago?.pagado
                               ? `Venció el ${pago.diaVencimiento} · pagado`
@@ -502,7 +502,7 @@ export function ElMes({
                       >
                         <CeldaNombre
                           className={HILO}
-                          icono={<IconoDeClave clave={sobre.icono} tam={13} />}
+                          clave={sobre.icono}
                           detalle={`de ${formatearRedondo(sobre.montoMensualCents)} al mes`}
                         >
                           {sobre.nombre}

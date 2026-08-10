@@ -500,12 +500,47 @@ export function FilaAgregar({
 }
 
 /** La celda del nombre: icono opcional, el nombre que se corta, y su detalle. */
+/**
+ * El icono de una categoría, en el color de su familia.
+ *
+ * Existe para que el icono y su color no puedan discrepar: son el mismo dato
+ * —la clave— leído dos veces, y separarlos era pedir que un día la comida
+ * saliera con el tenedor verde en una pantalla y con el tenedor gris en otra.
+ *
+ * Y para que el color **llegue a las listas**. La píldora de categoría solo
+ * sale donde hay sitio para su nombre —Movimientos, el detalle—; en el árbol
+ * de El mes el nombre ya está en la fila y la píldora sobraría. Ahí el color
+ * viaja en el icono, que es donde la referencia lo pone también.
+ */
+export function IconoDeCategoria({
+  clave,
+  tam = 13,
+  size = 'size-6',
+}: {
+  clave: ClaveIcono
+  tam?: number
+  /** La caja. Las listas usan 24px; las filas sueltas, 26. */
+  size?: string
+}) {
+  return (
+    <div
+      className={`${size} ${FAMILIAS[FAMILIA_POR_CLAVE[clave]]} grid shrink-0 place-items-center rounded-btn`}
+    >
+      <IconoDeClave clave={clave} tam={tam} />
+    </div>
+  )
+}
+
 export function CeldaNombre({
+  clave,
   icono,
   children,
   detalle,
   className = '',
 }: {
+  /** La categoría: su icono sale en el color de su familia. */
+  clave?: ClaveIcono
+  /** Para un icono que no es de categoría. Con `clave` no hace falta. */
   icono?: ReactNode
   children: ReactNode
   detalle?: ReactNode
@@ -513,10 +548,14 @@ export function CeldaNombre({
 }) {
   return (
     <div className={`flex min-w-0 items-center gap-[9px] py-[7px] ${className}`}>
-      {icono !== undefined && (
-        <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-btn border">
-          {icono}
-        </div>
+      {clave !== undefined ? (
+        <IconoDeCategoria clave={clave} />
+      ) : (
+        icono !== undefined && (
+          <div className="bg-gris border-linea text-texto-2 grid size-6 shrink-0 place-items-center rounded-btn border">
+            {icono}
+          </div>
+        )
       )}
       <div className="min-w-0">
         <div className="truncate text-cuerpo font-medium">{children}</div>

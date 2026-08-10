@@ -408,6 +408,14 @@ qué es; el otro, cómo va. Hay una prueba que revienta si alguien mete ámbar o
 rojo en la paleta de categorías, que es la regla que se va a romper sola el día
 que alguien busque un octavo color bonito.
 
+**Y el color tuvo que salir de la píldora para llegar a las listas.** La
+píldora solo aparece donde hay sitio para su nombre —Movimientos, el detalle—;
+en el árbol de El mes el nombre ya está en la fila y la píldora sobraría. Ahí
+el color viaja en **el icono**, que es donde la referencia lo pone también.
+`IconoDeCategoria` es la pieza: el icono y su color son el mismo dato leído dos
+veces, y tenerlos separados era pedir que un día la comida saliera con el
+tenedor verde en una pantalla y con el gris en otra.
+
 **De la referencia no se copiaron los emoji.** Los iconos salen de `iconos.tsx`
 —lucide, una sola puerta— y un emoji se dibuja distinto en cada sistema: la
 misma categoría se vería de tres maneras según el teléfono. Y la medición sacó
