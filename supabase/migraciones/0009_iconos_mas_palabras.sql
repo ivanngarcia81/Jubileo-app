@@ -1,10 +1,21 @@
 -- ---------------------------------------------------------------------------
--- 0009 — Tres palabras más para el icono de servicios, y la siembra en función
+-- 0009 — Más palabras, una clave nueva, y la siembra en función
 -- ---------------------------------------------------------------------------
 --
 -- "Electricidad" salía con el rombo genérico. La siembra de 0007 conoce `luz`
 -- pero no `electricidad`, y media población le dice de la otra manera. Lo mismo
 -- con `cable` y `celular`, que son recibos de todos los meses y no estaban.
+--
+-- Y otras dos que se vieron en un presupuesto de verdad:
+--
+-- **`tarjeta`.** El icono de la tarjeta de crédito existía desde 0007 y ninguna
+-- palabra lo alcanzaba, así que una categoría llamada "Tarjeta" salía con el
+-- genérico teniendo su dibujo hecho.
+--
+-- **`personal`, que es una clave nueva.** "Personal" y "Gastos personales" son
+-- de los nombres de sobre más comunes que hay y no se parecían a nada. Va al
+-- final de la lista porque es la palabra más ancha de todas: antes de `seguro`,
+-- un "Seguro personal" saldría con la persona en vez del escudo.
 --
 -- ---------------------------------------------------------------------------
 -- La palabra que NO se agregó, y por qué
@@ -39,6 +50,26 @@
 --
 -- Cada migración futura que agregue palabras es un `create or replace` de esta
 -- función más un `select sembrar_iconos()`. Nada más.
+
+-- ---------------------------------------------------------------------------
+-- La clave nueva entra al CHECK
+-- ---------------------------------------------------------------------------
+--
+-- El CHECK de 0007 no la conoce, así que sin esto la siembra de abajo fallaría
+-- al escribirla. Se recrea entero en vez de tocarse: una restricción no se
+-- edita, se reemplaza — y el archivo que la creó ya corrió y está congelado.
+--
+-- Siguen fuera las tres que salen del grupo (`fijo`, `variable`, `ingreso`): no
+-- se eligen a mano, y aceptarlas dejaría guardar una elección que la rejilla no
+-- puede volver a enseñar.
+alter table categorias drop constraint if exists icono_conocido;
+alter table categorias add constraint icono_conocido check (
+  icono is null or icono in (
+    'casa', 'comida', 'transporte', 'servicios', 'telefono', 'seguro',
+    'salud', 'ropa', 'ninos', 'mascota', 'regalo', 'ahorro', 'tarjeta',
+    'personal', 'deuda', 'mayordomia', 'gasto'
+  )
+);
 
 create or replace function sembrar_iconos()
 returns int
@@ -78,6 +109,10 @@ begin
                when n like '%gasolina%' or n like '%carro%'
                  or n like '%auto%' or n like '%uber%'
                  or n like '%bus%'                                 then 'transporte'
+               when n like '%tarjeta%'                             then 'tarjeta'
+               -- La última, y por eso: es la palabra más ancha. Antes de
+               -- `seguro`, un "Seguro personal" saldría con la persona.
+               when n like '%personal%'                            then 'personal'
              end as clave
         from limpio
     ) s

@@ -197,6 +197,7 @@ export const FAMILIA_POR_CLAVE: Record<ClaveIcono, Familia> = {
   ninos: 'rosa',
   mascota: 'rosa',
   ropa: 'rosa',
+  personal: 'rosa',
   // Lo estructural: el techo, lo que lo protege, y lo que se debe.
   casa: 'pizarra',
   seguro: 'pizarra',

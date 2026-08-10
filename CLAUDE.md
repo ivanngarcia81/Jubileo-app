@@ -104,7 +104,7 @@ herramientas/        las comprobaciones de navegador y el candado de tokens
 ```
 
 Migraciones corridas contra producción, y por lo tanto congeladas: **0001 a 0008**.
-`0009_mas_palabras_de_servicios.sql` está escrito y probado pero **todavía no se ha
+`0009_iconos_mas_palabras.sql` está escrito y probado pero **todavía no se ha
 corrido**; el cambio que sigue va en `0010_…`.
 
 ## Cómo trabajar

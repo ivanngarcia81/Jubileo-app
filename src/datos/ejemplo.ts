@@ -249,7 +249,7 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   variables: [
     { id: 'comida', nombre: 'Comida', icono: 'comida', detalle: '', diaVencimiento: null, montoMensualCents: centavos(45000), gastadoCents: centavos(28400) },
     { id: 'gasolina', nombre: 'Gasolina', icono: 'transporte', detalle: '', diaVencimiento: null, montoMensualCents: centavos(18000), gastadoCents: centavos(15900) },
-    { id: 'personal', nombre: 'Personal', icono: 'variable', detalle: '', diaVencimiento: null, montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
+    { id: 'personal', nombre: 'Personal', icono: 'personal', detalle: '', diaVencimiento: null, montoMensualCents: centavos(12000), gastadoCents: centavos(12800) },
   ],
 
   mayordomia: {

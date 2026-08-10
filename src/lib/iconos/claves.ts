@@ -36,6 +36,7 @@ export type ClaveIcono =
   | 'ninos'
   | 'ahorro'
   | 'tarjeta'
+  | 'personal'
 
 /**
  * Lo que el usuario puede escoger en la hoja de categoría, en el orden en que
@@ -58,6 +59,7 @@ export const CLAVES_DE_CATEGORIA: readonly ClaveIcono[] = [
   'regalo',
   'ahorro',
   'tarjeta',
+  'personal',
   'deuda',
   'mayordomia',
   'gasto',
@@ -84,6 +86,7 @@ export const NOMBRE_DE_CLAVE: Record<ClaveIcono, string> = {
   ninos: 'Niños',
   ahorro: 'Ahorro',
   tarjeta: 'Tarjeta',
+  personal: 'Personal',
 }
 
 export function esClaveDeCategoria(v: string): v is ClaveIcono {
@@ -105,7 +108,7 @@ export const PALABRAS: readonly { clave: ClaveIcono; palabras: readonly string[]
   { clave: 'casa', palabras: ['renta', 'casa', 'hipoteca'] },
   // `gas` falta a propósito: la comparación es por trozo, "Gasolina" contiene
   // "gas", y `servicios` se prueba antes que `transporte`. Agregarlo le robaría
-  // el icono a la gasolina de todo el mundo. Ver `0009_mas_palabras_de_servicios.sql`.
+  // el icono a la gasolina de todo el mundo. Ver `0009_iconos_mas_palabras.sql`.
   {
     clave: 'servicios',
     palabras: [
@@ -121,6 +124,11 @@ export const PALABRAS: readonly { clave: ClaveIcono; palabras: readonly string[]
   },
   { clave: 'comida', palabras: ['comida', 'super', 'despensa'] },
   { clave: 'transporte', palabras: ['gasolina', 'carro', 'auto', 'uber', 'bus'] },
+  { clave: 'tarjeta', palabras: ['tarjeta'] },
+  // "Gastos personales" y "Personal" son de los nombres más comunes que hay, y
+  // caían en el genérico. Va al final porque es la más ancha de todas: si
+  // fuera antes, "Seguro personal" saldría con la persona y no con el escudo.
+  { clave: 'personal', palabras: ['personal'] },
 ]
 
 /**

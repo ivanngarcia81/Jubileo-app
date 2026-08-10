@@ -28,6 +28,12 @@ describe('la sugerencia por nombre', () => {
     expect(sugerirIcono('Electricidad')).toBe('servicios')
     expect(sugerirIcono('Cable e internet')).toBe('servicios')
     expect(sugerirIcono('Plan celular')).toBe('servicios')
+    expect(sugerirIcono('Tarjeta de crédito')).toBe('tarjeta')
+    expect(sugerirIcono('Personal')).toBe('personal')
+    expect(sugerirIcono('Gastos personales')).toBe('personal')
+    // `personal` es la palabra más ancha de la lista y por eso va al final:
+    // antes de `seguro`, este saldría con la persona en vez del escudo.
+    expect(sugerirIcono('Seguro personal')).toBe('seguro')
     expect(sugerirIcono('Hipoteca')).toBe('casa')
     expect(sugerirIcono('Luz y agua')).toBe('servicios')
     expect(sugerirIcono('Internet')).toBe('servicios')
@@ -53,16 +59,15 @@ describe('la sugerencia por nombre', () => {
 
   it('lo que no se parece a nada se queda sin icono, y manda el grupo', () => {
     expect(sugerirIcono('Diezmo y ofrenda')).toBeNull()
-    expect(sugerirIcono('Personal')).toBeNull()
     expect(sugerirIcono('Remesa a la familia')).toBeNull()
     expect(sugerirIcono('')).toBeNull()
   })
 })
 
 describe('las claves que se pueden elegir', () => {
-  it('son dieciséis, sin repetir', () => {
-    expect(CLAVES_DE_CATEGORIA).toHaveLength(16)
-    expect(new Set(CLAVES_DE_CATEGORIA).size).toBe(16)
+  it('son diecisiete, sin repetir', () => {
+    expect(CLAVES_DE_CATEGORIA).toHaveLength(17)
+    expect(new Set(CLAVES_DE_CATEGORIA).size).toBe(17)
   })
 
   it('todas tienen nombre en español para el lector de pantalla', () => {

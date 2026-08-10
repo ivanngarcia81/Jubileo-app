@@ -7,8 +7,8 @@ import {
   Car,
   CircleDollarSign,
   CreditCard,
-  Diamond,
   Gift,
+  HandCoins,
   HeartPulse,
   Home,
   PawPrint,
@@ -16,8 +16,8 @@ import {
   PiggyBank,
   ShieldCheck,
   Shirt,
-  Sparkles,
   UtensilsCrossed,
+  Wallet,
   Zap,
   BatteryMedium,
   Bell,
@@ -119,9 +119,17 @@ export type { ClaveIcono }
 
 const POR_CLAVE: Record<ClaveIcono, (p: PropsIcono) => ReactNode> = {
   // Las que salen del grupo cuando la categoría no eligió ninguna.
-  mayordomia: (p) => <Sparkles {...base(p)} />,
+  // Una mano dando monedas. Antes eran destellos, y unos destellos en 2026
+  // quieren decir "inteligencia artificial" en cualquier interfaz del mundo —
+  // no diezmo. `Church` habría sido lo obvio y se descartó: mayordomía es lo
+  // que se da, no dónde; una iglesia dibujada le pone denominación a una app
+  // que no la tiene.
+  mayordomia: (p) => <HandCoins {...base(p)} />,
   fijo: (p) => <CircleDollarSign {...base(p)} />,
-  variable: (p) => <Diamond {...base(p)} />,
+  // La cartera: lo que se gasta y cambia de mes a mes. Antes era un rombo, que
+  // no quiere decir nada — y como es el icono que le toca a toda categoría que
+  // no eligió el suyo, era el que más se veía.
+  variable: (p) => <Wallet {...base(p)} />,
   deuda: (p) => <TrendingDown {...base(p)} />,
   ingreso: (p) => <ArrowDownLeft {...base(p)} />,
   gasto: (p) => <CircleDollarSign {...base(p)} />,
@@ -139,6 +147,7 @@ const POR_CLAVE: Record<ClaveIcono, (p: PropsIcono) => ReactNode> = {
   regalo: (p) => <Gift {...base(p)} />,
   ahorro: (p) => <PiggyBank {...base(p)} />,
   tarjeta: (p) => <CreditCard {...base(p)} />,
+  personal: (p) => <UserRound {...base(p)} />,
 }
 
 /** El icono de una clave. Una clave desconocida cae al genérico, no revienta. */

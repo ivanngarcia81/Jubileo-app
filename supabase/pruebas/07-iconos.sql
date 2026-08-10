@@ -71,7 +71,8 @@ insert into categorias (hogar_id, nombre, grupo)
     ('Renta'), ('Hipoteca'),
     ('Luz y agua'), ('Electricidad'), ('Internet'), ('Cable e internet'),
     ('Teléfono'), ('TELEFONO'), ('Plan celular'), ('Súper'),
-    ('Seguro del carro'), ('Seguro de la casa'),
+    ('Seguro del carro'), ('Seguro de la casa'), ('Seguro personal'),
+    ('Tarjeta de crédito'), ('Gastos personales'),
     ('Diezmo y ofrenda'), ('Personal'), ('Remesa a la familia')
   ) as v(n);
 
@@ -84,7 +85,7 @@ insert into categorias (hogar_id, nombre, grupo, icono)
 -- Se llama a la función de verdad, no a una copia. Antes esta prueba repetía el
 -- `case` a mano, y por eso no se enteró de que a producción le faltaba
 -- `electricidad`: la copia de aquí se quedó vieja y siguió pasando igual. Ver
--- `0009_mas_palabras_de_servicios.sql`.
+-- `0009_iconos_mas_palabras.sql`.
 \o /dev/null
 select sembrar_iconos();
 \o
@@ -104,13 +105,18 @@ insert into esperado values
   ('Plan celular', 'servicios'),
   -- El orden manda: los dos traen otra palabra que también dispararía.
   ('Seguro del carro', 'seguro'), ('Seguro de la casa', 'seguro'),
+  -- `personal` va al final de la lista justo por esta fila: si fuera antes que
+  -- `seguro`, este saldría con la persona en vez del escudo.
+  ('Seguro personal', 'seguro'),
+  ('Tarjeta de crédito', 'tarjeta'),
+  ('Personal', 'personal'), ('Gastos personales', 'personal'),
   -- Lo que no se parece a nada se queda sin icono: manda el grupo.
-  ('Diezmo y ofrenda', null), ('Personal', null), ('Remesa a la familia', null),
+  ('Diezmo y ofrenda', null), ('Remesa a la familia', null),
   -- Y la que el usuario ya había escogido, intacta.
   ('Comida del perro', 'mascota');
 
 select case when count(*) = 0
-            then '  ok     los 22 nombres salen como dice src/lib/iconos/claves.ts'
+            then '  ok     los 25 nombres salen como dice src/lib/iconos/claves.ts'
             else '  FALLA  ' || string_agg(
                    c.nombre || ': ' || coalesce(c.icono, '(nulo)') ||
                    ' en vez de ' || coalesce(e.icono, '(nulo)'), ' | ') end
