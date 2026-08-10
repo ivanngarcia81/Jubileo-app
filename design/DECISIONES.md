@@ -461,3 +461,24 @@ un párrafo que lo explique.
 
 El nombre sale de `conExtra.enfoqueId`, o sea del propio simulador, para que la
 fila que se anota y la deuda que el cálculo ataca no puedan ser distintas.
+
+**Dos puertas, dos propósitos: la que decide el eje es la puerta.** *(Agosto de
+2026. El usuario lo pidió así: "Presupuesto mensual debería ser un resumen
+mensual —comida en todo el mes, gasolina en todo el mes— y agosto por semanas
+debería ser el lugar de trabajo".)*
+
+Lo que pedía ya estaba construido: el eje **Mes** es exactamente ese resumen por
+categoría. Lo que fallaba era dónde caías. Las dos entradas —el destino del menú
+y una semana del riel— abrían en **Semanas**, y encima el eje se recordaba en
+`localStorage`. Resultado: quien acababa de repartir la semana 2 y tocaba
+"Presupuesto mensual" volvía a caer en el reparto de la semana 2. El destino no
+llevaba a ningún sitio distinto del que ya estaba.
+
+Ahora `#/mes` abre en Mes y `#/mes?semana=N` abre en Semanas. La memoria se fue:
+servía a la pantalla y le estorbaba al usuario. El segmentado sigue ahí para
+cambiar de eje una vez dentro; lo que ya no hace es decidir a dónde llegas.
+
+El detalle que costó: ir del riel al destino **no vuelve a montar la pantalla**
+—solo cambia el fragmento— así que `useState` no se enteraba y el eje se quedaba
+donde estaba. La comprobación de navegador lo pilló en el primer intento, y por
+eso mide las dos direcciones y no solo la primera carga.

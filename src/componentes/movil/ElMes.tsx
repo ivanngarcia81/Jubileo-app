@@ -179,33 +179,31 @@ const TRES_CIFRAS = {
 /** Una cifra suelta de fila hija: va en la columna de Queda, no en la primera. */
 const EN_LA_ULTIMA = 'col-start-3 panel:col-start-5'
 
-/** El eje que se está mirando, recordado entre visitas. */
+/**
+ * El eje que se está mirando. **Lo decide la puerta por la que entraste**, no
+ * lo que miraste la última vez.
+ *
+ * Esta pantalla tiene dos entradas y dos propósitos, y confundirlos era el
+ * problema:
+ *
+ * - **Presupuesto mensual**, el destino del menú, es para *mirar*: cuánto se
+ *   fue en comida en todo el mes, cuánto en gasolina, cuánto queda de cada
+ *   sobre. Abre en **Mes**.
+ * - **Una semana del riel** (`?semana=3`) es el lugar de *trabajo*: ahí se
+ *   reparte el dinero y se marcan los pagos. Abre en **Semanas**, con esa
+ *   semana desplegada.
+ *
+ * Antes las dos abrían en Semanas y el eje se recordaba en `localStorage`, así
+ * que quien acababa de repartir una semana y tocaba "Presupuesto mensual"
+ * volvía a caer en el reparto — el destino del menú no llevaba a ningún sitio
+ * distinto del que ya estaba. La memoria servía a la pantalla y le estorbaba
+ * al usuario.
+ *
+ * El segmentado sigue ahí para cambiar de eje una vez dentro. Lo que ya no
+ * hace es decidir a dónde llegas.
+ */
 const EJES = ['Semanas', 'Cheques', 'Mes'] as const
 type Eje = (typeof EJES)[number]
-const LLAVE_EJE = 'jubileo:eje-de-el-mes'
-
-function useEje(inicial?: Eje): [Eje, (nuevo: Eje) => void] {
-  const [eje, setEje] = useState<Eje>(() => {
-    if (inicial) return inicial
-    try {
-      const guardado = localStorage.getItem(LLAVE_EJE)
-      return (EJES as readonly string[]).includes(guardado ?? '') ? (guardado as Eje) : 'Semanas'
-    } catch {
-      return 'Semanas'
-    }
-  })
-  return [
-    eje,
-    (nuevo) => {
-      setEje(nuevo)
-      try {
-        localStorage.setItem(LLAVE_EJE, nuevo)
-      } catch {
-        // Se queda en esta visita y ya.
-      }
-    },
-  ]
-}
 
 /** Qué grupos están abiertos, recordado entre visitas. */
 const LLAVE = 'jubileo:grupos-de-el-mes'
@@ -281,20 +279,23 @@ export function ElMes({
   // una palomita que aparece y se deshace sola es peor que una que tarda.
   const [pagando, setPagando] = useState<string | null>(null)
   const [abiertos, setAbiertos] = useAbiertos()
-  const [eje, setEje] = useEje(semanaPedida === undefined ? undefined : 'Semanas')
+  const [eje, setEje] = useState<Eje>(semanaPedida === undefined ? 'Mes' : 'Semanas')
   // La semana en curso nace abierta: es a la que se viene. Si vienes del rail
   // del sidebar, la que pediste.
   const [semanasAbiertas, setSemanasAbiertas] = useState<number[]>(() => [
     semanaPedida ?? presupuesto.semanas[presupuesto.semanaActiva]?.numero ?? 1,
   ])
 
-  // Y si el rail manda otra semana con la pantalla ya montada —tocar S4 estando
-  // en El mes— también se abre. `useState` solo mira su valor inicial.
+  // La puerta manda **también cuando la pantalla ya está montada**. Ir del riel
+  // al destino del menú no la vuelve a montar —solo cambia el fragmento— así
+  // que `useState` no se entera y el eje se quedaba donde estaba: quien acababa
+  // de repartir una semana y tocaba "Presupuesto mensual" seguía viendo el
+  // reparto. Se comprueba en las dos direcciones.
   const [ultimaPedida, setUltimaPedida] = useState(semanaPedida)
-  if (semanaPedida !== undefined && semanaPedida !== ultimaPedida) {
+  if (semanaPedida !== ultimaPedida) {
     setUltimaPedida(semanaPedida)
-    setEje('Semanas')
-    if (!semanasAbiertas.includes(semanaPedida)) {
+    setEje(semanaPedida === undefined ? 'Mes' : 'Semanas')
+    if (semanaPedida !== undefined && !semanasAbiertas.includes(semanaPedida)) {
       setSemanasAbiertas([...semanasAbiertas, semanaPedida])
     }
   }

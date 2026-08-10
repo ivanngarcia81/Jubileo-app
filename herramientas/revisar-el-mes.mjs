@@ -403,12 +403,11 @@ await p.waitForTimeout(1500)
 
 await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
 await p.waitForTimeout(800)
-// El mes abre en el eje nuevo: las semanas. Este tramo del camino ejercita el
-// árbol de categorías, así que se cambia el lente — y la elección se recuerda.
-ok((await p.locator('body').innerText()).includes('Semanas de agosto'),
-   'El mes abre en la vista de semanas: el eje nuevo')
-await p.getByRole('button', { name: 'Mes', exact: true }).first().click()
-await p.waitForTimeout(300)
+// El destino del menu abre en el resumen del mes por categoria: es para MIRAR.
+// El reparto semanal se llega por el riel, que es el lugar de trabajo. Ver el
+// comentario de `useEje` en ElMes.tsx.
+ok((await p.locator('body').innerText()).includes('Categorías de agosto'),
+   'Presupuesto mensual abre en el resumen del mes, no en el reparto')
 ok(await p.getByText('Sobres variables').first().isVisible(), 'El mes enseña los sobres variables, que es donde se reparte el resto')
 // Los cuatro grupos, con la deuda incluida: sin ella los montos de la pantalla
 // no llegaban a lo que dice "Sale este mes".
@@ -759,29 +758,6 @@ ok(!asignaciones_semana.some((a) => a.linea_presupuesto_id === `l-${MES}-c-comid
 ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000,
    'el dinero deja de contar en lo que sale, en vez de quedarse invisible')
 ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
-
-// ---- Salir de la cuenta ---------------------------------------------------
-// `salir()` existia desde el principio y ningun boton la llamaba: quien entraba
-// en un telefono se quedaba dentro para siempre. Lo que se mide es que el boton
-// llegue hasta el servidor, no que se vea — un boton que pregunta y no hace
-// nada es peor que ninguno.
-await p.goto(SITIO + '/#/ajustes', { waitUntil: 'networkidle' })
-await p.waitForTimeout(900)
-const enAjustes = await p.locator('body').innerText()
-ok(enAjustes.includes(USUARIO.email),
-   `Ajustes dice con que cuenta estas dentro (${USUARIO.email})`)
-await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
-await p.waitForTimeout(300)
-ok(await p.getByRole('button', { name: 'Mejor no' }).first().isVisible(),
-   'y pregunta antes de sacarte, con una salida de la pregunta')
-await p.getByRole('button', { name: 'Mejor no' }).first().click()
-await p.waitForTimeout(300)
-ok(salidas.length === 0, 'decir que mejor no, no cierra la sesion')
-await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
-await p.waitForTimeout(300)
-await p.getByRole('button', { name: 'Salir', exact: true }).first().click()
-ok(await esperarA(() => salidas.length === 1), 'y confirmar si la cierra de verdad')
-await p.waitForTimeout(1200)
 
 // ---- Cerrar la semana -----------------------------------------------------
 await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
@@ -1359,6 +1335,33 @@ ok(preferenciaAviso?.canal === 'correo' && preferenciaAviso?.activo === true,
 const zonaGuardada = escrituras.filter((e) => e.tabla === 'usuarios').some((e) => e.cuerpo?.zona_horaria)
 ok(zonaGuardada, 'y de paso se vuelve a guardar la zona horaria: quien se muda cambia su hora aquí')
 await p.screenshot({ path: RAIZ + 'capturas/app-preferencias.png' })
+
+// ---- Salir de la cuenta ---------------------------------------------------
+// **Va al final a propósito.** Esta es la única comprobación que destruye la
+// sesión: después de confirmar, la app recarga sin usuario y todo lo que
+// corriera detrás se encontraría la pantalla de entrar. Estaba en medio y se
+// llevó por delante a "Cerrar la semana" en cuanto el orden de arriba cambió.
+// `salir()` existia desde el principio y ningun boton la llamaba: quien entraba
+// en un telefono se quedaba dentro para siempre. Lo que se mide es que el boton
+// llegue hasta el servidor, no que se vea — un boton que pregunta y no hace
+// nada es peor que ninguno.
+await p.goto(SITIO + '/#/ajustes', { waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+const enAjustes = await p.locator('body').innerText()
+ok(enAjustes.includes(USUARIO.email),
+   `Ajustes dice con que cuenta estas dentro (${USUARIO.email})`)
+await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
+await p.waitForTimeout(300)
+ok(await p.getByRole('button', { name: 'Mejor no' }).first().isVisible(),
+   'y pregunta antes de sacarte, con una salida de la pregunta')
+await p.getByRole('button', { name: 'Mejor no' }).first().click()
+await p.waitForTimeout(300)
+ok(salidas.length === 0, 'decir que mejor no, no cierra la sesion')
+await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
+await p.waitForTimeout(300)
+await p.getByRole('button', { name: 'Salir', exact: true }).first().click()
+ok(await esperarA(() => salidas.length === 1), 'y confirmar si la cierra de verdad')
+await p.waitForTimeout(1200)
 
 ok(errores.length === 0, `sin errores en la consola${errores.length ? ': ' + errores.join(' | ') : ''}`)
 await nav.close(); rmSync(dir, { recursive: true, force: true })

@@ -307,6 +307,36 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- Dos puertas, dos propositos ----------
+// Presupuesto mensual es para MIRAR —cuanto se fue en comida en todo el mes— y
+// una semana del riel es para TRABAJAR. Antes las dos abrian en Semanas y el
+// eje se recordaba, asi que el destino del menu no llevaba a ningun sitio
+// distinto del que ya estabas.
+const puertaCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const pu = vigilar(await puertaCtx.newPage())
+
+await pu.goto(`${BASE}/#/mes`, { waitUntil: 'networkidle' })
+await pu.waitForTimeout(500)
+revisar((await pu.locator('body').innerText()).includes('Categorías de agosto'),
+  'el destino del menu abre en el resumen del mes por categoria')
+
+await pu.goto(`${BASE}/#/mes?semana=3`, { waitUntil: 'networkidle' })
+await pu.waitForTimeout(500)
+const enSemana = await pu.locator('body').innerText()
+revisar(enSemana.includes('Semanas de agosto'), 'y una semana del riel abre en el reparto semanal')
+revisar(await pu.getByRole('button', { name: 'Cerrar la semana 3' }).first().isVisible(),
+  'con la semana que se pidio ya desplegada')
+
+// Y la memoria ya no manda: volver al destino del menu despues de trabajar una
+// semana tiene que devolver el resumen, no el reparto.
+await pu.getByRole('button', { name: 'Semanas', exact: true }).first().click()
+await pu.waitForTimeout(300)
+await pu.goto(`${BASE}/#/mes`, { waitUntil: 'networkidle' })
+await pu.waitForTimeout(500)
+revisar((await pu.locator('body').innerText()).includes('Categorías de agosto'),
+  'y despues de trabajar una semana, el menu sigue llevando al resumen')
+await puertaCtx.close()
+
 // ---------- El extra del deslizador cae en UNA deuda, y se ve ----------
 // El deslizador decia "+$350" y la lista, a diez centimetros, "Solo el minimo
 // · $50". Las dos ciertas —una simula, la otra es lo que pagas— pero juntas no
