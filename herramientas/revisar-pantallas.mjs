@@ -307,6 +307,44 @@ revisar(
 )
 await railCtx.close()
 
+// ---------- Ningun boton de mentira en la cabecera del telefono ----------
+// La cabecera dibujaba un circulo con borde, del tamano de un pulgar, en la
+// esquina donde toda app pone su accion — y era un `div`. Seis pantallas con
+// un boton que no responde. Lo que se mide es que todo lo que PARECE tocable
+// en esa cabecera sea de verdad un boton.
+const cabCtx = await navegador.newContext({ viewport: { width: 352, height: 706 } })
+const cab = vigilar(await cabCtx.newPage())
+for (const ruta of ['resumen', 'mes', 'deudas', 'metas', 'movimientos', 'ajustes']) {
+  await cab.goto(`${BASE}/#/${ruta}`, { waitUntil: 'networkidle' })
+  await cab.waitForTimeout(300)
+  const falsos = await cab.evaluate(() => {
+    const h = document.querySelector('header')
+    if (!h) return []
+    // Un circulo con borde y de 30px para arriba, que no sea boton ni enlace.
+    return [...h.querySelectorAll('div')]
+      .filter((e) => {
+        const s = getComputedStyle(e)
+        const r = e.getBoundingClientRect()
+        return (
+          r.width >= 30 && r.width <= 48 && Math.abs(r.width - r.height) < 4 &&
+          parseFloat(s.borderRadius) > 12 && s.borderStyle !== 'none' &&
+          !e.closest('button') && !e.closest('a')
+        )
+      })
+      .map((e) => e.className)
+  })
+  revisar(falsos.length === 0,
+    `${ruta}: ningun circulo de la cabecera finge ser boton${falsos.length ? ` — ${falsos[0]}` : ''}`)
+}
+// Y la campana, que si tiene a donde ir, va.
+await cab.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
+await cab.waitForTimeout(300)
+await cab.getByRole('button', { name: /aviso del domingo/ }).first().click()
+await cab.waitForTimeout(400)
+revisar((await cab.evaluate(() => location.hash)).includes('aviso'),
+  `la campana lleva a la vista previa del aviso (${await cab.evaluate(() => location.hash)})`)
+await cabCtx.close()
+
 // ---------- El Dashboard: que cada tarjeta lleve a donde dice ----------
 // Un dashboard que resume pero no despacha es un reporte. Lo que se mide es
 // que cada tarjeta suelte al usuario en la seccion donde eso se arregla, y que

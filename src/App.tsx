@@ -8,13 +8,9 @@ import { Entrar } from "./componentes/Entrar";
 import { Membresia } from "./componentes/Membresia";
 import { Onboarding } from "./componentes/Onboarding";
 import {
-  IconoAjustes,
   IconoAviso,
   IconoDeudas,
-  IconoEditar,
-  IconoMas,
   IconoMetas,
-  IconoMovimientos,
   IconoRegresar,
 } from "./componentes/iconos";
 import { TuAviso, TuNombre, TuSesion } from "./componentes/Preferencias";
@@ -64,7 +60,6 @@ function cabeceraDe(
           alTocarAvatar={() => ir("resumen")}
           titulo={presupuesto.mes.etiqueta}
           subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
-          accion={<IconoEditar tam={16} />}
         />
       );
     case "deudas":
@@ -73,7 +68,6 @@ function cabeceraDe(
           avatar={<IconoDeudas />}
           titulo="Salir de deudas"
           subtitulo={cuantos(pendientes, 'deuda pendiente', 'deudas pendientes')}
-          accion={<IconoMas tam={16} />}
         />
       );
     case "metas":
@@ -82,7 +76,6 @@ function cabeceraDe(
           avatar={<IconoMetas />}
           titulo="Tus metas"
           subtitulo={cuantos(presupuesto.fondos.length, 'fondo de reserva', 'fondos de reserva')}
-          accion={<IconoMas tam={16} />}
         />
       );
     case "movimientos":
@@ -92,7 +85,6 @@ function cabeceraDe(
           alTocarAvatar={() => ir("resumen")}
           titulo="Movimientos"
           subtitulo={`${presupuesto.mes.etiqueta} · ${cuantos(presupuesto.movimientos.length, 'movimiento', 'movimientos')} en total`}
-          accion={<IconoMovimientos tam={16} />}
         />
       );
     case "ajustes":
@@ -102,7 +94,6 @@ function cabeceraDe(
           alTocarAvatar={() => ir("resumen")}
           titulo="Ajustes"
           subtitulo={`${presupuesto.usuario.frecuencia} · ${cuantos(presupuesto.periodos.length, 'cheque', 'cheques')}`}
-          accion={<IconoAjustes tam={16} />}
         />
       );
     default:
@@ -119,7 +110,8 @@ function cabeceraDe(
               : "Cuenta gratis"
           }
           accion={<IconoAviso tam={16} />}
-          conAviso
+          etiquetaAccion="Ver cómo se ve tu aviso del domingo"
+          alTocarAccion={() => ir("aviso")}
         />
       );
   }

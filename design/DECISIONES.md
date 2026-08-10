@@ -421,3 +421,25 @@ tenedor verde en una pantalla y con el gris en otra.
 misma categoría se vería de tres maneras según el teléfono. Y la medición sacó
 de paso una falla vieja: el chip teal iba a **4.27:1**, por debajo de AA. Su
 texto se oscureció a `#04645F`.
+
+**Los seis botones que no eran botones.** *(Agosto de 2026. El usuario preguntó
+qué hacía el lápiz de la cabecera de El mes. No hacía nada.)* La cabecera del
+teléfono dibujaba un círculo con borde, de 34px, en la esquina superior derecha
+—donde toda app del mundo pone su acción principal— y era un `<div>` con un
+icono adentro, copiado de la composición del mockup. En seis pantallas: un
+lápiz, dos "+", una campana y dos que repetían el icono de la pantalla en la
+que ya estabas.
+
+Un círculo del tamaño de un pulgar, con borde y en esa esquina, **es un botón**
+aunque el código diga `div`. Y los dos "+" eran peores que inútiles: prometían
+crear una deuda o un fondo cuando esa acción ya existía más abajo, en su propia
+lista. Quien lo tocara aprendía que la app no responde.
+
+Ahora el círculo **solo se dibuja si hace algo**. Cinco desaparecieron; la
+campana se quedó, convertida en botón de verdad que lleva a la vista previa del
+aviso del domingo — que es lo que una campana promete y lo que esa pantalla es.
+De paso se fue el punto teal de "hay algo nuevo": nada lo calculaba.
+
+La comprobación de navegador recorre las seis cabeceras y falla si encuentra un
+círculo con borde que no sea `button` ni `a`. Es una regla que se rompe sola: el
+siguiente mockup va a traer su adorno en esa misma esquina.

@@ -23,14 +23,29 @@ export function Cabecera({
   titulo,
   subtitulo,
   accion,
-  conAviso = false,
+  etiquetaAccion,
+  alTocarAccion,
   alTocarAvatar,
 }: {
   avatar: ReactNode
   titulo: string
   subtitulo: string
-  accion: ReactNode
-  conAviso?: boolean
+  /**
+   * El botón redondo de la derecha. **Solo se dibuja si hace algo.**
+   *
+   * Vivía como un `<div>` con un icono adentro, copiado de la composición del
+   * mockup, en seis pantallas: un lápiz en El mes, un "+" en Deudas y en
+   * Metas, una campana en el inicio, y dos que repetían el icono de la
+   * pantalla en la que ya estabas. Ninguno respondía.
+   *
+   * Un círculo del tamaño de un pulgar, con borde y sombra, en la esquina
+   * donde toda app pone su acción, **es un botón** aunque el código diga
+   * `div`. Y los dos "+" eran peores que inútiles: prometían crear una deuda
+   * o un fondo cuando esa acción ya vivía más abajo, en su lista.
+   */
+  accion?: ReactNode
+  etiquetaAccion?: string
+  alTocarAccion?: () => void
   alTocarAvatar?: () => void
 }) {
   return (
@@ -49,10 +64,16 @@ export function Cabecera({
           {subtitulo}
         </div>
       </div>
-      <div className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-chip border text-menor">
-        {accion}
-        {conAviso && <span className="bg-teal absolute top-2 right-[9px] size-[6px] rounded-chip" />}
-      </div>
+      {accion !== undefined && alTocarAccion !== undefined && (
+        <button
+          type="button"
+          onClick={alTocarAccion}
+          aria-label={etiquetaAccion}
+          className="bg-blanco border-linea text-texto-2 relative grid size-[34px] shrink-0 place-items-center rounded-chip border text-menor before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
+        >
+          {accion}
+        </button>
+      )}
     </header>
   )
 }
