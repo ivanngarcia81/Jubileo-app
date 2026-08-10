@@ -165,6 +165,7 @@ const PAGOS_POR_SEMANA: Presupuesto['pagosPorSemana'] = SEMANAS_CALENDARIO.map((
 export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   usuario: {
     nombre: 'Iván',
+    correo: 'ivan@ejemplo.com',
     iniciales: 'IV',
     nivel: 'premium',
     nivelVenceEn: null,

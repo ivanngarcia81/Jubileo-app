@@ -123,6 +123,12 @@ export interface ResumenMesPasado {
 export interface Presupuesto {
   usuario: {
     nombre: string
+    /**
+     * Con quién está abierta la sesión. Lo enseña Ajustes antes de ofrecer
+     * salirse: en un teléfono que se presta, "¿de quién es esta sesión?" es la
+     * pregunta que se hace antes de tocar ese botón.
+     */
+    correo: string
     iniciales: string
     nivel: 'gratis' | 'premium'
     /** Cuándo se acaba lo pagado, ya en texto. Nulo si no hay fecha. */

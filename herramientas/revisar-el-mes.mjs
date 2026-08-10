@@ -72,6 +72,8 @@ let preferenciaAviso = null
 let deudas = []
 let fondos = []
 const escrituras = []
+/** Cada vez que el cliente pide cerrar la sesion. */
+const salidas = []
 
 const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const ctx = await nav.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
@@ -109,6 +111,7 @@ await p.route('**/*', async (r) => {
   const pideUno = (r.request().headers()['accept'] ?? '').includes('vnd.pgrst.object')
   if (url.origin === SRV) {
     if (url.pathname === '/auth/v1/otp') return json({})
+    if (url.pathname === '/auth/v1/logout') { salidas.push(Date.now()); return json({}) }
     if (url.pathname === '/auth/v1/verify') return json({ access_token:'x', token_type:'bearer', expires_in:3600, refresh_token:'y', user: USUARIO })
     // Supabase renueva el token cuando vence. Sin esto, cualquier prueba que
     // adelante el reloj se encuentra con la pantalla de entrar en vez de la app.
@@ -756,6 +759,29 @@ ok(!asignaciones_semana.some((a) => a.linea_presupuesto_id === `l-${MES}-c-comid
 ok(lineas.reduce((s2, l) => s2 + l.monto_mensual_cents, 0) === saleAntes - 60000,
    'el dinero deja de contar en lo que sale, en vez de quedarse invisible')
 ok(!(await p.locator('body').innerText()).includes('Comida'), 'y desaparece de la pantalla')
+
+// ---- Salir de la cuenta ---------------------------------------------------
+// `salir()` existia desde el principio y ningun boton la llamaba: quien entraba
+// en un telefono se quedaba dentro para siempre. Lo que se mide es que el boton
+// llegue hasta el servidor, no que se vea — un boton que pregunta y no hace
+// nada es peor que ninguno.
+await p.goto(SITIO + '/#/ajustes', { waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+const enAjustes = await p.locator('body').innerText()
+ok(enAjustes.includes(USUARIO.email),
+   `Ajustes dice con que cuenta estas dentro (${USUARIO.email})`)
+await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
+await p.waitForTimeout(300)
+ok(await p.getByRole('button', { name: 'Mejor no' }).first().isVisible(),
+   'y pregunta antes de sacarte, con una salida de la pregunta')
+await p.getByRole('button', { name: 'Mejor no' }).first().click()
+await p.waitForTimeout(300)
+ok(salidas.length === 0, 'decir que mejor no, no cierra la sesion')
+await p.getByRole('button', { name: 'Salir de tu cuenta' }).first().click()
+await p.waitForTimeout(300)
+await p.getByRole('button', { name: 'Salir', exact: true }).first().click()
+ok(await esperarA(() => salidas.length === 1), 'y confirmar si la cierra de verdad')
+await p.waitForTimeout(1200)
 
 // ---- Cerrar la semana -----------------------------------------------------
 await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })

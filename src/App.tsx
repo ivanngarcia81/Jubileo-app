@@ -17,7 +17,7 @@ import {
   IconoMovimientos,
   IconoRegresar,
 } from "./componentes/iconos";
-import { TuAviso, TuNombre } from "./componentes/Preferencias";
+import { TuAviso, TuNombre, TuSesion } from "./componentes/Preferencias";
 import { type LoQueTrae, MesNuevo } from "./componentes/MesNuevo";
 import { PrimerMes } from "./componentes/PrimerMes";
 import {
@@ -327,6 +327,8 @@ function Ajustes({
           recargar();
         }}
       />
+      {/* Al final: es la única acción de Ajustes que te saca de la app. */}
+      {alGuardarNombre && <TuSesion presupuesto={presupuesto} />}
     </div>
   );
 }

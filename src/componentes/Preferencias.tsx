@@ -173,3 +173,79 @@ export function TuAviso({
     </form>
   )
 }
+
+/**
+ * Salir de la cuenta.
+ *
+ * Faltaba entera: `salir()` existía en `servidor/cliente.ts` desde el
+ * principio —con su borrado de la copia local y todo— y **ningún botón la
+ * llamaba**. Quien entraba en un teléfono se quedaba dentro para siempre.
+ *
+ * En una app de dinero eso no es un detalle. El teléfono se presta, la pareja
+ * lo agarra, alguien entra con la cuenta equivocada; y sin manera de salirse,
+ * la única salida era borrar los datos del sitio desde los ajustes del
+ * navegador — que es pedirle al usuario que sepa dónde está eso.
+ *
+ * **El verbo es "salir", no "cerrar".** En este producto "cerrar" ya quiere
+ * decir otra cosa —cerrar la semana, cerrar el mes, dos flujos que guardan
+ * dinero— y un botón de ajustes que dijera "cerrar sesión" se leería como uno
+ * de esos. El botón y su confirmación usan el mismo verbo, como manda
+ * `CLAUDE.md`.
+ *
+ * Pregunta antes de hacerlo, y no porque se pierda algo —el presupuesto vive en
+ * el servidor— sino porque volver a entrar cuesta esperar un correo, y en un
+ * teléfono con la app instalada eso puede ser cinco minutos de nada.
+ */
+export function TuSesion({ presupuesto }: { presupuesto: Presupuesto }) {
+  const [preguntando, setPreguntando] = useState(false)
+  const [saliendo, setSaliendo] = useState(false)
+
+  async function salirse() {
+    setSaliendo(true)
+    const { salir } = await import('../servidor/cliente')
+    await salir()
+    // Recarga entera en vez de mover el estado a mano: al salir cambia todo lo
+    // que la app tiene en memoria, y quedarse a medias enseñaría el presupuesto
+    // de quien acaba de irse.
+    location.reload()
+  }
+
+  return (
+    <div className={TARJETA}>
+      <div className={ETIQUETA}>Tu sesión</div>
+      <p className="text-texto-2 mt-2 text-menor leading-[1.5]">
+        Estás dentro como{' '}
+        <b className="text-texto font-semibold break-all">{presupuesto.usuario.correo}</b>. Tu
+        presupuesto se queda guardado; para volver a entrar te mandamos otro código.
+      </p>
+      {preguntando ? (
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPreguntando(false)}
+            disabled={saliendo}
+            className="border-linea text-texto min-h-11 flex-1 rounded-btn border text-cuerpo font-semibold disabled:opacity-40"
+          >
+            Mejor no
+          </button>
+          <button
+            type="button"
+            onClick={() => void salirse()}
+            disabled={saliendo}
+            className="bg-carbon min-h-11 flex-1 rounded-btn text-cuerpo font-semibold text-white disabled:opacity-40"
+          >
+            {saliendo ? 'Saliendo…' : 'Salir'}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPreguntando(true)}
+          className="border-linea text-texto mt-4 min-h-11 w-full rounded-btn border text-cuerpo font-semibold"
+        >
+          Salir de tu cuenta
+        </button>
+      )}
+    </div>
+  )
+}

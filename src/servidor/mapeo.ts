@@ -497,6 +497,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
   return {
     usuario: {
       nombre: (yo.nombre ?? yo.correo.split('@')[0] ?? '').split(/\s+/)[0] ?? '',
+      correo: yo.correo,
       iniciales: iniciales(yo.nombre, yo.correo),
       // El nivel se corrige al leer: si el webhook del vencimiento se perdió,
       // la base seguiría diciendo premium. Bajar a gratis no borra nada.

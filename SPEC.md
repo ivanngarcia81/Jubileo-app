@@ -211,6 +211,8 @@ El contrato visual está en `/design`. **Extrae de ahí colores, tipografías, e
    faltan N por revisar" con la acción en bloque.
 6. **El aviso** — No es una pantalla de la app: es la notificación. Ver sección 9.
 
+**Ajustes** —fuera de la píldora, se llega tocando el avatar— tiene cómo te llamamos, la hora del aviso, cómo te pagan, la membresía y **salir de tu cuenta**. El verbo es *salir* y no *cerrar*: en este producto "cerrar" ya es cerrar la semana y cerrar el mes.
+
 Navegación flotante en píldora oscura, cuatro destinos: **Inicio · Presupuesto ·
 Deudas · Metas**. **Ajustes y Movimientos viven fuera de la píldora** —son
 cuatro y así lo dibuja el mockup—: a Ajustes se llega tocando el avatar y a
