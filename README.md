@@ -385,19 +385,39 @@ no borra nada.
 
 ## Estado
 
-Fase 1, en construcción.
+Fase 1. **El código está completo**; lo que falta es conectar servicios, y eso
+son dos listas distintas que conviene no mezclar.
 
-Listo: el motor de periodos con sus pruebas, las pantallas del contrato visual
-— Mi semana, El mes, Deudas y el aviso en teléfono, y el panel de Resumen en
-computadora — el esquema de la base con sus pruebas, y la capa de datos que lo
-consulta.
+### Escrito y probado
+
+El motor de periodos y el de semanas, puros y con pruebas. El esquema con sus
+pruebas de restricciones, modo pareja y RLS. La capa de datos. Las pantallas:
+Dashboard, Presupuesto mensual, Deudas, Metas, Movimientos, Ajustes y la vista
+previa del aviso. Entrar con código, los 6 pasos del onboarding, repartir el
+mes, anotar, cerrar la semana, cerrar el mes, deudas con fecha de libertad,
+fondos de reserva, salir de la cuenta. El cron del aviso del domingo y los
+webhooks de Stripe.
 
 Sin `VITE_SUPABASE_URL` en el `.env`, la app corre con datos de ejemplo y se ve
 igual. Con la llave puesta, lee del servidor: es el único interruptor.
 
-La fase 1 está completa: se entra con el correo, se arman los 6 pasos del
-onboarding, se reparte el mes, se anotan gastos, se cierra la semana, se meten
-deudas y fondos, sale el aviso del domingo y se cobra la membresía.
+### Conectado en producción
 
-Falta, ya fuera de la fase 1: los avisos al teléfono (push y SMS), y Plaid —
-que el SPEC pone en la fase 3 y no antes.
+- **Base de datos y autenticación** (Supabase) — sí.
+- **Correo de entrada** (Resend + SMTP de Supabase) — sí. Se entra desde un
+  teléfono con el código de seis dígitos.
+- **Aviso del domingo** — el código está; faltan `CORREO_API_KEY`,
+  `CORREO_REMITENTE`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
+  y `URL_APP` en Vercel, más `CRON_SECRET` y `URL_APP` en GitHub → Settings.
+- **Membresía** (Stripe) — el código está; faltan las llaves y el webhook.
+
+### El criterio de aceptación
+
+*Un usuario nuevo que cobra cada dos semanas se registra, arma su mes, y recibe
+el correo del domingo con los números correctos, incluido el mes de 3 cheques.*
+La primera mitad ya se puede hacer; la segunda espera al aviso conectado.
+
+### Fuera de la fase 1
+
+Avisos al teléfono (push y SMS), Tauri para iOS (fase 2), Plaid (fase 3), modo
+pareja e insights (fase 4).
