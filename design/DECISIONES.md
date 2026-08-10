@@ -482,3 +482,23 @@ El detalle que costó: ir del riel al destino **no vuelve a montar la pantalla**
 —solo cambia el fragmento— así que `useState` no se enteraba y el eje se quedaba
 donde estaba. La comprobación de navegador lo pilló en el primer intento, y por
 eso mide las dos direcciones y no solo la primera carga.
+
+**Las dos puertas que estaban donde nadie las busca.** *(Agosto de 2026. El
+usuario lo dijo entero: "no veo por ningún lado dónde se entran los cheques y
+tampoco dónde se agregan gastos".)* Las dos existían. Ninguna estaba donde se
+va a buscarla.
+
+**Anotar un gasto** vivía solo como chip del Dashboard. Y *Movimientos* —la
+lista de gastos— era la única pantalla del producto donde se ven gastos y no se
+podía agregar uno. Quien busca dónde se anota, va ahí. Ahora la lista abre con
+"Anotar un gasto", que levanta la misma hoja de siempre: una acción, una hoja,
+dos puertas.
+
+**Los cheques** se configuran en Ajustes, y la pestaña "Cheques" del presupuesto
+—que es donde se ven— no lo decía por ningún lado. Esa vista se **deriva** de
+las fechas y no se edita, así que no se le puso un formulario duplicado: se le
+puso el camino, con el mismo verbo que usa Ajustes ("Cambiar cómo me pagan").
+
+Las dos son el mismo error: una función que existe pero cuya única entrada está
+en otra pantalla. Una app no se juzga por lo que sabe hacer, sino por lo que se
+encuentra.

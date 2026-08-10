@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { hoy as hoyDelUsuario } from '../../datos/fuente'
 import type { Movimiento, Presupuesto } from '../../datos/tipos'
-import { centavos } from '../../lib/dinero'
+import { type Centavos, centavos } from '../../lib/dinero'
 import { porDia } from '../../lib/mes/dias'
 import {
   Casilla,
@@ -9,12 +9,14 @@ import {
   CeldaNombre,
   ChipCategoria,
   Fila,
+  FilaAgregar,
   Hoja,
   ListaSeccion,
   Moneda,
   Vacio,
 } from '../base'
 import { IconoMovimientos } from '../iconos'
+import { Anotar } from './Anotar'
 import { cuantos, etiquetaDeDia, fechaLarga } from '../textos'
 
 /**
@@ -194,11 +196,21 @@ function FilaMovimiento({
 export function Movimientos({
   presupuesto,
   alRevisar,
+  alAnotar,
 }: {
   presupuesto: Presupuesto
   /** Ausente con los datos de ejemplo: la demostración se ve pero no se toca. */
   alRevisar?: (ids: readonly string[], revisado: boolean) => Promise<void>
+  /**
+   * Anotar un gasto desde aquí.
+   *
+   * Existía solo como chip del Dashboard, y esta —la lista de gastos— era la
+   * única pantalla del producto donde se ven gastos y no se podía agregar uno.
+   * Quien viene a buscar dónde se anota, viene aquí.
+   */
+  alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
 }) {
+  const [anotando, setAnotando] = useState(false)
   // El hoy del calendario del usuario, no el de UTC.
   const hoy = hoyDelUsuario()
   const [ocupados, setOcupados] = useState<readonly string[]>([])
@@ -230,6 +242,7 @@ export function Movimientos({
       dato={cuantos(presupuesto.movimientos.length, 'movimiento', 'movimientos')}
       {...COLUMNAS}
     >
+      {alAnotar && <FilaAgregar texto="Anotar un gasto" alTocar={() => setAnotando(true)} />}
       {/* La barra solo aparece cuando hay algo que hacer. Una que diga
           "0 pendientes" es ruido permanente. */}
       {sinRevisar.length > 0 && (
@@ -293,8 +306,13 @@ export function Movimientos({
     </ListaSeccion>
   )
 
+  const hojaDeAnotar = anotando && alAnotar && (
+    <Anotar presupuesto={presupuesto} alAnotar={alAnotar} alCerrar={() => setAnotando(false)} />
+  )
+
   return (
     <>
+      {hojaDeAnotar}
       {/* En la computadora el detalle es una columna que sigue a la fila
           escogida; en el teléfono no cabe, y sube desde abajo como todas las
           demás decisiones que tocan dinero. */}

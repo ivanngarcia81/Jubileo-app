@@ -1336,6 +1336,36 @@ const zonaGuardada = escrituras.filter((e) => e.tabla === 'usuarios').some((e) =
 ok(zonaGuardada, 'y de paso se vuelve a guardar la zona horaria: quien se muda cambia su hora aquí')
 await p.screenshot({ path: RAIZ + 'capturas/app-preferencias.png' })
 
+// ---- Las dos puertas que no estaban ---------------------------------------
+// Anotar vivia SOLO como chip del Dashboard, y Movimientos —la lista de
+// gastos— era la unica pantalla del producto donde se ven gastos y no se podia
+// agregar uno. Y los cheques solo se configuran en Ajustes, cosa que la
+// pestana "Cheques" no decia por ningun lado.
+await p.goto(SITIO + '/#/movimientos', { waitUntil: 'networkidle' })
+await p.waitForTimeout(800)
+ok(await p.getByRole('button', { name: 'Anotar un gasto' }).first().isVisible(),
+   'Movimientos deja anotar un gasto desde la lista de gastos')
+await p.getByRole('button', { name: 'Anotar un gasto' }).first().click()
+await p.waitForTimeout(400)
+ok(await p.getByRole('dialog').first().isVisible(), 'y abre la misma hoja de siempre')
+await p.locator('div[role=presentation]').first().click({ position: { x: 5, y: 5 } })
+await p.waitForTimeout(300)
+
+await p.goto(SITIO + '/#/mes', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Cheques', exact: true }).first().click()
+await p.waitForTimeout(400)
+ok(await p.getByRole('button', { name: 'Cambiar cómo me pagan' }).first().isVisible(),
+   'la pestana de Cheques dice donde se cambian')
+await p.getByRole('button', { name: 'Cambiar cómo me pagan' }).first().click()
+await p.waitForTimeout(500)
+ok((await p.evaluate(() => location.hash)).includes('ajustes'),
+   `y lleva a Ajustes, que es donde vive (${await p.evaluate(() => location.hash)})`)
+// Sin distinguir mayusculas: el rotulo va en versalitas por CSS, e `innerText`
+// respeta el `text-transform`. Es el mismo tropiezo del riel de semanas.
+ok(/cómo te pagan/i.test(await p.locator('body').innerText()),
+   'donde esta el formulario de verdad')
+
 // ---- Salir de la cuenta ---------------------------------------------------
 // **Va al final a propósito.** Esta es la única comprobación que destruye la
 // sesión: después de confirmar, la app recarga sin usuario y todo lo que

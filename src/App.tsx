@@ -219,6 +219,7 @@ function Contenido({
           {...(alCrearCategoria ? { alCrearCategoria } : {})}
           {...(alCambiarIcono ? { alCambiarIcono } : {})}
           {...(alCerrarMes ? { alCerrarMes } : {})}
+          {...(alPonerMonto ? { alVerComoMePagan: () => ir('ajustes') } : {})}
           {...(alVerMes ? { alVerMes } : {})}
           {...(semanaPedida === undefined ? {} : { semanaPedida })}
         />
@@ -238,6 +239,7 @@ function Contenido({
         <Movimientos
           presupuesto={presupuesto}
           {...(alRevisar ? { alRevisar } : {})}
+          {...(alAnotar ? { alAnotar } : {})}
         />
       );
     case "metas":

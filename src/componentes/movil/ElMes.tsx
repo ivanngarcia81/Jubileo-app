@@ -243,6 +243,7 @@ export function ElMes({
   alCrearCategoria,
   alCambiarIcono,
   alCerrarMes,
+  alVerComoMePagan,
   alVerMes,
   semanaPedida,
 }: {
@@ -261,6 +262,8 @@ export function ElMes({
   ) => Promise<void>
   alCambiarIcono?: (categoriaId: string, icono: ClaveIcono) => Promise<void>
   alCerrarMes?: () => Promise<void>
+  /** Lleva a Ajustes, donde se cambian las fechas y los montos de los cheques. */
+  alVerComoMePagan?: () => void
   alVerMes?: (anio: number, mes: number) => void
   /**
    * La semana que hay que dejar abierta, si alguien lo pidió — el rail del
@@ -566,6 +569,15 @@ export function ElMes({
             Esta vista se deriva sola de las fechas: cada cheque cubre lo que se vence hasta que
             llega el siguiente, y el extra llega entero. Lo que se presupuesta son las semanas.
           </Vacio>
+          {/*
+            Esta lista se deriva; no se edita. Pero las fechas y los montos de
+            los cheques salen de "cómo me pagan", que vive en Ajustes — y esta
+            pantalla no lo decía por ningún lado. Quien viene a cambiar su
+            cheque viene aquí, que es donde los ve.
+          */}
+          {alVerComoMePagan && (
+            <FilaAgregar texto="Cambiar cómo me pagan" alTocar={alVerComoMePagan} />
+          )}
         </ListaSeccion>
       )}
 
