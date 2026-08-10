@@ -207,8 +207,6 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   // Lo que suman las tres líneas de deuda de abajo. Estaba en $1,650, que no
   // salía de ningún lado: los pagos de la demostración son 150 + 310 + 95.
   aLaDeudaCents: centavos(55500),
-  variacionEntra: '+$1,200',
-  variacionSale: '+4%',
 
   pagos: PAGOS,
   pagosPorSemana: PAGOS_POR_SEMANA,

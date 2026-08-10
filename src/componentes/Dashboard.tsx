@@ -72,7 +72,7 @@ function Tarjeta({
   children: React.ReactNode
 }) {
   return (
-    <section className="bg-blanco border-linea rounded-card border p-[15px] panel:p-[18px]">
+    <section className="bg-blanco rounded-card shadow-tarjeta flex h-full flex-col p-[15px] panel:p-[18px]">
       <div className="mb-[13px] flex items-center gap-[10px]">
         <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-btn text-cuerpo">
           {icono}
@@ -91,7 +91,11 @@ function Lleva({ texto, alTocar }: { texto: string; alTocar: () => void }) {
     <button
       type="button"
       onClick={alTocar}
-      className="text-teal-osc mt-[11px] flex min-h-11 w-full items-center justify-center gap-[6px] text-menor font-semibold"
+      // `mt-auto` es lo que empareja la fila: el enlace se va al fondo de su
+      // tarjeta, así que los de dos tarjetas vecinas quedan a la misma altura.
+      // Sin esto, una tarjeta con un renglón y otra con cinco terminan en
+      // sitios distintos y el hueco de abajo se lee como algo sin cargar.
+      className="text-teal-osc mt-auto flex min-h-11 w-full items-center justify-center gap-[6px] pt-[11px] text-menor font-semibold"
     >
       {texto} →
     </button>
@@ -136,7 +140,7 @@ function LaSemanaEnCurso({
     { Icono: IconoReloj, texto: 'Cerrar', ...(alAbrirCierre ? { alTocar: alAbrirCierre } : {}) },
   ]
   return (
-    <section className="bg-blanco border-linea rounded-card border p-[15px] panel:p-[18px]">
+    <section className="bg-blanco rounded-card shadow-tarjeta flex h-full flex-col p-[15px] panel:p-[18px]">
       <Hero presupuesto={presupuesto} />
       <div className="mt-[13px] flex gap-[7px]">
         {CHIPS.map(({ Icono, texto, alTocar }) => (
@@ -603,7 +607,7 @@ export function Dashboard({
         curso cruzando las dos: es la tarjeta que trae el héroe y los chips, y
         partida a la mitad el número grande dejaría de serlo.
       */}
-      <div className="grid gap-3 panel:grid-cols-2 panel:items-start">
+      <div className="grid gap-3 panel:grid-cols-2">
         <div className="panel:col-span-2">
           <LaSemanaEnCurso
             presupuesto={presupuesto}

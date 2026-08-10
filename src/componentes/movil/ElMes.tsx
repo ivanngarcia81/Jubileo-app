@@ -68,7 +68,7 @@ function SelectorDeMes({
     vista === 'Entra' ? presupuesto.entraCents : vista === 'Sale' ? presupuesto.saleCents : sobra
 
   return (
-    <div className="bg-blanco border-linea rounded-card border px-[14px] pt-[15px] pb-3">
+    <div className="bg-blanco rounded-card shadow-tarjeta px-[14px] pt-[15px] pb-3">
       <div className="mb-[14px] text-center">
         <div
           className={`font-serif text-heroe leading-none [font-variant-numeric:tabular-nums] ${

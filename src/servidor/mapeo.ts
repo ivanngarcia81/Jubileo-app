@@ -532,8 +532,6 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     // Base cero: el dinero que entró y todavía no tiene trabajo.
     sinRepartirCents: centavos(entraCents - saleCents),
     aLaDeudaCents,
-    variacionEntra: '',
-    variacionSale: '',
 
     pagos,
     pagosPorSemana,

@@ -110,7 +110,7 @@ export function ComoMePagan({
 
   if (!abierto) {
     return (
-      <div className="bg-blanco border-linea rounded-card border p-5">
+      <div className="bg-blanco rounded-card shadow-tarjeta p-5">
         <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cómo te pagan
         </div>
@@ -133,7 +133,7 @@ export function ComoMePagan({
   }
 
   return (
-    <div className="bg-blanco border-linea rounded-card border p-5">
+    <div className="bg-blanco rounded-card shadow-tarjeta p-5">
       <h2 className="font-serif text-titulo leading-tight">Cómo te pagan</h2>
       <p className="text-texto-2 mt-1 text-menor leading-[1.5]">
         Cambiar esto vuelve a armar tus cheques, pero <b>no rehace tu presupuesto</b>: los montos

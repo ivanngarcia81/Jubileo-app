@@ -13,7 +13,7 @@ import type { Presupuesto } from '../datos/tipos'
  */
 
 const ETIQUETA = 'text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase'
-const TARJETA = 'bg-blanco border-linea rounded-card border p-5'
+const TARJETA = 'bg-blanco rounded-card shadow-tarjeta p-5'
 
 function Guardar({ listo, guardando, children }: { listo: boolean; guardando: boolean; children: string }) {
   return (

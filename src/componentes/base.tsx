@@ -33,7 +33,7 @@ export function Tarjeta({
   className?: string
 }) {
   return (
-    <div className={`bg-blanco border-linea rounded-card border p-[13px_14px] ${className}`}>
+    <div className={`bg-blanco rounded-card shadow-tarjeta p-[13px_14px] ${className}`}>
       {children}
     </div>
   )
@@ -660,7 +660,7 @@ export function Hoja({
       role="presentation"
     >
       <div
-        className="bg-blanco max-h-[92dvh] w-full overflow-y-auto rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+        className="bg-blanco shadow-hoja max-h-[92dvh] w-full overflow-y-auto rounded-t-card px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={etiqueta}

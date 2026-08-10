@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Presupuesto } from "../../datos/tipos";
-import { type Centavos, formatearRedondo } from "../../lib/dinero";
+import { type Centavos, centavos, formatearRedondo } from "../../lib/dinero";
+import { variacionContraElMesPasado } from "../../lib/mes/variacion";
 import type { Ruta } from "../../rutas";
 import { ROTULO } from "../rotulos";
 import { cuantos } from "../textos";
@@ -63,44 +64,100 @@ export function CabeceraDeContenido({
  * tarjeta de deudas de abajo, con su fecha de libertad al lado.
  */
 
+/**
+ * La variación contra el mes pasado, al lado de la cifra.
+ *
+ * El color dice si el cambio es bueno **para esa cifra**, que no es lo mismo
+ * que si el número subió: entrar más es bueno, salir más no. Nada va en rojo —
+ * regla 4 de los tokens: el rojo es del sobregiro y de nada más, y un mes con
+ * gastos más altos no es un sobregiro.
+ *
+ * No se dibuja cuando no hay contra qué comparar. Ver `lib/mes/variacion`.
+ */
+function Variacion({
+  cents,
+  subirEsBueno,
+}: {
+  cents: Centavos;
+  subirEsBueno: boolean;
+}) {
+  const subio = cents > 0;
+  const bien = subio === subirEsBueno;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-[3px] rounded-chip px-[7px] py-[3px] text-rotulo font-bold [font-variant-numeric:tabular-nums] ${
+        bien ? "bg-brillo-teal text-teal-osc" : "bg-brillo-ambar text-ambar-osc"
+      }`}
+    >
+      {subio ? "↑" : "↓"}
+      {formatearRedondo(centavos(Math.abs(cents)))}
+    </span>
+  );
+}
+
 function Tarjeta({
   titulo,
   valor,
   detalle,
+  variacion,
+  subirEsBueno = true,
   teal = false,
 }: {
   titulo: string;
   valor: Centavos;
   detalle: ReactNode;
+  /** La diferencia contra el mes pasado. Ausente cuando no hay con qué. */
+  variacion?: Centavos | undefined;
+  subirEsBueno?: boolean;
   teal?: boolean;
 }) {
   return (
-    <div className="bg-blanco border-linea rounded-card border px-[15px] py-[13px]">
+    <div className="bg-blanco rounded-card shadow-tarjeta px-[15px] py-[13px]">
       <div className="text-texto-2 text-rotulo font-semibold tracking-[.12em] uppercase">
         {titulo}
       </div>
-      <div
-        className={`font-serif mt-[5px] text-cifra [font-variant-numeric:tabular-nums] ${teal ? "text-teal-osc" : ""}`}
-      >
-        {formatearRedondo(valor)}
+      <div className="mt-[5px] flex flex-wrap items-baseline gap-x-[9px] gap-y-1">
+        <div
+          className={`font-serif text-cifra [font-variant-numeric:tabular-nums] ${teal ? "text-teal-osc" : ""}`}
+        >
+          {formatearRedondo(valor)}
+        </div>
+        {variacion !== undefined && (
+          <Variacion cents={variacion} subirEsBueno={subirEsBueno} />
+        )}
       </div>
-      <div className="text-texto-2 mt-1 text-menor">{detalle}</div>
+      <div className="text-texto-2 mt-1 text-menor">
+        {detalle}
+        {variacion !== undefined && (
+          <span className="text-texto-2"> · contra el mes pasado</span>
+        )}
+      </div>
     </div>
   );
 }
 
 export function TarjetasDelMes({ presupuesto }: { presupuesto: Presupuesto }) {
+  // Sale de `mesesPasados`, que ya se trae para la franja del selector de mes.
+  // Nula en el primer mes de una cuenta nueva, y entonces no se dibuja: "+$0"
+  // diría que no cambió nada cuando la verdad es que no hay contra qué medir.
+  const { anio, mes } = presupuesto.mes;
+  const entra = variacionContraElMesPasado(presupuesto.mesesPasados, anio, mes, "entra");
+  const sale = variacionContraElMesPasado(presupuesto.mesesPasados, anio, mes, "sale");
+
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <Tarjeta
         titulo="Entra este mes"
         valor={presupuesto.entraCents}
         detalle={cuantos(presupuesto.periodos.length, "cheque", "cheques")}
+        {...(entra ? { variacion: entra.diferenciaCents } : {})}
       />
       <Tarjeta
         titulo="Sale este mes"
         valor={presupuesto.saleCents}
         detalle={cuantos(contarCategorias(presupuesto), "categoría", "categorías")}
+        subirEsBueno={false}
+        {...(sale ? { variacion: sale.diferenciaCents } : {})}
       />
       <Tarjeta
         titulo="Sin repartir"
@@ -133,7 +190,7 @@ export function TarjetaEscritorio({
 }) {
   return (
     <section
-      className={`bg-blanco border-linea rounded-card border p-[18px] ${className}`}
+      className={`bg-blanco rounded-card shadow-tarjeta p-[18px] ${className}`}
     >
       <div className="mb-[15px] flex items-center gap-[10px]">
         <div className="bg-carbon text-teal font-serif grid size-7 shrink-0 place-items-center rounded-btn text-cuerpo">

@@ -335,3 +335,45 @@ es *Anotar*, que es lo que se hace todos los días.
 Con eso `MiSemana` dejó de tener contenido propio y se retiró. Lo único que
 sobrevivió entero fue el héroe, que se fue a `componentes/HeroeDeLaSemana.tsx`
 en vez de seguir colgando de una pantalla que ya no existe.
+
+**Sombra en vez de borde, y por qué la referencia solo sirvió para la mitad.**
+*(Agosto de 2026. Llegó una captura de un panel de fintech con la petición de
+que la app se viera "más premium".)* Se tomaron tres cosas y se dejaron fuera
+las demás, con criterio:
+
+**Lo que se tomó.** *Elevación:* una tarjeta se separa del lienzo con sombra, no
+con un borde de 1px. El borde dibuja el contorno de la caja; la sombra hace que
+la caja esté encima. Son dos capas —una de contacto y otra ancha y muy tenue—
+porque una sola sombra ancha flota y una sola pegada se ve sucia. Los bordes no
+desaparecieron: siguen separando renglones dentro de una lista y marcando los
+campos, que es donde un contorno quiere decir algo. *Alturas parejas:* las
+tarjetas de una fila se estiran igual y su enlace se clava abajo con `mt-auto`,
+así los enlaces de dos tarjetas vecinas quedan a la misma altura — una fila
+despareja se lee como algo a medio cargar. *La comparación contra el mes
+pasado*, que es la que más se nota y la única que no es cosmética.
+
+**Lo que no se tomó, y por qué.** La paleta lima (el teal es la marca). La
+tarjeta de crédito con degradado (no hay banco conectado hasta la fase 3, y
+dibujarla sería prometer). Los avatares de "Quick payment" (inventar una
+función). El medidor de "75% del ingreso ahorrado" (una métrica que Jubileo no
+calcula; ponerla obligaría a fabricarla). Y el **"Upgrade to Pro" fijo en el
+sidebar**: un anuncio permanente dentro de una app de pago es exactamente lo que
+la abarata, no lo que la sube de nivel.
+
+De fondo, la referencia es un **dashboard de widgets** —tiene hasta un botón de
+"Add widget"—. El de Jubileo es de seis tarjetas que despachan a donde se
+arregla cada cosa. Copiar la parrilla habría sido cambiar de producto, no de
+estilo. Una referencia visual sirve para el **acabado**; la estructura la decide
+lo que el producto hace.
+
+**El campo muerto que salió a la luz.** `variacionEntra` y `variacionSale`
+existían en `Presupuesto` desde el principio y eran **cadenas vacías en
+producción**: solo los datos de ejemplo los llenaban, con números escritos a
+mano. Un campo que solo tiene valor en la demostración es peor que no tenerlo,
+porque las capturas enseñan algo que la app no hace. Se borraron y en su lugar
+está `lib/mes/variacion`, que la calcula de `mesesPasados` —lo que ya se trae
+para la franja del selector— y devuelve **nulo cuando no hay contra qué
+comparar**: en el primer mes de una cuenta nueva, "+$0" diría que no cambió nada
+cuando la verdad es que no hay con qué medirlo. Tampoco compara contra dos meses
+atrás si falta el de en medio: llamar "el mes pasado" a octubre desde diciembre
+es mentir con precisión.

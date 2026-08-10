@@ -64,7 +64,7 @@ export function Membresia({
 
   if (nivel === 'premium') {
     return (
-      <div className="bg-blanco border-linea rounded-card border p-5">
+      <div className="bg-blanco rounded-card shadow-tarjeta p-5">
         <div className="text-teal-osc text-menor font-bold tracking-[.06em] uppercase">
           Cuenta Premium
         </div>
@@ -102,7 +102,7 @@ export function Membresia({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-blanco border-linea rounded-card border p-5">
+      <div className="bg-blanco rounded-card shadow-tarjeta p-5">
         <div className="text-texto-2 text-menor font-bold tracking-[.06em] uppercase">
           Cuenta gratis
         </div>
@@ -182,7 +182,7 @@ export function Membresia({
       </div>
 
       {alCanjear && (
-        <div className="bg-blanco border-linea rounded-card border p-5">
+        <div className="bg-blanco rounded-card shadow-tarjeta p-5">
           {canjeando ? (
             <>
               <label

@@ -182,8 +182,6 @@ export interface Presupuesto {
   saleCents: Centavos
   sinRepartirCents: Centavos
   aLaDeudaCents: Centavos
-  variacionEntra: string
-  variacionSale: string
 
   /** Los pagos de la semana en curso. Es `pagosPorSemana[semanaActiva]`. */
   pagos: Pago[]

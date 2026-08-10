@@ -78,6 +78,8 @@
   --text-heroe: var(--texto-heroe);
 
   /* ---------- Forma y espacio ---------- */
+  --shadow-tarjeta: var(--sombra-tarjeta);
+  --shadow-hoja: var(--sombra-hoja);
   --radius-card: var(--r-card);
   --radius-chip: var(--r-chip);
   --radius-btn: var(--r-btn);
