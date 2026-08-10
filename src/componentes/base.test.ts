@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { centavos } from '../lib/dinero'
-import { claseDeQueda, colorDeSobre, porcentaje } from './base'
+import { FAMILIA_POR_CLAVE, FAMILIAS, claseDeQueda, colorDeSobre, porcentaje } from './base'
+import { CLAVES_DE_CATEGORIA } from '../lib/iconos'
 
 /**
  * La regla 4 de los tokens escrita como prueba. Es una regla de las que se
@@ -88,5 +89,40 @@ describe('el color de la cifra que queda', () => {
         equivalente[colorDeSobre(centavos(gastado), centavos(20000))],
       )
     }
+  })
+})
+
+/**
+ * El color de categoría dice *qué es*; el de estado, *cómo va*. Que no
+ * compartan tinta es lo que sostiene la regla 4: si una categoría fuera ámbar,
+ * la bandera de semana apretada dejaría de querer decir algo, y el día que el
+ * usuario de verdad se pase, el rojo ya no lo va a leer.
+ *
+ * Es una regla que se rompe sola: el día que alguien busque un octavo color
+ * bonito, el ámbar es el primero que va a probar.
+ */
+describe('la paleta de categorías', () => {
+  it('no gasta la tinta del ámbar ni la del rojo', () => {
+    for (const [familia, clases] of Object.entries(FAMILIAS)) {
+      expect(clases, `la familia "${familia}"`).not.toMatch(/ambar|rojo/)
+    }
+  })
+
+  it('toda categoría de la rejilla tiene su familia', () => {
+    // Sin esto, una clave nueva saldría con `undefined` de clase y la píldora
+    // se dibujaría transparente sin que nadie lo note.
+    for (const clave of CLAVES_DE_CATEGORIA) {
+      expect(FAMILIA_POR_CLAVE[clave], clave).toBeTruthy()
+      expect(FAMILIAS[FAMILIA_POR_CLAVE[clave]], clave).toBeTruthy()
+    }
+  })
+
+  it('las que más aparecen en una lista no comparten familia', () => {
+    // Comida, transporte, los recibos, la salud y la casa son las que llenan
+    // una lista de movimientos: si dos de ellas cayeran en el mismo color, el
+    // color dejaría de servir para lo único que sirve, que es reconocer.
+    const cotidianas = ['comida', 'transporte', 'servicios', 'salud', 'casa'] as const
+    const familias = cotidianas.map((c) => FAMILIA_POR_CLAVE[c])
+    expect(new Set(familias).size).toBe(cotidianas.length)
   })
 })

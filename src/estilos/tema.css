@@ -48,6 +48,24 @@
   --color-brillo-ambar: var(--brillo-ambar);
   --color-brillo-neutro: var(--brillo-neutro);
   --color-ambar-osc: var(--ambar-osc);
+
+  /* Las ocho familias del color de categoría. Ver `design-tokens.css`. */
+  --color-chip-teal: var(--chip-teal);
+  --color-chip-teal-texto: var(--chip-teal-texto);
+  --color-chip-verde: var(--chip-verde);
+  --color-chip-verde-texto: var(--chip-verde-texto);
+  --color-chip-azul: var(--chip-azul);
+  --color-chip-azul-texto: var(--chip-azul-texto);
+  --color-chip-indigo: var(--chip-indigo);
+  --color-chip-indigo-texto: var(--chip-indigo-texto);
+  --color-chip-violeta: var(--chip-violeta);
+  --color-chip-violeta-texto: var(--chip-violeta-texto);
+  --color-chip-rosa: var(--chip-rosa);
+  --color-chip-rosa-texto: var(--chip-rosa-texto);
+  --color-chip-pizarra: var(--chip-pizarra);
+  --color-chip-pizarra-texto: var(--chip-pizarra-texto);
+  --color-chip-neutro: var(--chip-neutro);
+  --color-chip-neutro-texto: var(--chip-neutro-texto);
   --color-neutro-osc: var(--neutro-osc);
 
   --color-texto: var(--texto);

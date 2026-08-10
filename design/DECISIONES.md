@@ -377,3 +377,39 @@ comparar**: en el primer mes de una cuenta nueva, "+$0" diría que no cambió na
 cuando la verdad es que no hay con qué medirlo. Tampoco compara contra dos meses
 atrás si falta el de en medio: llamar "el mes pasado" a octubre desde diciembre
 es mentir con precisión.
+
+**Un color por categoría, sin gastar la tinta del ámbar.** *(Agosto de 2026.
+Llegó otra referencia — la lista de movimientos de una app oscura, con una
+píldora de color distinto por categoría.)* La píldora ya existía; lo que no
+existía era el color propio: eran tres tonos, y este archivo decía por qué —
+"si cada categoría trajera su tono, la lista se volvería un arcoíris y el teal
+dejaría de querer decir algo".
+
+Ese miedo era correcto y la conclusión no. El problema no es que haya muchos
+colores: es que **el color de identidad y el de estado compartan tinta**. Una
+categoría pintada de ámbar deja a la bandera de semana apretada sin querer
+decir nada, y el día que el usuario de verdad se pase, el rojo ya no lo lee.
+
+Así que la paleta de categorías se construyó **excluyendo ámbar y rojo**. Ocho
+familias —teal, verde, azul, índigo, violeta, rosa, pizarra y neutro—, cada una
+un fondo tenue con su texto oscuro encima. Los ocho pasan AA sobre su propio
+fondo (regla 5); el más justo es verde con 5.08:1. Y los ocho fondos se
+distinguen entre sí sobre blanco.
+
+Dieciséis colores distintos tampoco se distinguirían, así que se agrupó: las
+que llenan una lista de movimientos tienen familia propia —comida, transporte,
+los recibos, la salud, la casa— y la cola larga comparte. Regalo, niños,
+mascota y ropa son la misma familia a propósito: aparecen poco, y distinguirlas
+habría costado cuatro colores que nadie sabría leer.
+
+Los tonos **forzados** —"Extra", "Apretada", "enfoque", el conteo de pagos
+pendientes— siguen siendo los tres de siempre y viven en otra tabla. Uno dice
+qué es; el otro, cómo va. Hay una prueba que revienta si alguien mete ámbar o
+rojo en la paleta de categorías, que es la regla que se va a romper sola el día
+que alguien busque un octavo color bonito.
+
+**De la referencia no se copiaron los emoji.** Los iconos salen de `iconos.tsx`
+—lucide, una sola puerta— y un emoji se dibuja distinto en cada sistema: la
+misma categoría se vería de tres maneras según el teléfono. Y la medición sacó
+de paso una falla vieja: el chip teal iba a **4.27:1**, por debajo de AA. Su
+texto se oscureció a `#04645F`.

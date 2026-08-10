@@ -131,38 +131,81 @@ export function porcentaje(parte: Centavos, total: Centavos): number {
  */
 export type TonoChip = 'teal' | 'ambar' | 'neutro'
 
+/**
+ * Los tonos de **estado**: los que fuerza quien dibuja la píldora para decir
+ * algo que no es la categoría — "Extra", "Apretada", "enfoque", el conteo de
+ * pagos pendientes. Siguen siendo tres, y ámbar sigue queriendo decir cuidado.
+ */
 const TONOS: Record<TonoChip, string> = {
-  teal: 'bg-brillo-teal text-teal-osc',
+  teal: 'bg-chip-teal text-chip-teal-texto',
   ambar: 'bg-brillo-ambar text-ambar-osc',
-  neutro: 'bg-brillo-neutro text-neutro-osc',
+  neutro: 'bg-chip-neutro text-chip-neutro-texto',
 }
 
-const TONO_POR_CLAVE: Record<ClaveIcono, TonoChip> = {
-  // Lo que se da y lo que entra: teal, el color de la marca.
+/**
+ * Los colores de **categoría**: ocho familias, para reconocer de un vistazo en
+ * una lista larga. Es otra cosa que los tonos de arriba, y por eso viven
+ * aparte: uno dice *qué es*, el otro *cómo va*.
+ *
+ * Aquí no hay ámbar ni rojo. Son colores de estado —cuidado y te pasaste— y
+ * una categoría pintada de ámbar dejaría a la bandera de apretada sin querer
+ * decir nada. Es la regla 4 de los tokens, aplicada al revés de lo habitual:
+ * no se trata de no usar el rojo de más, sino de no gastar su tinta en otra
+ * cosa.
+ *
+ * Las que más aparecen en una lista de movimientos tienen familia propia
+ * —comida, transporte, los recibos, salud, la casa—; la cola larga comparte.
+ * Dieciséis colores distintos no se distinguen entre sí y volverían la lista
+ * un arcoíris, que era justo el miedo de la versión de tres tonos. La
+ * respuesta no era quedarse en tres: era agrupar.
+ */
+type Familia =
+  | 'teal'
+  | 'verde'
+  | 'azul'
+  | 'indigo'
+  | 'violeta'
+  | 'rosa'
+  | 'pizarra'
+  | 'neutro'
+
+export const FAMILIAS: Record<Familia, string> = {
+  teal: 'bg-chip-teal text-chip-teal-texto',
+  verde: 'bg-chip-verde text-chip-verde-texto',
+  azul: 'bg-chip-azul text-chip-azul-texto',
+  indigo: 'bg-chip-indigo text-chip-indigo-texto',
+  violeta: 'bg-chip-violeta text-chip-violeta-texto',
+  rosa: 'bg-chip-rosa text-chip-rosa-texto',
+  pizarra: 'bg-chip-pizarra text-chip-pizarra-texto',
+  neutro: 'bg-chip-neutro text-chip-neutro-texto',
+}
+
+export const FAMILIA_POR_CLAVE: Record<ClaveIcono, Familia> = {
+  // Lo que entra y lo que se aparta: el teal de la marca.
   mayordomia: 'teal',
   ingreso: 'teal',
   ahorro: 'teal',
-  // El techo y lo que lo sostiene.
-  casa: 'teal',
-  servicios: 'teal',
-  // Lo que se gasta día con día y hay que cuidar.
-  comida: 'ambar',
-  transporte: 'ambar',
-  // Todo lo demás, sin color: el color se gasta si se usa en todo. Los ocho
-  // iconos nuevos entran aquí a propósito — si cada categoría trajera su tono,
-  // la lista se volvería un arcoíris y el teal dejaría de querer decir algo.
+  // El gasto de todos los días, el que más renglones ocupa.
+  comida: 'verde',
+  transporte: 'azul',
+  // Los recibos que llegan solos cada mes.
+  servicios: 'indigo',
+  telefono: 'indigo',
+  salud: 'violeta',
+  // La vida personal: la cola larga, que comparte familia a propósito.
+  regalo: 'rosa',
+  ninos: 'rosa',
+  mascota: 'rosa',
+  ropa: 'rosa',
+  // Lo estructural: el techo, lo que lo protege, y lo que se debe.
+  casa: 'pizarra',
+  seguro: 'pizarra',
+  deuda: 'pizarra',
+  tarjeta: 'pizarra',
+  // Sin categoría propia todavía: mandan su grupo.
+  gasto: 'neutro',
   fijo: 'neutro',
   variable: 'neutro',
-  seguro: 'neutro',
-  deuda: 'neutro',
-  gasto: 'neutro',
-  telefono: 'neutro',
-  salud: 'neutro',
-  ropa: 'neutro',
-  regalo: 'neutro',
-  mascota: 'neutro',
-  ninos: 'neutro',
-  tarjeta: 'neutro',
 }
 
 export function ChipCategoria({
@@ -176,13 +219,17 @@ export function ChipCategoria({
   tono?: TonoChip
   children: ReactNode
 }) {
-  const elegido = tono ?? (clave ? TONO_POR_CLAVE[clave] : 'neutro')
+  const clases = tono
+    ? TONOS[tono]
+    : clave
+      ? FAMILIAS[FAMILIA_POR_CLAVE[clave]]
+      : FAMILIAS.neutro
   return (
     // La píldora se encoge antes que lo que va a su lado: un nombre de
     // categoría largo se corta dentro de ella en vez de empujar al cheque
     // fuera de la fila.
     <span
-      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-chip px-2 text-rotulo font-bold tracking-[.06em] uppercase ${TONOS[elegido]}`}
+      className={`inline-flex h-[21px] min-w-0 items-center gap-[5px] rounded-chip px-2 text-rotulo font-bold tracking-[.06em] uppercase ${clases}`}
     >
       {clave !== undefined && <IconoDeClave clave={clave} tam={11} className="shrink-0" />}
       <span className="truncate">{children}</span>

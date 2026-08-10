@@ -36,6 +36,37 @@
      encima de él — la regla 5. El mockup trae además un cuarto tono en rojo;
      no se copió: el rojo es del sobregiro y nada más, regla 4. */
   --brillo-ambar:  rgb(232 163 61 / .16);
+
+  /* ---------- El color de una categoría ----------
+     Ocho familias, cada una un fondo tenue y su texto oscuro encima. Sirven
+     para **reconocer** una categoría de un vistazo en una lista larga: es lo
+     que hace que "todo lo de comida" se encuentre sin leer.
+
+     Ámbar y rojo NO están, y esa es la regla que sostiene todo lo demás: son
+     colores de **estado** —cuidado y te pasaste— y una categoría pintada de
+     ámbar dejaría a la bandera de semana apretada sin querer decir nada. El
+     color de identidad y el de estado no pueden compartir tinta.
+
+     Los ocho textos pasan AA sobre su propio fondo (regla 5); el más justo es
+     verde con 5.08:1. Y los ocho fondos se distinguen entre sí sobre blanco —
+     el par más parecido es azul contra índigo, que además nunca comparten
+     icono ni palabra. */
+  --chip-teal:            rgb(10 187 180 / .14);
+  --chip-teal-texto:      #04645F;
+  --chip-verde:           rgb(63 163 77 / .16);
+  --chip-verde-texto:     #2E7038;
+  --chip-azul:            rgb(47 128 237 / .14);
+  --chip-azul-texto:      #175CBF;
+  --chip-indigo:          rgb(79 70 229 / .11);
+  --chip-indigo-texto:    #3B2FB8;
+  --chip-violeta:         rgb(192 38 211 / .13);
+  --chip-violeta-texto:   #8A1A96;
+  --chip-rosa:            rgb(224 81 155 / .14);
+  --chip-rosa-texto:      #A8256B;
+  --chip-pizarra:         rgb(90 113 132 / .16);
+  --chip-pizarra-texto:   #3E5567;
+  --chip-neutro:          rgb(28 30 31 / .07);
+  --chip-neutro-texto:    #4A4F4E;
   --brillo-neutro: rgb(28 30 31 / .07);
   --ambar-osc:     #8A5C10;
   --neutro-osc:    #4A4F4E;
