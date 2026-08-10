@@ -406,16 +406,24 @@ igual. Con la llave puesta, lee del servidor: es el único interruptor.
 - **Base de datos y autenticación** (Supabase) — sí.
 - **Correo de entrada** (Resend + SMTP de Supabase) — sí. Se entra desde un
   teléfono con el código de seis dígitos.
-- **Aviso del domingo** — el código está; faltan `CORREO_API_KEY`,
-  `CORREO_REMITENTE`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
-  y `URL_APP` en Vercel, más `CRON_SECRET` y `URL_APP` en GitHub → Settings.
-- **Membresía** (Stripe) — el código está; faltan las llaves y el webhook.
+- **Aviso del domingo** — conectado. Las variables están en Vercel y el
+  `CRON_SECRET` y `URL_APP` también en GitHub → Settings → Actions, que es
+  donde vive el reloj. **Falta verlo llegar**: el aviso sale cuando arranca un
+  cheque y a la hora que cada quien eligió, así que un disparo manual desde
+  Actions puede salir en verde habiendo mandado cero, y eso no es un fallo.
+- **Membresía** (Stripe) — conectada, con el webhook apuntando a `/api/stripe`.
+  **Falta verlo cobrar**: los webhooks son la única fuente de verdad del nivel,
+  y hasta que un pago de prueba no suba a alguien a premium, eso no está
+  comprobado.
 
 ### El criterio de aceptación
 
 *Un usuario nuevo que cobra cada dos semanas se registra, arma su mes, y recibe
 el correo del domingo con los números correctos, incluido el mes de 3 cheques.*
-La primera mitad ya se puede hacer; la segunda espera al aviso conectado.
+
+Todo lo que hace falta está conectado. Lo que queda es **verlo pasar de
+principio a fin con una cuenta nueva** — y hasta que eso ocurra, la fase 1 está
+lista pero no verificada, que no es lo mismo.
 
 ### Fuera de la fase 1
 
