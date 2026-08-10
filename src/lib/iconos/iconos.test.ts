@@ -22,6 +22,12 @@ describe('la sugerencia por nombre', () => {
     expect(sugerirIcono('Pagos del carro')).toBe('transporte')
     expect(sugerirIcono('Uber al trabajo')).toBe('transporte')
     expect(sugerirIcono('Renta')).toBe('casa')
+    // Las cuatro maneras de decir el mismo recibo. "Electricidad" salió con el
+    // rombo genérico en producción hasta 0009: `luz` estaba, la otra no.
+    expect(sugerirIcono('Luz')).toBe('servicios')
+    expect(sugerirIcono('Electricidad')).toBe('servicios')
+    expect(sugerirIcono('Cable e internet')).toBe('servicios')
+    expect(sugerirIcono('Plan celular')).toBe('servicios')
     expect(sugerirIcono('Hipoteca')).toBe('casa')
     expect(sugerirIcono('Luz y agua')).toBe('servicios')
     expect(sugerirIcono('Internet')).toBe('servicios')
@@ -81,5 +87,24 @@ describe('las claves que se pueden elegir', () => {
     // `fijo`, `variable` e `ingreso` salen del grupo: no se eligen a mano.
     expect(esClaveDeCategoria('fijo')).toBe(false)
     expect(esClaveDeCategoria('ingreso')).toBe(false)
+  })
+})
+
+/**
+ * `gas` no está en la lista, y tiene que seguir sin estar. La comparación es
+ * por trozo y `servicios` se prueba antes que `transporte`: el día que alguien
+ * lo agregue "por completar la lista", la gasolina de todo el mundo cambia de
+ * icono sin que nadie lo pida. Esta prueba es el que lo delata.
+ */
+describe('la trampa de gas', () => {
+  it('la gasolina sigue siendo transporte', () => {
+    expect(sugerirIcono('Gasolina')).toBe('transporte')
+    expect(sugerirIcono('Gasolina del mes')).toBe('transporte')
+  })
+
+  it('y "gas" a secas no sugiere servicios: no está, y por eso no cae ahí', () => {
+    // Cae en transporte por el trozo de "gasolina"... no: "gas" no contiene
+    // "gasolina". No se parece a nada, así que manda el grupo.
+    expect(sugerirIcono('Gas')).toBe(null)
   })
 })

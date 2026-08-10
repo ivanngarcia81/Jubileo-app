@@ -103,7 +103,22 @@ export function esClaveDeCategoria(v: string): v is ClaveIcono {
 export const PALABRAS: readonly { clave: ClaveIcono; palabras: readonly string[] }[] = [
   { clave: 'seguro', palabras: ['seguro'] },
   { clave: 'casa', palabras: ['renta', 'casa', 'hipoteca'] },
-  { clave: 'servicios', palabras: ['luz', 'agua', 'internet', 'telefono', 'servicios'] },
+  // `gas` falta a propósito: la comparación es por trozo, "Gasolina" contiene
+  // "gas", y `servicios` se prueba antes que `transporte`. Agregarlo le robaría
+  // el icono a la gasolina de todo el mundo. Ver `0009_mas_palabras_de_servicios.sql`.
+  {
+    clave: 'servicios',
+    palabras: [
+      'luz',
+      'electricidad',
+      'agua',
+      'internet',
+      'cable',
+      'telefono',
+      'celular',
+      'servicios',
+    ],
+  },
   { clave: 'comida', palabras: ['comida', 'super', 'despensa'] },
   { clave: 'transporte', palabras: ['gasolina', 'carro', 'auto', 'uber', 'bus'] },
 ]

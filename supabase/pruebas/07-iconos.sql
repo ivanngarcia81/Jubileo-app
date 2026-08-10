@@ -57,9 +57,10 @@ select probar('cadena vacía',
   $$update categorias set icono = '' where nombre = 'Con icono'$$, 'rechaza');
 
 -- ---------------------------------------------------------------------------
--- La siembra. Se vuelve a correr aquí tal cual la escribe 0007 — con los
--- nombres que el hogar de prueba acaba de meter — porque la migración ya pasó
--- sobre una tabla vacía cuando se aplicó el esquema.
+-- La siembra. Se vuelve a llamar aquí —con los nombres que el hogar de prueba
+-- acaba de meter— porque la migración ya pasó sobre una tabla vacía cuando se
+-- aplicó el esquema. Desde 0009 es una función, así que esto ejercita el mismo
+-- código que corre en producción y no una copia que se puede quedar vieja.
 -- ---------------------------------------------------------------------------
 delete from categorias where hogar_id in (select hogar_id from casa);
 
@@ -68,7 +69,8 @@ insert into categorias (hogar_id, nombre, grupo)
     ('Comida'), ('Supermercado'), ('Despensa del mes'),
     ('Gasolina'), ('Pagos del carro'), ('Uber al trabajo'),
     ('Renta'), ('Hipoteca'),
-    ('Luz y agua'), ('Internet'), ('Teléfono'), ('TELEFONO'), ('Súper'),
+    ('Luz y agua'), ('Electricidad'), ('Internet'), ('Cable e internet'),
+    ('Teléfono'), ('TELEFONO'), ('Plan celular'), ('Súper'),
     ('Seguro del carro'), ('Seguro de la casa'),
     ('Diezmo y ofrenda'), ('Personal'), ('Remesa a la familia')
   ) as v(n);
@@ -79,43 +81,27 @@ insert into categorias (hogar_id, nombre, grupo, icono)
   select hogar_id, 'Comida del perro', 'variable', 'mascota' from casa;
 
 \echo '--- la siembra: las mismas palabras que src/lib/iconos ---'
-with limpio as (
-  select id, translate(lower(nombre), 'áéíóúüñ', 'aeiouun') as n
-    from categorias
-   where icono is null
-)
-update categorias c
-   set icono = s.clave
-  from (
-    select id,
-           case
-             when n like '%seguro%'                              then 'seguro'
-             when n like '%renta%' or n like '%casa%'
-               or n like '%hipoteca%'                            then 'casa'
-             when n like '%luz%' or n like '%agua%'
-               or n like '%internet%' or n like '%telefono%'
-               or n like '%servicios%'                           then 'servicios'
-             when n like '%comida%' or n like '%super%'
-               or n like '%despensa%'                            then 'comida'
-             when n like '%gasolina%' or n like '%carro%'
-               or n like '%auto%' or n like '%uber%'
-               or n like '%bus%'                                 then 'transporte'
-           end as clave
-      from limpio
-  ) s
- where c.id = s.id
-   and s.clave is not null
-   and c.icono is null;
+-- Se llama a la función de verdad, no a una copia. Antes esta prueba repetía el
+-- `case` a mano, y por eso no se enteró de que a producción le faltaba
+-- `electricidad`: la copia de aquí se quedó vieja y siguió pasando igual. Ver
+-- `0009_mas_palabras_de_servicios.sql`.
+\o /dev/null
+select sembrar_iconos();
+\o
 
 create temporary table esperado (nombre text, icono text);
 insert into esperado values
   ('Comida', 'comida'), ('Supermercado', 'comida'), ('Despensa del mes', 'comida'),
   ('Súper', 'comida'),
+  -- `gas` no está en la lista y no puede estar: "Gasolina" lo contiene y
+  -- `servicios` se prueba antes. Esta fila es la que lo delata.
   ('Gasolina', 'transporte'), ('Pagos del carro', 'transporte'),
   ('Uber al trabajo', 'transporte'),
   ('Renta', 'casa'), ('Hipoteca', 'casa'),
-  ('Luz y agua', 'servicios'), ('Internet', 'servicios'),
+  ('Luz y agua', 'servicios'), ('Electricidad', 'servicios'),
+  ('Internet', 'servicios'), ('Cable e internet', 'servicios'),
   ('Teléfono', 'servicios'), ('TELEFONO', 'servicios'),
+  ('Plan celular', 'servicios'),
   -- El orden manda: los dos traen otra palabra que también dispararía.
   ('Seguro del carro', 'seguro'), ('Seguro de la casa', 'seguro'),
   -- Lo que no se parece a nada se queda sin icono: manda el grupo.
@@ -124,7 +110,7 @@ insert into esperado values
   ('Comida del perro', 'mascota');
 
 select case when count(*) = 0
-            then '  ok     los 19 nombres salen como dice src/lib/iconos/claves.ts'
+            then '  ok     los 22 nombres salen como dice src/lib/iconos/claves.ts'
             else '  FALLA  ' || string_agg(
                    c.nombre || ': ' || coalesce(c.icono, '(nulo)') ||
                    ' en vez de ' || coalesce(e.icono, '(nulo)'), ' | ') end
@@ -142,33 +128,9 @@ select case when icono = 'mascota'
 -- no puede. Se repite la siembra y se comprueba que nada se movió.
 create temporary table antes as select id, icono from categorias;
 
-with limpio as (
-  select id, translate(lower(nombre), 'áéíóúüñ', 'aeiouun') as n
-    from categorias
-   where icono is null
-)
-update categorias c
-   set icono = s.clave
-  from (
-    select id,
-           case
-             when n like '%seguro%'                              then 'seguro'
-             when n like '%renta%' or n like '%casa%'
-               or n like '%hipoteca%'                            then 'casa'
-             when n like '%luz%' or n like '%agua%'
-               or n like '%internet%' or n like '%telefono%'
-               or n like '%servicios%'                           then 'servicios'
-             when n like '%comida%' or n like '%super%'
-               or n like '%despensa%'                            then 'comida'
-             when n like '%gasolina%' or n like '%carro%'
-               or n like '%auto%' or n like '%uber%'
-               or n like '%bus%'                                 then 'transporte'
-           end as clave
-      from limpio
-  ) s
- where c.id = s.id
-   and s.clave is not null
-   and c.icono is null;
+\o /dev/null
+select sembrar_iconos();
+\o
 
 select case when count(*) = 0
             then '  ok     la segunda pasada deja todo igual'
