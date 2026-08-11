@@ -137,7 +137,7 @@ describe('la alerta de apretada', () => {
       }),
     )
     expect(a.alerta).toContain('se vencen $600 más de lo que habrá entrado')
-    expect(a.alerta).toContain('Sus sobres traen $210')
+    expect(a.alerta).toContain('Tus sobres traen $210')
     expect(a.alerta).toContain('mover a una semana con cheque')
   })
 
@@ -223,5 +223,78 @@ describe('el correo', () => {
     expect(html).not.toContain('<link')
     expect(html).not.toContain('<img')
     expect(html).not.toContain('display:flex')
+  })
+})
+
+/**
+ * El trato de tú, comprobado sobre el texto que de verdad sale.
+ *
+ * `CLAUDE.md` lo dice desde el principio —"interfaz en español, trato de tú"—
+ * y el aviso lo rompía en la frase de apretada: "**Sus** sobres traen $103 que
+ * **puedes** mover". Usted y tú en la misma oración, en el correo que la
+ * sección 9 del SPEC llama la función más importante del producto.
+ *
+ * Se le pone candado y no solo se arregla la palabra porque es una regla que se
+ * rompe **de una en una**: nadie escribe un correo entero en usted, se le
+ * escapa un "su" al redactar una frase nueva. Y en el correo no hay pantalla
+ * que lo delate — llega al buzón de alguien y ya.
+ */
+describe('el trato de tú', () => {
+  // "Su" y "sus" en mayúscula o pegados a un espacio. `su` dentro de otra
+  // palabra —"supermercado", "asunto"— no cuenta.
+  const USTED = /(^|[\s(¿"'])(su|sus|usted|ustedes|suyo|suya)([\s.,;:!?)"']|$)/i
+
+  // Se junta TODO lo que sale, no solo la frase que falló: el "su" que se
+  // escape mañana va a ser en otra línea.
+  const texto = (d: Partial<DatosDelAviso> = {}) => {
+    const a = armarAviso(datos(d))
+    return [
+      a.asunto,
+      a.saludo,
+      a.entra,
+      a.semana,
+      a.alerta,
+      a.cierre,
+      ...a.sobres,
+      ...a.pagos.map((p) => p.texto),
+    ]
+      .filter(Boolean)
+      .join(' | ')
+  }
+
+  it('ninguna frase del aviso trata de usted', () => {
+    // El caso que lo delató: una semana apretada con sobres que se pueden
+    // mover. Es la única frase del aviso que hablaba de "sus" sobres.
+    expect(
+      texto({
+        semana: {
+          numero: 2,
+          desdeDia: 8,
+          hastaDia: 14,
+          presupuestoCents: centavos(10300),
+          faltanCents: centavos(12500),
+          movibleCents: centavos(10300),
+        },
+      }),
+    ).not.toMatch(USTED)
+  })
+
+  it('ni cuando lo que aprieta es fijo y no hay nada que mover', () => {
+    expect(
+      texto({
+        semana: {
+          numero: 2,
+          desdeDia: 8,
+          hastaDia: 14,
+          presupuestoCents: centavos(10300),
+          faltanCents: centavos(12500),
+          movibleCents: centavos(0),
+        },
+      }),
+    ).not.toMatch(USTED)
+  })
+
+  it('ni en una semana que va bien', () => {
+    expect(texto()).not.toMatch(USTED)
   })
 })

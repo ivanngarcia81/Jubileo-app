@@ -143,7 +143,7 @@ export function armarAviso(d: DatosDelAviso): Aviso {
     d.semana.faltanCents > 0
       ? `La semana se aprieta: hasta el día ${d.semana.hastaDia} se vencen ${formatearDolares(d.semana.faltanCents)} más de lo que habrá entrado.` +
         (d.semana.movibleCents > 0
-          ? ` Sus sobres traen ${formatearDolares(d.semana.movibleCents)} que puedes mover a una semana con cheque.`
+          ? ` Tus sobres traen ${formatearDolares(d.semana.movibleCents)} que puedes mover a una semana con cheque.`
           : ' Lo que vence es fijo: aquí no hay sobres que mover — adelanta un pago o ajusta el mes.')
       : null
 
