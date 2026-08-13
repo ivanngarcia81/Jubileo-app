@@ -72,6 +72,18 @@ await p.goto(`${BASE}/#/resumen`, { waitUntil: 'networkidle' })
 // la pantalla de inicio.
 await p.goto(`${BASE}/#/mes?semana=1`, { waitUntil: 'networkidle' })
 await p.waitForTimeout(400)
+// `elementFromPoint` solo ve lo que cae dentro de la ventana, asi que la
+// casilla tiene que estar a la vista antes de medirla. Sin esto, la
+// comprobacion se rompe cada vez que algo crece por encima de la lista — y eso
+// no es un defecto del area tocable, que es lo unico que aqui se mide.
+// Al **centro**, no solo "a la vista": `scrollIntoViewIfNeeded` la deja pegada
+// al borde de abajo, que es donde flota la pildora de navegacion, y entonces lo
+// que se mediria es la pildora. Centrada, los cinco puntos caen dentro de la
+// ventana y sobre la casilla.
+await p.evaluate(() =>
+  document.querySelector('[role=checkbox]').scrollIntoView({ block: 'center' }),
+)
+await p.waitForTimeout(300)
 const toque = await p.evaluate(() => {
   const casilla = document.querySelector('[role=checkbox]')
   const c = casilla.getBoundingClientRect()
@@ -621,6 +633,19 @@ await rg.goto(`${BASE}/#/mes?semana=2`, { waitUntil: 'networkidle' })
 await rg.waitForTimeout(500)
 revisar(/regla de arrastre/i.test(await rg.locator('body').innerText()),
   'el eje de Semanas explica el arrastre, que es de donde salen las cifras raras')
+// El cuadro vacio junto a la renta. Tenia etiqueta para lectores de pantalla y
+// nada visible; encabezado no se le puede poner porque comparte columna con la
+// barra de las filas de semana.
+revisar(/marca lo que ya pagaste/i.test(await rg.locator('body').innerText()),
+  'y dice para que son las casillas, que no tienen etiqueta visible')
+// La casilla existe de verdad y sigue diciendo lo suyo a quien no ve la
+// pantalla: la explicacion se agrega, no reemplaza.
+await rg.goto(`${BASE}/#/mes?semana=1`, { waitUntil: 'networkidle' })
+await rg.waitForTimeout(500)
+// Las dos formas: en los datos de ejemplo la renta ya esta pagada, asi que la
+// casilla dice "Desmarcar Renta" y no "Marcar Renta como pagado".
+revisar(await rg.getByRole('checkbox', { name: /^(Marcar|Desmarcar) / }).first().isVisible(),
+  'sin quitarle la etiqueta que ya tenia para lectores de pantalla')
 // En el arbol del mes no aplica: ahi no hay semanas de las que arrastrar.
 await rg.goto(`${BASE}/#/mes`, { waitUntil: 'networkidle' })
 await rg.waitForTimeout(500)

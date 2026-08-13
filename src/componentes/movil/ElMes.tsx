@@ -386,6 +386,33 @@ export function ElMes({
 
       <Segmentado opciones={EJES} activa={eje} alElegir={(v) => setEje(v as Eje)} />
 
+      {/*
+        Qué es el cuadro vacío que sale junto a la renta.
+        =================================================
+        La casilla tenía una etiqueta perfecta para lectores de pantalla
+        —"Marcar Renta como pagado"— y **nada visible**. Quien mira la pantalla
+        veía un cuadro blanco en medio de un renglón y tenía que adivinar.
+
+        El arreglo obvio —ponerle encabezado a su columna— no se puede: en el
+        teléfono la casilla vive en `col-start-2`, que es **la misma columna
+        donde va la barra** de las filas de semana. Un encabezado ahí estaría
+        etiquetando la barra.
+
+        Así que se dice con palabras, una vez, antes de la lista. De paso
+        contesta la otra mitad de la pregunta: por qué la renta lleva cuadro y
+        la comida no.
+
+        Y corta a propósito: esto va **encima** de la pantalla de trabajo, y una
+        explicación de seis renglones ahí empuja debajo del pliegue justo lo que
+        se viene a hacer todos los días.
+      */}
+      {eje === 'Semanas' && fijosYDeudas.length > 0 && (
+        <Regla rotulo="Las casillas" titulo="Marca lo que ya pagaste">
+          Toca el cuadro de un gasto fijo cuando lo pagues. Los sobres no llevan: esos se anotan
+          gasto por gasto.
+        </Regla>
+      )}
+
       {eje === 'Semanas' && (
         <ListaSeccion
           titulo={`Semanas de ${nombreDelMes}`}
