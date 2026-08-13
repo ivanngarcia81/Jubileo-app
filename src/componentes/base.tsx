@@ -709,6 +709,13 @@ export function FilaFondo({
   etiqueta?: string
 }) {
   const avance = porcentaje(acumuladoCents, metaCents)
+  // Lo que falta, no la meta.
+  //
+  // La fila decía "$12,780 · de $18,000", y la meta ya la dibuja la barra. Lo
+  // que nadie puede calcular de un vistazo es cuánto falta, que es justo la
+  // pregunta que trae a alguien a esta pantalla. Y hace pareja con el otro
+  // renglón: uno dice cuánto tiempo falta, este cuánto dinero.
+  const faltan = centavos(Math.max(0, metaCents - acumuladoCents))
   return (
     <Fila {...(alTocar ? { alTocar, etiqueta } : {})}>
       <CeldaNombre detalle={cuando}>{nombre}</CeldaNombre>
@@ -716,7 +723,13 @@ export function FilaFondo({
       <CeldaCifra>
         <Moneda centavos={acumuladoCents} />
         <div className="text-texto-2 text-rotulo font-normal">
-          de <Moneda centavos={metaCents} />
+          {faltan === 0 ? (
+            'ya está'
+          ) : (
+            <>
+              faltan <Moneda centavos={faltan} />
+            </>
+          )}
         </div>
       </CeldaCifra>
     </Fila>
@@ -731,6 +744,33 @@ export function FilaFondo({
  * arriba, y espacio para la barra del teléfono. Tenerlo en un solo lugar evita
  * que se vayan separando de a poquito, que es como los diseños se rompen.
  */
+/**
+ * Una regla del producto, explicada donde la regla aplica.
+ *
+ * Es documentación puesta a la mano en vez de en un manual que nadie abre. Se
+ * usa para lo que el usuario **no puede deducir mirando** — cuando un número de
+ * la pantalla sale de una regla y no de una suma que esté a la vista.
+ */
+export function Regla({
+  rotulo,
+  titulo,
+  children,
+}: {
+  rotulo: string
+  titulo: string
+  children: ReactNode
+}) {
+  return (
+    <div className="bg-chip-teal rounded-card px-4 py-[14px]">
+      <div className="text-chip-teal-texto text-rotulo font-bold tracking-[.12em] uppercase">
+        {rotulo}
+      </div>
+      <div className="text-texto mt-1 text-cuerpo font-semibold">{titulo}</div>
+      <p className="text-texto-2 mt-1 text-menor leading-[1.55]">{children}</p>
+    </div>
+  )
+}
+
 export function Hoja({
   etiqueta,
   alCerrar,

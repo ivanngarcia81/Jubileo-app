@@ -24,6 +24,7 @@ import {
   Fila,
   FilaAgregar,
   FilaFondo,
+  Regla,
   ListaSeccion,
   Moneda,
   Segmentado,
@@ -521,6 +522,21 @@ export function ElMes({
             )
           })}
         </ListaSeccion>
+      )}
+
+      {/*
+        El arrastre semanal es la regla que hace que las cifras no cuadren a
+        simple vista, y no estaba dicha en ningún lado. Si la semana 1 dejó $50
+        sin gastar, el "te queda" de la semana 2 es mayor que lo que se planeó
+        para la semana 2 — y sin explicación eso se lee como un error de la app.
+        Va aquí, debajo de las semanas, que es donde la duda aparece.
+      */}
+      {eje === 'Semanas' && presupuesto.semanas.length > 1 && (
+        <Regla rotulo="Regla de arrastre" titulo="Lo que no gastas se queda contigo">
+          Lo que sobra de un sobre pasa al mismo sobre la semana siguiente — y lo que se te pasó
+          también viaja, en negativo. Por eso lo que te queda no siempre es lo que planeaste para
+          esa semana.
+        </Regla>
       )}
 
       {eje === 'Cheques' && (

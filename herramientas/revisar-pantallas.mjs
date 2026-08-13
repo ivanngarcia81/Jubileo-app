@@ -596,6 +596,38 @@ for (const [w, espera] of [
   await ctx.close()
 }
 
+// ---- Lo que falta, y la regla que explica las cifras ----------------------
+// La fila de un fondo decia "$12,780 · de $18,000". La meta ya la dibuja la
+// barra; lo que nadie calcula de un vistazo es cuanto falta, que es la pregunta
+// que trae a alguien a esa pantalla.
+const metasCtx = await navegador.newContext({ viewport: { width: 390, height: 844 } })
+const mt = vigilar(await metasCtx.newPage())
+await mt.goto(`${BASE}/#/metas`, { waitUntil: 'networkidle' })
+await mt.waitForTimeout(400)
+const textoMetas = await mt.locator('body').innerText()
+revisar(/faltan \$/i.test(textoMetas), 'la fila de un fondo dice cuanto dinero falta')
+// Y sigue diciendo cuanto TIEMPO falta: son las dos mitades de la misma
+// pregunta, y quitar una para poner la otra no seria mejorar nada.
+revisar(/faltan \d+ (mes|meses|año|años)/i.test(textoMetas),
+  'sin dejar de decir cuanto tiempo falta')
+await metasCtx.close()
+
+// El arrastre semanal es la regla que hace que las cifras no cuadren a simple
+// vista: si la semana 1 dejo $50 sin gastar, el "te queda" de la semana 2 es
+// mayor que lo planeado para la 2. Sin explicacion eso se lee como un error.
+const reglaCtx = await navegador.newContext({ viewport: { width: 390, height: 844 } })
+const rg = vigilar(await reglaCtx.newPage())
+await rg.goto(`${BASE}/#/mes?semana=2`, { waitUntil: 'networkidle' })
+await rg.waitForTimeout(500)
+revisar(/regla de arrastre/i.test(await rg.locator('body').innerText()),
+  'el eje de Semanas explica el arrastre, que es de donde salen las cifras raras')
+// En el arbol del mes no aplica: ahi no hay semanas de las que arrastrar.
+await rg.goto(`${BASE}/#/mes`, { waitUntil: 'networkidle' })
+await rg.waitForTimeout(500)
+revisar(!/regla de arrastre/i.test(await rg.locator('body').innerText()),
+  'y no la repite en el arbol del mes, donde no viene al caso')
+await reglaCtx.close()
+
 // ---- El boton flotante: en el telefono si, en el escritorio no -------------
 // Es la puerta a las tres acciones de todos los dias. En escritorio no tiene
 // sentido —el sidebar ya tiene los destinos a la vista y no hay pulgar que
