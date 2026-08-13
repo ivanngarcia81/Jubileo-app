@@ -23,6 +23,7 @@ import {
 import { Sidebar } from "./componentes/escritorio/Sidebar";
 import { Dashboard } from "./componentes/Dashboard";
 import { AccionRapida } from "./componentes/movil/AccionRapida";
+import type { AlAnotar } from "./componentes/movil/Anotar";
 import { Aviso } from "./componentes/movil/Aviso";
 import { Deudas } from "./componentes/movil/Deudas";
 import { ElMes } from "./componentes/movil/ElMes";
@@ -34,7 +35,7 @@ import { useEsEscritorio } from "./componentes/pantalla";
 import { cuantos, fechaLarga } from "./componentes/textos";
 import type { ClaveIcono } from "./lib/iconos";
 import { type Centavos, centavos } from "./lib/dinero";
-import { fecha } from "./lib/fecha";
+import { type FechaCivil, fecha } from "./lib/fecha";
 import type { MesObjetivo } from "./lib/periodos";
 import { type Destino, type Ruta, rutaEscritorio, rutaMovil, useRuta } from "./rutas";
 
@@ -135,11 +136,7 @@ interface Acciones {
     icono: ClaveIcono | null,
   ) => Promise<void>;
   alCambiarIcono?: (categoriaId: string, icono: ClaveIcono) => Promise<void>;
-  alAnotar?: (
-    categoriaId: string,
-    montoCents: Centavos,
-    descripcion: string,
-  ) => Promise<void>;
+  alAnotar?: AlAnotar;
   alMarcarPago?: (pago: Pago) => Promise<void>;
   alCerrarSemana?: (r: RespuestaCierre) => Promise<void>;
   alCerrarMes?: () => Promise<void>;
@@ -241,6 +238,7 @@ function Contenido({
           presupuesto={presupuesto}
           {...(alRevisar ? { alRevisar } : {})}
           {...(alAnotar ? { alAnotar } : {})}
+          {...(alCrearCategoria ? { alCrearCategoria } : {})}
         />
       );
     case "metas":
@@ -263,6 +261,7 @@ function Contenido({
           {...(alAnotar ? { alAnotar } : {})}
           {...(alCerrarSemana ? { alCerrarSemana } : {})}
           {...(alRevisar ? { alRevisar } : {})}
+          {...(alCrearCategoria ? { alCrearCategoria } : {})}
         />
       );
   }
@@ -618,14 +617,24 @@ export function App() {
         categoriaId: string,
         montoCents: Centavos,
         descripcion: string,
+        cuando: FechaCivil = hoy(),
       ) => {
+        // El gasto cuelga del cheque que **contiene ese día**, no del que está
+        // en curso. Anotar el lunes lo del viernes pasado puede caer en el
+        // cheque anterior —con quincena, una semana del mes y un cheque no son
+        // lo mismo— y colgarlo del activo movería el dinero de la semana
+        // equivocada. Que es justo lo que este campo vino a arreglar.
+        const i = presupuesto.periodos.findIndex(
+          (p) => p.fechaInicio <= cuando && cuando <= p.fechaFin,
+        );
+        const periodoId = presupuesto.periodoIds[i] ?? presupuesto.periodoActivoId!;
         const { anotarGasto } = await import("./servidor/repositorios/anotar");
         await anotarGasto({
           hogarId: presupuesto.hogarId!,
           usuarioId,
-          periodoId: presupuesto.periodoActivoId!,
+          periodoId,
           categoriaId,
-          fecha: hoy(),
+          fecha: cuando,
           montoCents,
           descripcion,
         });
@@ -843,6 +852,7 @@ export function App() {
               ir={ir}
               {...(alAnotar ? { alAnotar } : {})}
               {...(alAnotarCheque ? { alAnotarCheque } : {})}
+              {...(alCrearCategoria ? { alCrearCategoria } : {})}
             />
           }
         >

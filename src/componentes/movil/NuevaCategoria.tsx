@@ -20,6 +20,21 @@ import { RejillaDeIconos, RotuloDeIconos } from './RejillaDeIconos'
  * su valor (sección 9 del SPEC).
  */
 
+/**
+ * Crear una categoría desde donde sea.
+ *
+ * Lleva el `grupo` porque quien la crea desde fuera del Presupuesto sí decide
+ * si es un sobre o un fijo; el componente de aquí ya lo recibe hecho. Misma
+ * lección que `AlAnotar`: una firma escrita a mano en cuatro archivos se
+ * desincroniza en cuanto se le agrega un parámetro.
+ */
+export type AlCrearCategoria = (
+  grupo: 'fijo' | 'variable',
+  nombre: string,
+  diaVencimiento: number | undefined,
+  icono: ClaveIcono | null,
+) => Promise<void>
+
 export function NuevaCategoria({
   grupo,
   alCrear,

@@ -168,6 +168,18 @@ export interface Presupuesto {
    * hace que un gasto de hoy baje el dinero de esta semana y no el del mes.
    */
   periodoActivoId: string | null
+  /**
+   * La llave de cada cheque, en el mismo orden que `periodos`.
+   *
+   * `Periodo` no puede traerla: vive en `lib/periodos`, que es el generador
+   * puro, y los cheques que inventa todavía no existen en ninguna base. Por eso
+   * va aparte, como ya van `libreporPeriodoCents` y `cubrePorPeriodoCents`.
+   *
+   * Hace falta para anotar un gasto de otro día: el gasto cuelga del cheque que
+   * **contiene esa fecha**, que no siempre es el que está en curso. Vacía con
+   * los datos de ejemplo.
+   */
+  periodoIds: string[]
   ingresoPorChequeCents: Centavos
   /** Lo que queda libre en cada periodo, en el mismo orden que `periodos`. */
   libreporPeriodoCents: Centavos[]

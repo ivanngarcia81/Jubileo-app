@@ -566,6 +566,8 @@ ok(gasto?.monto_cents === 2550, `el gasto se guarda en centavos enteros: ${gasto
 ok(gasto?.tipo === 'gasto' && gasto?.estado === 'asignada' && gasto?.categoria_id === 'c-comida',
    'con su categoría, ya asignado y sin signo negativo')
 ok(gasto?.periodo_id === 'p1', 'colgado del cheque en curso, no del mes')
+ok(gasto?.fecha === '2026-08-05', `y con la fecha de hoy por omisión: ${gasto?.fecha}`)
+
 
 // Los sobres enseñan cifras redondeadas: $25.50 gastados se ven como $26. El
 // presupuesto es el de la semana 1 —el 5 de agosto, con el reloj clavado—:
@@ -632,6 +634,56 @@ ok(/Gastado[\s\S]*\$26 de \$600/.test(hojaDetalle),
    `y cómo va ese sobre en el mes: ${hojaDetalle.match(/\$\d+ de \$\d+/)?.[0] ?? '—'}`)
 await p.screenshot({ path: RAIZ + 'capturas/app-movimiento-detalle.png' })
 await p.getByRole('button', { name: 'Cerrar' }).first().click()
+await p.waitForTimeout(300)
+
+// ---- Anotar algo de otro día ----------------------------------------------
+// El lunes uno anota lo del viernes pasado. Hasta ahora el gasto se colgaba
+// SIEMPRE del cheque en curso con la fecha de hoy, o sea que bajaba el dinero
+// de la semana equivocada — y la semana es el eje del producto entero.
+// Se pregunta el día y no la semana: elegir "Semana 2" obligaria a inventarle
+// una fecha al movimiento; el día es el dato de verdad y la semana sale de él.
+await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: /^Anotar/ }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+const conDia = p.getByRole('dialog').first()
+ok(/cuándo fue/i.test(await conDia.innerText()), 'la hoja de anotar pregunta qué día fue')
+ok(/semana 1/i.test(await conDia.innerText()),
+   'y dice en qué semana cae el día que trae puesto')
+// El 13 de agosto: semana 2 del mes, y dentro del cheque p2 (11–17), no del p1
+// que sigue siendo el que esta en curso.
+await p.getByLabel('Qué día fue el gasto').first().fill('2026-08-13')
+await p.waitForTimeout(300)
+ok(/semana 2/i.test(await conDia.innerText()),
+   'cambiar el día cambia la semana que se anuncia')
+await p.getByLabel('Cuánto gastaste').first().fill('12.00')
+await p.getByRole('button', { name: /^Comida/ }).first().click()
+await p.getByRole('button', { name: 'Anotar', exact: true }).last().click()
+await p.waitForTimeout(1200)
+const deOtroDia = transacciones.at(-1)
+ok(deOtroDia?.fecha === '2026-08-13', `se guarda con el día que se eligió: ${deOtroDia?.fecha}`)
+ok(deOtroDia?.periodo_id === 'p2',
+   `y colgado del cheque que CONTIENE ese día, no del que está en curso: ${deOtroDia?.periodo_id}`)
+
+// ---- Crear un sobre sin salir de la hoja ----------------------------------
+// Quien anota un gasto de algo que todavia no tiene sobre tenia que abandonar
+// la hoja, ir al Presupuesto, crearlo y volver — y para entonces ya se le
+// olvido cuanto era.
+await p.goto(SITIO + '/#/resumen', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: /^Anotar/ }).first().click()
+await p.getByRole('dialog').first().waitFor({ state: 'visible' })
+await p.getByLabel('Cuánto gastaste').first().fill('9.99')
+await p.getByRole('button', { name: 'Crear un sobre nuevo' }).first().click()
+await p.waitForTimeout(400)
+await p.getByLabel('Nombre de la categoría').first().fill('Cafecito')
+await p.getByRole('button', { name: 'Crear' }).first().click()
+await p.waitForTimeout(1400)
+const conSobre = p.getByRole('dialog', { name: 'Anotar un gasto' }).first()
+ok(await conSobre.isVisible(), 'crear un sobre desde aquí devuelve a la hoja, no la tira')
+ok(await p.getByRole('button', { name: /^Cafecito/ }).first().getAttribute('aria-pressed') === 'true',
+   'y el sobre recién creado queda escogido: se creó PARA este gasto')
+await p.getByRole('button', { name: 'Cancelar' }).first().click()
 await p.waitForTimeout(300)
 
 await p.goto(SITIO + '/#/semana', { waitUntil: 'networkidle' })
@@ -1177,7 +1229,7 @@ await p.evaluate(async (llave) => {
                        onboardingTerminado: true, frecuencia: 'Semanal' },
             mesId: null, hogarId: null,
             mes: { anio: 2026, mes: 8, etiqueta: 'Agosto 2026' },
-            mesCerrado: false, periodos: [], periodoActivo: 0, periodoActivoId: null,
+            mesCerrado: false, periodos: [], periodoActivo: 0, periodoActivoId: null, periodoIds: [],
             ingresoPorChequeCents: 0, libreporPeriodoCents: [],
             entraCents: 0, saleCents: 0, sinRepartirCents: 0, aLaDeudaCents: 0,
             variacionEntra: '', variacionSale: '',

@@ -5,7 +5,8 @@ import { diaDe } from '../../lib/fecha'
 import type { Destino, Ruta } from '../../rutas'
 import { FAMILIAS, Hoja } from '../base'
 import { IconoAnotar, IconoCerrar, IconoEntra, IconoGasto, IconoSemana } from '../iconos'
-import { Anotar } from './Anotar'
+import { type AlAnotar, Anotar } from './Anotar'
+import type { AlCrearCategoria } from './NuevaCategoria'
 import { AnotarCheque } from './AnotarCheque'
 
 /**
@@ -65,11 +66,13 @@ export function AccionRapida({
   presupuesto,
   alAnotar,
   alAnotarCheque,
+  alCrearCategoria,
   ir,
 }: {
   presupuesto: Presupuesto
-  alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
+  alAnotar?: AlAnotar
   alAnotarCheque?: (montoCents: Centavos) => Promise<void>
+  alCrearCategoria?: AlCrearCategoria
   ir: (destino: Ruta | Destino) => void
 }) {
   const [abierta, setAbierta] = useState(false)
@@ -185,6 +188,7 @@ export function AccionRapida({
         <Anotar
           presupuesto={presupuesto}
           alAnotar={alAnotar}
+          {...(alCrearCategoria ? { alCrearCategoria } : {})}
           alCerrar={() => setHoja(null)}
         />
       )}

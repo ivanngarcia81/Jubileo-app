@@ -523,6 +523,7 @@ export function aPresupuesto(filas: FilasDelMes, opciones: OpcionesMapeo = {}): 
     planSemanal,
     periodoActivo,
     periodoActivoId: enCurso?.id ?? null,
+    periodoIds: periodosOrdenados.map((p) => p.id),
     ingresoPorChequeCents: enCurso ? ingresoDe(enCurso) : centavos(0),
     libreporPeriodoCents,
     cubrePorPeriodoCents,

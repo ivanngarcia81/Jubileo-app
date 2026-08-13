@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { hoy as hoyDelUsuario } from '../../datos/fuente'
 import type { Movimiento, Presupuesto } from '../../datos/tipos'
-import { type Centavos, centavos } from '../../lib/dinero'
+import { centavos } from '../../lib/dinero'
 import { porDia } from '../../lib/mes/dias'
 import {
   Casilla,
@@ -16,7 +16,8 @@ import {
   Vacio,
 } from '../base'
 import { IconoMovimientos } from '../iconos'
-import { Anotar } from './Anotar'
+import { type AlAnotar, Anotar } from './Anotar'
+import type { AlCrearCategoria } from './NuevaCategoria'
 import { cuantos, etiquetaDeDia, fechaLarga } from '../textos'
 
 /**
@@ -197,6 +198,7 @@ export function Movimientos({
   presupuesto,
   alRevisar,
   alAnotar,
+  alCrearCategoria,
 }: {
   presupuesto: Presupuesto
   /** Ausente con los datos de ejemplo: la demostración se ve pero no se toca. */
@@ -208,7 +210,8 @@ export function Movimientos({
    * única pantalla del producto donde se ven gastos y no se podía agregar uno.
    * Quien viene a buscar dónde se anota, viene aquí.
    */
-  alAnotar?: (categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>
+  alAnotar?: AlAnotar
+  alCrearCategoria?: AlCrearCategoria
 }) {
   const [anotando, setAnotando] = useState(false)
   // El hoy del calendario del usuario, no el de UTC.
@@ -307,7 +310,12 @@ export function Movimientos({
   )
 
   const hojaDeAnotar = anotando && alAnotar && (
-    <Anotar presupuesto={presupuesto} alAnotar={alAnotar} alCerrar={() => setAnotando(false)} />
+    <Anotar
+      presupuesto={presupuesto}
+      alAnotar={alAnotar}
+      {...(alCrearCategoria ? { alCrearCategoria } : {})}
+      alCerrar={() => setAnotando(false)}
+    />
   )
 
   return (

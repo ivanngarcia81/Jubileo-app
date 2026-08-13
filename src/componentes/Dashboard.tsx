@@ -28,7 +28,8 @@ import {
   IconoPalomita,
   IconoReloj,
 } from './iconos'
-import { Anotar } from './movil/Anotar'
+import { type AlAnotar, Anotar } from './movil/Anotar'
+import type { AlCrearCategoria } from './movil/NuevaCategoria'
 import { CerrarSemana, type RespuestaCierre } from './movil/CerrarSemana'
 import { Hero } from './HeroeDeLaSemana'
 import { cuantos, mesYAnio, nombreDeMes } from './textos'
@@ -583,11 +584,13 @@ export function Dashboard({
   alAnotar,
   alCerrarSemana,
   alRevisar,
+  alCrearCategoria,
 }: {
   presupuesto: Presupuesto
   ir: (destino: Ruta | Destino) => void
   /** Ausentes con los datos de ejemplo: la demostración se ve pero no se toca. */
-  alAnotar?: ((categoriaId: string, montoCents: Centavos, descripcion: string) => Promise<void>) | undefined
+  alAnotar?: AlAnotar | undefined
+  alCrearCategoria?: AlCrearCategoria | undefined
   alCerrarSemana?: ((r: RespuestaCierre) => Promise<void>) | undefined
   alRevisar?: ((ids: readonly string[], revisado: boolean) => Promise<void>) | undefined
 }) {
@@ -634,6 +637,7 @@ export function Dashboard({
         <Anotar
           presupuesto={presupuesto}
           alAnotar={alAnotar}
+          {...(alCrearCategoria ? { alCrearCategoria } : {})}
           alCerrar={() => setAnotando(false)}
         />
       )}

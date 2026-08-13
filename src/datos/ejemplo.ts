@@ -196,6 +196,8 @@ export const PRESUPUESTO_EJEMPLO: Presupuesto = {
   planSemanal: PLAN_SEMANAL,
   periodoActivo: 1,
   periodoActivoId: null,
+  // Sin servidor no hay llaves: los datos de ejemplo no se pueden editar.
+  periodoIds: [],
   ingresoPorChequeCents: centavos(124000),
   libreporPeriodoCents: [centavos(0), centavos(6500), centavos(120000)],
   // Lo que entra en cada cheque menos lo que le queda libre.
