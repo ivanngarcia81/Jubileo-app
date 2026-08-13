@@ -22,6 +22,7 @@ import {
 } from "./componentes/escritorio/Panel";
 import { Sidebar } from "./componentes/escritorio/Sidebar";
 import { Dashboard } from "./componentes/Dashboard";
+import { AccionRapida } from "./componentes/movil/AccionRapida";
 import { Aviso } from "./componentes/movil/Aviso";
 import { Deudas } from "./componentes/movil/Deudas";
 import { ElMes } from "./componentes/movil/ElMes";
@@ -632,6 +633,18 @@ export function App() {
       }
     : undefined;
 
+  // Corregir lo que entró en el cheque en curso, sin cerrar la semana. Hasta
+  // hoy esto solo se podía hacer dentro del cierre, que es pedir que se termine
+  // la semana con tal de arreglar un número que está mal desde el martes.
+  const alAnotarCheque = presupuesto.periodoActivoId
+    ? async (montoCents: Centavos) => {
+        const { anotarIngresoDelCheque } =
+          await import("./servidor/repositorios/cheques");
+        await anotarIngresoDelCheque(presupuesto.periodoActivoId!, montoCents);
+        fuente.recargar();
+      }
+    : undefined;
+
   // Marcar un pago es anotar el gasto completo; desmarcarlo es borrarlo.
   const alMarcarPago = puedeAnotar
     ? async (pago: Pago) => {
@@ -824,6 +837,14 @@ export function App() {
           cabecera={cabeceraDe(enMovil, presupuesto, ir)}
           activa={enMovil}
           ir={ir}
+          accionRapida={
+            <AccionRapida
+              presupuesto={presupuesto}
+              ir={ir}
+              {...(alAnotar ? { alAnotar } : {})}
+              {...(alAnotarCheque ? { alAnotarCheque } : {})}
+            />
+          }
         >
           {enMovil === "ajustes" ? (
             <Ajustes

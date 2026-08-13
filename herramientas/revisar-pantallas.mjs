@@ -596,6 +596,37 @@ for (const [w, espera] of [
   await ctx.close()
 }
 
+// ---- El boton flotante: en el telefono si, en el escritorio no -------------
+// Es la puerta a las tres acciones de todos los dias. En escritorio no tiene
+// sentido —el sidebar ya tiene los destinos a la vista y no hay pulgar que
+// alcanzar—, asi que se queda en el marco de telefono. Y con datos de ejemplo
+// las dos puertas que escriben se ven pero no se tocan, igual que los chips del
+// Dashboard: ensenan que la accion existe sin prometer que va a guardar.
+const fabCtx = await navegador.newContext({ viewport: { width: 390, height: 844 } })
+const f = vigilar(await fabCtx.newPage())
+await f.goto(`${BASE}/#/deudas`, { waitUntil: 'networkidle' })
+await f.waitForTimeout(400)
+const fab = f.getByRole('button', { name: 'Anotar o repartir' }).first()
+revisar(await fab.isVisible(), 'el boton flotante esta en el telefono, en toda pantalla')
+await fab.click()
+await f.waitForTimeout(300)
+revisar(await f.getByRole('button', { name: /Anotar un gasto/ }).first().isDisabled(),
+  'con datos de ejemplo, anotar un gasto se ve pero no se toca')
+revisar(await f.getByRole('button', { name: /Anotar un cheque/ }).first().isDisabled(),
+  'y anotar un cheque tampoco')
+revisar(!(await f.getByRole('button', { name: /Repartir la semana/ }).first().isDisabled()),
+  'pero repartir si: no escribe nada, solo lleva a donde se reparte')
+await f.screenshot({ path: `${SALIDA}/app-accion-rapida.png` })
+await fabCtx.close()
+
+const anchoCtx = await navegador.newContext({ viewport: { width: 1280, height: 900 } })
+const a = vigilar(await anchoCtx.newPage())
+await a.goto(`${BASE}/#/deudas`, { waitUntil: 'networkidle' })
+await a.waitForTimeout(400)
+revisar(await a.getByRole('button', { name: 'Anotar o repartir' }).count() === 0,
+  'y en escritorio no aparece: ahi la navegacion ya esta toda a la vista')
+await anchoCtx.close()
+
 await navegador.close()
 
 revisar(errores.length === 0, `sin errores en la consola${errores.length ? `: ${errores.join(' | ')}` : ''}`)

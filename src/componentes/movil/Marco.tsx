@@ -128,11 +128,14 @@ export function Marco({
   children,
   activa,
   ir,
+  accionRapida,
 }: {
   cabecera: ReactNode
   children: ReactNode
   activa: Ruta
   ir: (ruta: Ruta) => void
+  /** El botón flotante y su hoja. Va en el marco porque se ve en toda pantalla. */
+  accionRapida?: ReactNode
 }) {
   return (
     <div className="bg-gris text-texto font-sans flex min-h-dvh flex-col">
@@ -141,10 +144,15 @@ export function Marco({
           un iPad o en media ventana de laptop las tarjetas pensadas para esa
           columna se estiran a mil píxeles y el texto de 14.5px queda flotando.
           Se deja crecer un poco más que el mockup y ahí se detiene. */}
-      <main className="mx-auto w-full max-w-movil flex-1 px-4 pt-[14px] pb-[calc(110px+env(safe-area-inset-bottom))]">
+      {/* 150 y no 110: desde que el botón flotante ocupa la banda de arriba de
+          la píldora, con 110 la última tarjeta de cada pantalla quedaba tapada
+          para siempre. El botón puede flotar sobre lo que se está desplazando
+          —para eso flota—, pero no sobre el final de la lista. */}
+      <main className="mx-auto w-full max-w-movil flex-1 px-4 pt-[14px] pb-[calc(150px+env(safe-area-inset-bottom))]">
         {children}
       </main>
       <NavFlotante activa={activa} ir={ir} />
+      {accionRapida}
     </div>
   )
 }

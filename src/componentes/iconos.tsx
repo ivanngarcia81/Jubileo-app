@@ -30,10 +30,12 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Receipt,
   Settings,
   Signal,
   Star,
   Target,
+  X,
   TrendingDown,
   UserRound,
 } from 'lucide-react'
@@ -93,6 +95,11 @@ export const IconoEnfoque = (p: PropsIcono) => <Star {...base(p)} />
 export const IconoReloj = (p: PropsIcono) => <Clock {...base(p)} />
 export const IconoPalomita = (p: PropsIcono) => <Check {...base(p)} />
 export const IconoAnotar = (p: PropsIcono) => <Plus {...base(p)} />
+export const IconoCerrar = (p: PropsIcono) => <X {...base(p)} />
+/** Un gasto: el recibo. Va en la hoja de acción rápida, no en las categorías. */
+export const IconoGasto = (p: PropsIcono) => <Receipt {...base(p)} />
+/** Dinero que llega. La misma flecha que ya usa la clave `ingreso`. */
+export const IconoEntra = (p: PropsIcono) => <ArrowDownLeft {...base(p)} />
 export const IconoFlecha = (p: PropsIcono) => <ArrowRight {...base(p)} />
 
 // ---------- El teléfono de mentiras del aviso ----------

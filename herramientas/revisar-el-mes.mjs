@@ -1366,6 +1366,55 @@ ok((await p.evaluate(() => location.hash)).includes('ajustes'),
 ok(/cómo te pagan/i.test(await p.locator('body').innerText()),
    'donde esta el formulario de verdad')
 
+// ---- El boton flotante: tres puertas desde cualquier pantalla -------------
+// "No veo por ningun lado donde se entran los cheques y tampoco veo donde se
+// agrega gastos." Las tres acciones de todos los dias vivian cada una dentro de
+// su pantalla, y anotar un cheque no vivia en ninguna: habia que cerrar la
+// semana entera para corregir lo que entro.
+// Se prueba desde Deudas a proposito: es la pantalla que menos tiene que ver
+// con anotar, y justamente por eso demuestra que el boton esta en todas.
+await p.goto(SITIO + '/#/deudas', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+ok(await p.getByRole('button', { name: 'Anotar o repartir' }).first().isVisible(),
+   'el boton flotante se ve tambien donde no se anota nada')
+await p.getByRole('button', { name: 'Anotar o repartir' }).first().click()
+await p.waitForTimeout(400)
+const puertas = await p.getByRole('dialog', { name: 'Acción rápida' }).first().innerText()
+ok(/Anotar un gasto/i.test(puertas) && /Anotar un cheque/i.test(puertas) && /Repartir la semana/i.test(puertas),
+   'y abre las tres puertas: gasto, cheque y repartir')
+// El boton no puede quedarse encima de su propia hoja: la salida es la ✕ de la
+// cabecera. Con tres filas en vertical, el flotante aterrizaba sobre la puerta
+// de en medio.
+ok(!(await p.getByRole('button', { name: 'Anotar o repartir' }).first().isVisible()),
+   'y se quita de en medio para no taparlas')
+
+// Repartir no escribe: lleva a la semana en curso, ya abierta.
+await p.getByRole('button', { name: /Repartir la semana/ }).first().click()
+await p.waitForTimeout(700)
+ok(/#\/mes\?semana=\d/.test(await p.evaluate(() => location.hash)),
+   `"Repartir la semana" lleva al presupuesto con su semana (${await p.evaluate(() => location.hash)})`)
+
+// Anotar un cheque: la puerta que no existia.
+await p.goto(SITIO + '/#/deudas', { waitUntil: 'networkidle' })
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Anotar o repartir' }).first().click()
+await p.waitForTimeout(400)
+await p.getByRole('button', { name: /Anotar un cheque/ }).first().click()
+await p.waitForTimeout(400)
+ok(await p.getByRole('dialog', { name: 'Anotar un cheque' }).first().isVisible(),
+   'la puerta del cheque abre su hoja')
+await p.getByLabel('Cuánto entró de verdad').first().fill('1180.50')
+await p.getByRole('button', { name: 'Anotar', exact: true }).first().click()
+await p.waitForTimeout(900)
+const anotado = escrituras.filter((e) => e.tabla === 'periodos' && e.cuerpo && 'ingreso_real_cents' in e.cuerpo).at(-1)
+ok(anotado?.cuerpo?.ingreso_real_cents === 118050,
+   `guarda lo que entro de verdad en centavos enteros: ${anotado?.cuerpo?.ingreso_real_cents}`)
+// Lo que de verdad importa de esta puerta: que NO cierre nada. Cerrar la semana
+// es otro acto, con otras dos preguntas, y meterlo aqui de contrabando dejaria
+// al usuario con la semana terminada por haber corregido un numero.
+ok(!('estado' in (anotado?.cuerpo ?? {})),
+   'y no toca el estado del cheque: anotar no es cerrar')
+
 // ---- Salir de la cuenta ---------------------------------------------------
 // **Va al final a propósito.** Esta es la única comprobación que destruye la
 // sesión: después de confirmar, la app recarga sin usuario y todo lo que
